@@ -1,0 +1,264 @@
+<header class="topbar">
+  <button class="brand" type="button" (click)="navigate('learn')" aria-label="Accueil KeltiaWave Learn">
+    <img class="brand-mascot" src="/assets/keltiawave-mascot.webp" alt="">
+    <span><b><i>Keltia</i><em>Wave</em></b><small>Breton learning</small></span>
+  </button>
+  <nav aria-label="Navigation principale">
+    <button type="button" [class.active]="mode === 'learn' && screen !== 'progression'" (click)="navigate('learn')">{{ t('lessons') }}</button>
+    <button type="button" *ngIf="api.user()?.role === 'admin'" [class.active]="mode === 'admin'" (click)="navigate('admin')">{{ t('admin') }}</button>
+    <button type="button" [class.active]="mode === 'learn' && screen === 'progression'" (click)="openProgression()">{{ t('progress') }}</button>
+  </nav>
+  <div class="header-actions"><label class="language-select"><span>◎</span><select [ngModel]="uiLanguage" (ngModelChange)="changeLanguage($event)" aria-label="Langue de l’interface"><option value="fr">FR</option><option value="br">BR</option><option value="en">EN</option></select></label><div class="account-control" (click)="$event.stopPropagation()">
+    <button class="account-button" type="button" [class.connected]="!!api.user()" (click)="accountOpen = !accountOpen" [attr.aria-expanded]="accountOpen">
+      <span class="account-avatar">{{ api.user() ? (api.user()?.display_name || api.user()?.email)?.charAt(0)?.toUpperCase() : '♙' }}</span>
+      <span><b>{{ api.user() ? (api.user()?.display_name || api.user()?.email) : t('signin') }}</b><small *ngIf="api.user()">{{ api.user()?.role === 'admin' ? t('administrator') : t('connectedUser') }}</small></span><i>⌄</i>
+    </button>
+    <section class="account-menu" *ngIf="accountOpen">
+      <form *ngIf="!api.user(); else connectedMenu" (ngSubmit)="loginFromHeader()">
+        <header><b>{{ t('signin') }}</b><p>{{ t('accountHelp') }}</p></header>
+        <label><span>{{ t('email') }}</span><input type="email" name="headerEmail" [(ngModel)]="learnerEmail" autocomplete="username" required></label>
+        <label><span>{{ t('password') }}</span><input type="password" name="headerPassword" [(ngModel)]="learnerPassword" autocomplete="current-password" required></label>
+        <p class="account-error" *ngIf="learnerMessage">{{ learnerMessage }}</p>
+        <button class="primary" type="submit" [disabled]="learnerBusy || !learnerEmail || !learnerPassword">{{ learnerBusy ? '…' : t('signin') }}</button>
+        <button class="test-profile-link" type="button" (click)="openTestProfiles()">⚗ {{ t('profiles') }}</button><small>{{ t('optional') }}</small>
+      </form>
+      <ng-template #connectedMenu><div class="connected-menu"><header><span class="account-avatar large">{{ (api.user()?.display_name || api.user()?.email)?.charAt(0)?.toUpperCase() }}</span><div><b>{{ api.user()?.display_name }}</b><small>{{ api.user()?.email }}</small><em>{{ api.user()?.role === 'admin' ? t('administrator') : t('connectedUser') }}</em></div></header><button type="button" *ngIf="api.user()?.role === 'admin'" (click)="accountOpen = false; navigate('admin')">⚙ {{ t('admin') }}</button><button type="button" (click)="accountOpen = false; openProgression()">▦ {{ t('myProgress') }}</button><button type="button" (click)="openTestProfiles()">⚗ {{ t('profiles') }}</button><button class="sign-out" type="button" (click)="signOut()">{{ t('signout') }}</button></div></ng-template>
+    </section>
+  </div></div>
+</header>
+
+<main *ngIf="mode === 'learn'; else adminView" [class.lesson-running]="screen === 'exercise' || screen === 'correction'">
+  <section class="page-heading" *ngIf="screen !== 'catalog' && screen !== 'progression' && screen !== 'profiles'">
+    <p class="eyebrow">Compréhension du breton</p>
+    <h1>Jeu 1 · Texte à trous <span>Vidéo</span></h1>
+    <p>Écoute, complète les mots manquants et réécoute chaque passage.</p>
+  </section>
+
+  <section class="test-profiles-page" *ngIf="screen === 'profiles'">
+    <div><p class="eyebrow">KeltiaWave Learn</p><h1>{{ t('testTitle') }}</h1><p>{{ t('testCopy') }}</p></div>
+    <div class="test-profile-grid"><article *ngFor="let profile of testProfiles"><span class="test-profile-avatar">{{ profile.name.charAt(0) }}</span><div><h2>{{ profile.name }}</h2><b>{{ profile.role }}</b><p>{{ profile.description }}</p><small>{{ profile.email }} · classe123</small></div><button class="primary" type="button" (click)="loginTestProfile(profile)" [disabled]="learnerBusy">{{ t('useProfile') }}</button></article></div>
+    <button class="secondary" type="button" (click)="navigate('learn')">← {{ t('backLessons') }}</button>
+  </section>
+
+  <section class="catalog" *ngIf="screen === 'catalog'">
+    <div class="catalog-heading catalog-hero"><div><p class="eyebrow">KeltiaWave Learn</p><h1>{{ t('heroTitle') }}</h1><p class="hero-copy">{{ t('heroCopy') }}</p></div><label class="catalog-search"><span>⌕</span><input [(ngModel)]="catalogSearch" [placeholder]="t('search')"></label></div>
+    <div class="catalog-layout">
+      <aside class="filter-sidebar">
+        <h2>{{ t('filters') }}</h2>
+        <label><span>{{ t('theme') }}</span><select [(ngModel)]="catalogTheme"><option *ngFor="let theme of catalogThemes" [value]="theme">{{ theme === 'Tous' ? t('allThemes') : theme }}</option></select></label>
+        <label><span>{{ t('level') }}</span><select [(ngModel)]="catalogLevel"><option *ngFor="let level of ['Tous', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']" [value]="level">{{ level === 'Tous' ? t('allLevels') : level }}</option></select></label>
+        <label><span>{{ t('duration') }}</span><select [(ngModel)]="catalogDuration"><option value="Toutes">{{ t('allDurations') }}</option><option value="Courte">≤ 3 min</option><option value="Moyenne">3–10 min</option><option value="Longue">&gt; 10 min</option></select></label>
+        <fieldset><legend>{{ t('gameType') }}</legend><label class="check-filter"><input type="checkbox" checked disabled> {{ t('gaps') }}</label></fieldset>
+        <button class="reset-filter" type="button" (click)="catalogSearch = ''; catalogLevel = 'Tous'; catalogTheme = 'Tous'; catalogDuration = 'Toutes'">↻ {{ t('reset') }}</button>
+        <div class="filter-help"><b>Comment ça marche ?</b><p>Regarde la vidéo, écoute attentivement et complète les mots manquants.</p></div>
+      </aside>
+      <section class="catalog-results">
+        <header><b>{{ filteredCatalogLessons.length }} {{ t('lessons').toLowerCase() }}</b><span>▦ {{ t('grid') }}</span></header>
+        <div class="lesson-grid">
+          <article class="video-card" *ngFor="let lesson of filteredCatalogLessons">
+            <button class="video-card-main" type="button" (click)="openCatalogLesson(lesson)"><span class="lesson-thumbnail" [class.has-image]="!!lesson.thumbnail" [attr.data-visual]="lesson.visual"><img *ngIf="lesson.thumbnail" [src]="lesson.thumbnail" alt="" loading="lazy"><span class="thumbnail-label">{{ lesson.theme }}</span><b class="thumbnail-duration">◷ {{ lesson.duration }}</b></span><span class="lesson-copy"><strong>{{ lesson.title }}</strong><span class="lesson-meta"><i>Niveau {{ lesson.level }}</i><i>{{ lesson.theme }}</i></span><small>{{ lesson.questions }} mots à trouver <em>{{ lesson.status }}</em></small><span class="lesson-progress" *ngIf="lesson.progress"><i [style.width.%]="lesson.progress"></i></span></span></button>
+            <a class="card-source-link" *ngIf="lesson.source?.videos?.[0]?.source_url as sourceUrl" [href]="sourceUrl" target="_blank" rel="noopener noreferrer">↗ {{ lesson.source?.videos?.[0]?.source_link_label || t('sourceOriginal') }}</a>
+          </article>
+        </div>
+        <p class="empty-catalog" *ngIf="!filteredCatalogLessons.length">{{ t('noLesson') }}</p>
+      </section>
+    </div>
+  </section>
+
+  <section class="progression-page" *ngIf="screen === 'progression'">
+    <div class="progression-heading"><p class="eyebrow">Mon apprentissage</p><h1>Progression</h1><p>{{ api.user() ? 'Ta progression est synchronisée avec ton compte.' : 'Tu peux apprendre sans compte : ta progression est conservée sur ce navigateur.' }}</p></div>
+    <section class="optional-login" *ngIf="!api.user(); else syncedAccount">
+      <div><b>Envie de retrouver ta progression partout ?</b><p>La connexion est facultative. Elle permet seulement de synchroniser tes résultats entre tes appareils.</p></div>
+      <form (ngSubmit)="loginLearner()"><input type="email" name="learnerEmail" [(ngModel)]="learnerEmail" placeholder="Adresse électronique" required><input type="password" name="learnerPassword" [(ngModel)]="learnerPassword" placeholder="Mot de passe" required><button class="primary" [disabled]="learnerBusy">{{ learnerBusy ? 'Connexion…' : 'Se connecter' }}</button></form>
+      <small *ngIf="learnerMessage">{{ learnerMessage }}</small>
+    </section>
+    <ng-template #syncedAccount><section class="synced-account"><span>✓ Progression synchronisée pour <b>{{ api.user()?.display_name }}</b></span><button class="secondary" type="button" (click)="api.logout(); loadProgress()">Se déconnecter</button></section></ng-template>
+    <div class="progress-summary"><article><strong>{{ progressRecords.length }}</strong><span>{{ t('startedLessons') }}</span></article><article><strong>{{ completedProgressCount }}</strong><span>{{ t('completedLessons') }}</span></article></div>
+    <div class="progress-list" *ngIf="progressRecords.length; else noProgress">
+      <article *ngFor="let record of progressRecords"><div><span class="level">{{ progressLesson(record)?.level || '—' }}</span><b>{{ progressLesson(record)?.title || t('lesson') }}</b><small>{{ record.status === 'completed' ? t('completedLessons') : t('startedLessons') }} · {{ record.attempts }}</small></div><strong>{{ progressScore(record) }} %</strong><span class="progress-meter"><span class="progress-bar"><i [style.width.%]="record.status === 'completed' ? 100 : 25"></i></span><small>{{ record.status === 'completed' ? '✓ ' + t('exerciseCompleted') : '▶ ' + t('mediaPlayed') }}</small></span><div class="progress-links" *ngIf="progressLesson(record) as lesson"><button type="button" (click)="openProgressDetail(record, 'result')">{{ t('result') }}</button><button type="button" (click)="openProgressDetail(record, 'translation')">{{ t('translation') }}</button><button type="button" (click)="openProgressDetail(record, 'vocabulary')">{{ t('vocabulary') }}</button><button type="button" (click)="openProgressDetail(record, 'grammar')">{{ t('grammar') }}</button><button class="continue-link" type="button" (click)="openCatalogLesson(lesson)">{{ record.status === 'completed' ? t('restart') : t('continue') }}</button></div></article>
+    </div>
+    <ng-template #noProgress><p class="empty-catalog">{{ t('noProgress') }}</p></ng-template>
+  </section>
+
+  <ol class="steps" *ngIf="screen !== 'catalog' && screen !== 'progression' && screen !== 'profiles'" aria-label="Progression de la leçon">
+    <li [class.current]="screen === 'intro'" [class.done]="screen !== 'intro'"><b>1</b><span>{{ t('lesson') }}</span></li>
+    <li [class.current]="screen === 'exercise'"><b>2</b><span>{{ t('listen') }}</span></li>
+    <li [class.current]="screen === 'correction'"><b>3</b><span>{{ t('correction') }}</span></li>
+    <li [class.current]="screen === 'result'"><b>4</b><span>{{ t('result') }}</span></li>
+  </ol>
+
+  <section class="workspace" *ngIf="screen !== 'catalog' && screen !== 'progression' && screen !== 'profiles'" [class.player-layout]="screen === 'exercise' || screen === 'correction'" [class.result-layout]="screen === 'result'">
+    <article #mediaCard class="media-card">
+      <div #videoShell class="video-shell" [class.empty]="!videoUrl" [class.audio-shell]="activeMediaIsAudio" [style.background-image]="activeMediaIsAudio && activeCoverUrl ? 'url(' + activeCoverUrl + ')' : null">
+        <video *ngIf="!activeMediaIsAudio" #lessonVideo controls preload="metadata" [src]="videoUrl || null" (play)="handleVideoPlay()" (timeupdate)="syncExercisePageWithVideo($event)" (loadedmetadata)="videoMetadataLoaded()"></video>
+        <audio *ngIf="activeMediaIsAudio" #lessonVideo controls preload="metadata" [src]="videoUrl || null" (play)="handleVideoPlay()" (timeupdate)="syncExercisePageWithVideo($event)" (loadedmetadata)="videoMetadataLoaded()"></audio>
+        <div class="audio-cover-copy" *ngIf="activeMediaIsAudio"><span>🎧</span><b>{{ activeLesson.title }}</b><small>{{ activeLesson.theme }}</small></div>
+        <label class="audio-seeker" *ngIf="activeMediaIsAudio && videoUrl"><time>{{ formatTime(currentVideoTime) }}</time><input type="range" min="0" [max]="videoDurationSeconds || 0" step="0.1" [value]="currentVideoTime" (input)="seekMedia($event)" aria-label="Position dans le fichier audio"><time>{{ formatTime(videoDurationSeconds || 0) }}</time></label>
+        <div class="result-subtitles" *ngIf="screen === 'result' && subtitleLanguage !== 'off'">
+          <p *ngFor="let segment of currentSubtitleSegments">
+            <ng-container *ngIf="subtitleLanguage === 'fr'; else bretonSubtitle">{{ segment.translation }}</ng-container>
+            <ng-template #bretonSubtitle>
+            <ng-container *ngFor="let part of segment.parts">
+              <span *ngIf="part.blank as blank; else resultPlain" class="result-word" [class.correct]="isCorrect(blank)" [class.incorrect]="!isCorrect(blank)">{{ blank.value || blank.answer }}</span>
+              <ng-template #resultPlain>{{ part.text }}</ng-template>
+            </ng-container>
+            </ng-template>
+          </p>
+        </div>
+        <div class="video-placeholder" *ngIf="!videoUrl">
+          <span class="play-symbol">▶</span><b>Ajoute une vidéo de test</b><small>Le fichier reste dans ton navigateur.</small>
+        </div>
+      </div>
+      <div class="media-actions">
+        <div class="subtitle-language-buttons" *ngIf="screen === 'result' && videoUrl"><button class="file-button subtitle-toggle" type="button" [class.active]="subtitleLanguage === 'br'" (click)="toggleSubtitles('br')">Sous-titres BR</button><button class="file-button subtitle-toggle" type="button" *ngIf="hasFrenchSubtitles" [class.active]="subtitleLanguage === 'fr'" (click)="toggleSubtitles('fr')">Sous-titres FR</button></div>
+        <a class="original-link" *ngIf="activeSourceUrl" [href]="activeSourceUrl" target="_blank" rel="noopener noreferrer">↗ {{ activeSourceLinkLabel || t('sourceOriginal') }}</a>
+      </div>
+      <small class="file-name" *ngIf="videoName">{{ videoName }}</small>
+    </article>
+
+    <article class="lesson-card" *ngIf="screen === 'intro'">
+      <span class="level">Niveau {{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2><p>{{ activeLesson.description }}</p>
+      <dl><div><dt>{{ t('duration') }}</dt><dd>{{ activeLesson.duration }}</dd></div><div><dt>{{ t('theme') }}</dt><dd>{{ activeLesson.theme }}</dd></div><div><dt>{{ t('questions') }}</dt><dd>{{ blanks.length }} {{ t('words') }}</dd></div></dl>
+      <button class="primary" type="button" (click)="startLesson()">{{ t('start') }}</button>
+    </article>
+
+    <article class="exercise-card" *ngIf="screen === 'exercise' || screen === 'correction'" [style.height.px]="playerPanelHeight || null">
+      <div class="card-title"><div><span class="level">{{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2></div><span>Page {{ exercisePage + 1 }} / {{ exercisePageCount }}</span></div>
+      <p class="instruction">{{ screen === 'exercise' ? t('instruction') : t('correction') }}</p>
+      <div #transcriptScroll class="transcript" [class.corrected]="screen === 'correction'">
+        <article #transcriptSegment *ngFor="let segment of visibleSegments" [attr.data-segment-id]="segment.id" [class.segment-active]="isSegmentActive(segment)"><time>{{ formatTime(segment.start) }}</time><p>
+          <ng-container *ngFor="let part of segment.parts">
+            <ng-container *ngIf="part.blank as blank; else plainPart">
+              <input [(ngModel)]="blank.value" [disabled]="screen === 'correction'" [attr.aria-label]="'Mot manquant ' + blank.id" [class.good]="screen === 'correction' && isCorrect(blank)" [class.bad]="screen === 'correction' && !isCorrect(blank)" autocomplete="off" spellcheck="false">
+              <span class="answer-mark good" *ngIf="screen === 'correction' && isCorrect(blank)">✓</span><span class="answer-mark bad" *ngIf="screen === 'correction' && !isCorrect(blank)">✕</span>
+            </ng-container>
+            <ng-template #plainPart>{{ part.text }}</ng-template>
+          </ng-container>
+        </p></article>
+      </div>
+      <div class="correction-list" *ngIf="screen === 'correction'">
+        <div *ngFor="let blank of visibleBlanks" [class.success]="isCorrect(blank)"><span><b>Ta réponse :</b> {{ blank.value || '—' }}</span><span *ngIf="!isCorrect(blank)"><b>Réponse :</b> {{ blank.answer }}</span><button type="button" (click)="replay(blank)" [disabled]="!videoUrl">{{ replayingId === blank.id ? 'Lecture…' : '↻ Réécouter' }}</button></div>
+      </div>
+      <footer class="actions paged-actions">
+        <button class="secondary" type="button" *ngIf="exercisePage > 0" (click)="previousExercisePage()">← Page précédente</button>
+        <button class="secondary" type="button" *ngIf="screen === 'exercise' && exercisePage === 0" (click)="screen = 'intro'">Retour</button>
+        <span class="page-dots"><i *ngFor="let index of exercisePageIndexes" [class.active]="index === exercisePage"></i></span>
+        <button class="primary" type="button" *ngIf="exercisePage < exercisePageCount - 1" (click)="nextExercisePage()">Page suivante →</button>
+        <button class="primary" type="button" *ngIf="screen === 'exercise' && exercisePage === exercisePageCount - 1" (click)="validate()">Valider</button>
+        <button class="primary" type="button" *ngIf="screen === 'correction' && exercisePage === exercisePageCount - 1" (click)="showResult()">Voir mon résultat</button>
+      </footer>
+    </article>
+
+    <article class="result-card" *ngIf="screen === 'result'" [class.translation-active]="resultTab === 'translation'" [style.height.px]="resultTab === 'translation' ? (playerPanelHeight || null) : null">
+      <nav class="result-tabs" aria-label="Contenu pédagogique"><button type="button" [class.active]="resultTab === 'result'" (click)="selectResultTab('result')">{{ t('result') }}</button><button type="button" [class.active]="resultTab === 'translation'" (click)="selectResultTab('translation')">{{ t('translation') }}</button><button type="button" [class.active]="resultTab === 'vocabulary'" (click)="selectResultTab('vocabulary')">{{ t('vocabulary') }}</button><button type="button" [class.active]="resultTab === 'grammar'" (click)="selectResultTab('grammar')">{{ t('grammar') }}</button></nav>
+      <div class="result-tab-content" *ngIf="resultTab === 'result'">
+        <p class="eyebrow">{{ historicalProgress ? 'Meilleur résultat enregistré' : 'Leçon terminée' }}</p><h2>{{ scoreAppreciation() }}</h2><div class="score-ring"><strong>{{ displayedScore }}</strong><span>/ {{ displayedTotalQuestions }}</span><small>{{ displayedScorePercent }} %</small></div><p>{{ displayedScore }} bonne{{ displayedScore > 1 ? 's' : '' }} réponse{{ displayedScore > 1 ? 's' : '' }} sur {{ displayedTotalQuestions }}.</p><div class="result-detail" *ngIf="!historicalProgress"><span *ngFor="let blank of blanks" [class.success]="isCorrect(blank)">{{ isCorrect(blank) ? '✓' : '✕' }} {{ blank.answer }}</span></div><p class="history-note" *ngIf="historicalProgress">Détail des réponses non conservé · {{ historicalProgress.attempts }} tentative{{ historicalProgress.attempts > 1 ? 's' : '' }} enregistrée{{ historicalProgress.attempts > 1 ? 's' : '' }}.</p>
+      </div>
+      <div #translationScroll class="learning-list translation-scroll" *ngIf="resultTab === 'translation'"><span class="translation-spacer" aria-hidden="true"></span><article #translationSegment *ngFor="let segment of activeLesson.segments" [attr.data-segment-id]="segment.id" [class.segment-active]="isSegmentActive(segment)"><time>{{ formatTime(segment.start) }}</time><div><b>{{ displaySegmentText(segment) }}</b><p>{{ segment.translation || 'Traduction non renseignée.' }}</p></div></article><span class="translation-spacer" aria-hidden="true"></span></div>
+      <div class="learning-list vocabulary-list" *ngIf="resultTab === 'vocabulary'"><article *ngFor="let item of activeLesson.vocabulary"><b>{{ item.word }}</b><div><strong>{{ item.translation }}</strong><p>{{ item.example }}</p></div></article><p class="empty-tab" *ngIf="!activeLesson.vocabulary.length">Aucun vocabulaire renseigné pour cette leçon.</p></div>
+      <div *ngIf="resultTab === 'grammar'"><div class="grammar-card" *ngFor="let item of activeLesson.grammar"><span>Point de grammaire</span><h3>{{ item.title }}</h3><p>{{ item.explanation }}</p><blockquote>{{ item.example }}<small>{{ item.translation }}</small></blockquote></div><p class="empty-tab" *ngIf="!activeLesson.grammar.length">Aucun point de grammaire renseigné pour cette leçon.</p></div>
+      <div class="actions compact-actions"><button class="secondary" type="button" (click)="retry()">Recommencer</button><button class="primary" type="button" (click)="screen = 'catalog'">Retour aux leçons</button></div>
+    </article>
+  </section>
+</main>
+
+<ng-template #adminView>
+  <main class="admin-main" *ngIf="api.user()?.role === 'admin'">
+    <section class="page-heading"><p class="eyebrow">KeltiaWave Learn · {{ t('admin') }}</p><h1>{{ adminT('heading') }}</h1><p>{{ adminT('intro') }}</p></section>
+    <p class="admin-message error backend-warning" *ngIf="!backendAvailable">Backend inaccessible : démarre l’ensemble avec <code>./start_learning.sh</code> depuis la racine du dépôt. La sauvegarde serveur est indisponible tant que cette connexion n’est pas rétablie.</p>
+
+    <section class="admin-panel auth-panel connected">
+      <div><b>{{ api.user()?.display_name }}</b><small>{{ api.user()?.email }} · rôle administrateur</small></div>
+      <button class="secondary" type="button" (click)="signOut()">{{ adminT('signout') }}</button>
+    </section>
+
+    <section class="admin-panel saved-lessons" *ngIf="api.user()?.role === 'admin'">
+      <header><span>↺</span><div><h2>{{ adminT('saved') }}</h2><p>{{ adminT('savedHelp') }}</p></div><button class="secondary" type="button" (click)="newAdminLesson()">+ {{ adminT('newLesson') }}</button></header>
+      <div class="saved-lesson-list" *ngIf="adminLessons.length; else noSavedLessons">
+        <button type="button" *ngFor="let lesson of adminLessons" [class.active]="currentLessonId === lesson.id" (click)="editAdminLesson(lesson)">
+          <span><b>{{ lesson.title }}</b><small>{{ lesson.level }} · {{ lesson.domain }}</small></span>
+          <i [class.published]="lesson.status === 'published'">{{ lesson.status === 'published' ? 'Publiée' : lesson.status === 'archived' ? 'Archivée' : 'Brouillon' }}</i>
+        </button>
+      </div>
+      <ng-template #noSavedLessons><p class="empty-tab">{{ adminT('noSaved') }}</p></ng-template>
+    </section>
+    <ol class="admin-steps"><li class="active">1 {{ adminT('media') }}</li><li [class.active]="!!transcriptText">2 {{ adminT('transcription') }}</li><li [class.active]="!!adminSegments.length">3 {{ adminT('createGaps') }}</li><li [class.active]="!!selectedAdminTokens.length">4 {{ adminT('preview') }}</li><li>5 {{ adminT('publish') }}</li></ol>
+
+    <section class="admin-grid">
+      <article class="admin-panel lesson-settings">
+        <header><span>1</span><div><h2>{{ currentLessonId ? adminT('editLesson') : adminT('media') }}</h2><p>{{ currentLessonId ? adminT('editHelp') : adminT('uploadHelp') }}</p></div></header>
+        <label class="field"><span>{{ adminT('title') }}</span><input [(ngModel)]="adminTitle"></label>
+        <div class="field-row"><label class="field"><span>{{ adminT('level') }}</span><select [(ngModel)]="adminLevel"><option *ngFor="let level of levels" [value]="level">{{ level }}</option></select></label><label class="field"><span>{{ adminT('theme') }}</span><input [(ngModel)]="adminTheme"></label></div>
+        <label class="field"><span>{{ adminT('description') }}</span><textarea rows="3" [(ngModel)]="adminDescription"></textarea></label>
+        <div class="field-row media-metadata-row"><label class="field"><span>{{ adminT('mediaDuration') }}</span><input [(ngModel)]="adminDuration" placeholder="Ex. 2:15 ou 135"><small>{{ adminT('durationHelp') }}</small></label><label class="field"><span>{{ adminT('sourceUrl') }}</span><input type="url" [(ngModel)]="adminSourceUrl" placeholder="https://…"><small>{{ adminT('sourceHelp') }}</small></label></div>
+        <label class="field"><span>{{ adminT('sourceLabel') }}</span><input [(ngModel)]="adminSourceLinkLabel" [placeholder]="t('sourceOriginal')" maxlength="120"><small>{{ adminT('sourceLabelHelp') }}</small></label>
+        <div class="media-upload-grid">
+          <label class="upload-zone"><input type="file" accept="video/mp4,video/webm,video/quicktime,audio/mpeg,.mp3" (change)="selectVideo($event)"><b>{{ videoName || adminT('chooseMedia') }}</b><small>MP4, WebM, MOV ou MP3</small></label>
+          <label class="upload-zone cover-upload"><input type="file" accept="image/jpeg,image/png,image/webp" (change)="selectCover($event)"><span class="cover-preview" *ngIf="coverPreviewUrl" [style.background-image]="'url(' + coverPreviewUrl + ')'" aria-hidden="true"></span><b>{{ coverFile?.name || uploadedCoverName || adminT('chooseCover') }}</b><small>JPG, PNG ou WebP · 8 Mo maximum</small></label>
+        </div>
+      </article>
+
+      <article class="admin-panel transcript-panel">
+        <header><span>2</span><div><h2>{{ adminT('transcription') }}</h2><p>{{ adminT('transcriptionHelp') }}</p></div></header>
+        <label class="upload-zone compact"><input type="file" accept=".txt,.srt,.vtt,text/plain" (change)="selectTranscript($event)"><b>{{ transcriptFileName || adminT('importTranscript') }}</b><small>SRT / VTT · timestamps</small></label>
+        <section class="admin-sync-preview" *ngIf="videoUrl">
+          <header><b>Vérifier la synchronisation</b><small>Lis la vidéo puis corrige les timestamps et le texte directement dans les blocs synchronisés.</small></header>
+          <div class="video-shell" [class.audio-shell]="activeMediaIsAudio" [style.background-image]="activeMediaIsAudio && (coverPreviewUrl || activeCoverUrl) ? 'url(' + (coverPreviewUrl || activeCoverUrl) + ')' : null">
+            <video *ngIf="!activeMediaIsAudio" #lessonVideo controls preload="metadata" [src]="videoUrl" (timeupdate)="syncAdminPreview($event)" (loadedmetadata)="videoMetadataLoaded()"></video>
+            <audio *ngIf="activeMediaIsAudio" #lessonVideo controls preload="metadata" [src]="videoUrl" (timeupdate)="syncAdminPreview($event)" (loadedmetadata)="videoMetadataLoaded()"></audio>
+            <div class="audio-cover-copy" *ngIf="activeMediaIsAudio"><span>🎧</span><b>{{ adminTitle }}</b></div>
+            <div class="admin-preview-subtitles" *ngIf="currentAdminSubtitleSegments.length"><p *ngFor="let segment of currentAdminSubtitleSegments">{{ displayAdminSegmentText(segment) }}</p></div>
+          </div>
+          <div #adminPreviewScroll class="admin-preview-blocks" *ngIf="adminSegments.length">
+            <article #adminPreviewSegment *ngFor="let segment of adminSegments; let index = index" [attr.data-segment-id]="segment.id" [class.segment-active]="currentAdminSubtitleSegments.includes(segment)">
+              <div class="admin-preview-timing"><label><span>Début (s)</span><input type="number" min="0" step="0.1" [(ngModel)]="segment.start" (ngModelChange)="syncTranscriptFromAdminBlocks()"></label><label><span>Fin (s)</span><input type="number" min="0" step="0.1" [ngModel]="segment.end" (ngModelChange)="updateAdminSegmentEnd(index, $event)"></label></div>
+              <textarea rows="2" [ngModel]="displayAdminSegmentText(segment)" (ngModelChange)="updateAdminSegmentText(segment, $event)" aria-label="Texte du bloc SRT"></textarea>
+            </article>
+          </div>
+          <button class="secondary full admin-readjust-blocks" type="button" *ngIf="adminSegments.length" (click)="parseTranscript()">{{ adminT('adjustText') }}</button>
+        </section>
+      </article>
+    </section>
+
+    <p class="admin-message error" *ngIf="adminError">{{ adminError }}</p><p class="admin-message" *ngIf="adminMessage">{{ adminMessage }}</p>
+
+    <section class="admin-panel hole-editor" *ngIf="adminSegments.length">
+      <header><span>3</span><div><h2>{{ adminT('createGaps') }}</h2><p>{{ adminT('createGapsHelp') }}</p></div><b>{{ selectedAdminTokens.length }}</b></header>
+      <article class="segment-editor" *ngFor="let segment of adminSegments">
+        <time>{{ formatTime(segment.start) }} → {{ formatTime(segment.end) }}</time>
+        <div class="token-line"><ng-container *ngFor="let token of segment.tokens"><button *ngIf="token.kind === 'word'; else fixedToken" type="button" [class.selected]="token.selected" (click)="toggleToken(token)">{{ token.text }}</button><ng-template #fixedToken>{{ token.text }}</ng-template></ng-container></div>
+      </article>
+    </section>
+
+    <section class="admin-panel preview-panel" *ngIf="selectedAdminTokens.length">
+      <header><span>4</span><div><h2>{{ adminT('preview') }}</h2><p>{{ adminT('createGapsHelp') }}</p></div><b>{{ selectedAdminTokens.length }}</b></header>
+      <div class="selected-word-options">
+        <article *ngFor="let token of selectedAdminTokens">
+          <b>{{ token.text }}</b>
+          <label><span>Variantes acceptées</span><input [(ngModel)]="token.acceptedVariants" placeholder="Ex. variante 1, variante 2"></label>
+          <label class="mutation-option"><input type="checkbox" [(ngModel)]="token.acceptMutations"><span>Accepter les mutations bretonnes</span></label>
+        </article>
+      </div>
+      <footer class="admin-actions"><button class="secondary" type="button" (click)="exportLesson()">{{ adminT('export') }}</button><button class="secondary" type="button" (click)="previewAdminLesson()">{{ adminT('playerPreview') }}</button><button class="secondary" type="button" (click)="saveAdminLesson(false)" [disabled]="adminBusy">{{ adminT('saveDraft') }}</button><button class="primary" type="button" (click)="saveAdminLesson(true)" [disabled]="adminBusy">{{ adminBusy ? adminT('sending') : adminT('publish') }}</button></footer>
+    </section>
+
+    <section class="admin-panel pedagogy-panel" *ngIf="adminSegments.length">
+      <header><span>5</span><div><h2>{{ adminT('translations') }}</h2><p>{{ adminT('translations') }}</p></div></header>
+      <label class="translation-row" *ngFor="let segment of adminSegments"><time>{{ formatTime(segment.start) }}</time><b>{{ displayAdminSegmentText(segment) }}</b><textarea rows="2" [(ngModel)]="segment.translation" placeholder="Traduction française…"></textarea></label>
+    </section>
+
+    <section class="admin-grid pedagogy-grid" *ngIf="adminSegments.length">
+      <article class="admin-panel pedagogy-panel">
+        <header><span>6</span><div><h2>{{ adminT('vocabulary') }}</h2><p>{{ adminT('vocabulary') }}</p></div></header>
+        <div class="vocabulary-admin-row" *ngFor="let item of adminVocabulary; let index = index"><input [(ngModel)]="item.word" [placeholder]="t('bretonWord')"><input [(ngModel)]="item.translation" [placeholder]="t('translation')"><input [(ngModel)]="item.example" [placeholder]="t('example')"><button type="button" (click)="removeVocabularyItem(index)" aria-label="Supprimer">×</button></div>
+        <button class="secondary full" type="button" (click)="addVocabularyItem()">+ {{ t('addWord') }}</button>
+      </article>
+      <article class="admin-panel pedagogy-panel">
+        <header><span>7</span><div><h2>{{ adminT('grammar') }}</h2><p>{{ adminT('grammar') }}</p></div></header>
+        <label class="field"><span>{{ adminT('title') }}</span><input [(ngModel)]="adminGrammar.title" placeholder="Ex. Mont a ran da + lieu"></label><label class="field"><span>{{ t('explanation') }}</span><textarea rows="3" [(ngModel)]="adminGrammar.explanation"></textarea></label><label class="field"><span>{{ t('example') }}</span><input [(ngModel)]="adminGrammar.example"></label><label class="field"><span>{{ t('translation') }}</span><input [(ngModel)]="adminGrammar.translation"></label>
+      </article>
+    </section>
+  </main>
+</ng-template>
+
+<footer class="site-footer">KeltiaWave Learn · Brezhoneg gant Fañch</footer>

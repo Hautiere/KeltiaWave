@@ -1,0 +1,174 @@
+<div class="account-page">
+  <header class="kw-header">
+    <div class="kw-bar">
+      <a class="header-brand" href="https://keltiawave.com/" aria-label="Portail KeltiaWave">
+        <span class="brand-avatar"><img src="/assets/fanch-avatar-bzh-01.webp" alt=""></span>
+      <span>
+          <span class="header-brand-title"><span>Keltia</span><span>Wave Komz</span></span>
+          <span class="header-brand-subtitle">{{ 'v2.brandSubtitle' | t }}</span>
+      </span>
+      </a>
+
+      <nav class="kw-nav" aria-label="Navigation">
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
+        <a *ngIf="auth.user()?.role !== 'teacher'" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/ecrire"><span class="nav-ico">✎</span>{{ 'nav.write' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'admin'" routerLink="/admin"><span class="nav-ico">⚙</span>{{ 'nav.admin' | t }}</a>
+      </nav>
+
+      <div class="header-tools">
+        <label class="lang-select">
+          <span>{{ 'lang.label' | t }}</span>
+          <select [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
+            <option value="fr">FR</option>
+            <option value="br">BR</option>
+            <option value="en">EN</option>
+            <option value="cy">CY</option>
+          </select>
+        </label>
+        <app-v2-session-action />
+      </div>
+    </div>
+  </header>
+
+  <main class="account-main">
+    <header class="page-top">
+      <div class="page-title">
+        <a class="back-library" [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'">← {{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <h1>{{ auth.user() ? 'Mon profil' : 'Connexion' }}</h1>
+      </div>
+    </header>
+
+    <section class="account-hero" *ngIf="!auth.user()">
+      <div class="account-symbol avatar-symbol" aria-hidden="true">
+        <img [src]="draftAvatar" alt="">
+      </div>
+      <div class="account-copy">
+        <h2>{{ auth.user() ? (auth.user()?.display_name || auth.user()?.email) : 'Your account' }}</h2>
+        <p *ngIf="!auth.user(); else connectedSummary">Sign in to access your personal space, your data and your contributions.</p>
+        <ng-template #connectedSummary>
+          <p>{{ auth.user()?.email }} · role {{ auth.user()?.role }} · poids {{ auth.user()?.validation_weight }}</p>
+        </ng-template>
+      </div>
+
+      <div class="account-actions">
+        <button class="btn ghost" type="button" (click)="showLogin()">Sign in</button>
+        <button class="btn primary" type="button" (click)="showRegister()">Create account</button>
+      </div>
+    </section>
+
+    <section class="auth-panel" *ngIf="showAuthForm && !auth.token()">
+      <div class="auth-head">
+        <h2>{{ mode === 'login' ? 'Sign in' : 'Create account' }}</h2>
+        <p>{{ mode === 'login' ? 'Use your KeltiaWave account.' : 'Create a personal contributor account.' }}</p>
+      </div>
+      <form class="auth-form" (ngSubmit)="submit($event)">
+        <div class="register-avatar-card" *ngIf="mode === 'register'">
+          <div class="avatar-carousel">
+            <button class="avatar-step" type="button" (click)="cycleAvatar(-1)" aria-label="Avatar precedent">‹</button>
+            <img class="avatar-preview" [src]="draftAvatar" alt="">
+            <button class="avatar-step" type="button" (click)="cycleAvatar(1)" aria-label="Avatar suivant">›</button>
+          </div>
+          <div class="register-avatar-copy">
+            <strong>Photo du compte</strong>
+            <span>{{ avatarPickerLabel }}</span>
+            <label class="btn ghost small file-btn">
+              Choisir mon image
+              <input type="file" accept="image/*" (change)="onAvatarFileSelected($event)">
+            </label>
+          </div>
+        </div>
+        <label *ngIf="mode === 'register'">
+          <span>{{ 'profile.displayName' | t }}</span>
+          <input type="text" [ngModel]="profileDraft.displayName" (ngModelChange)="updateProfileDraft('displayName', $event)" name="displayName" autocomplete="name">
+        </label>
+        <label *ngIf="mode === 'register'">
+          <span>{{ 'profile.languageLevel' | t }}</span>
+          <select [ngModel]="profileDraft.bretonLevel" (ngModelChange)="updateProfileDraft('bretonLevel', $event)" name="bretonLevel">
+            <option *ngFor="let level of levels" [value]="level.value">{{ level.value }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" [ngModel]="displayEmail" (ngModelChange)="update('email', $event)" name="email" autocomplete="email" placeholder="nom@example.org">
+        </label>
+        <label>
+          <span>{{ 'account.password' | t }}</span>
+          <input type="password" [(ngModel)]="password" name="password" autocomplete="current-password">
+        </label>
+        <button class="btn primary" type="submit" [disabled]="busy">{{ busy ? ('account.loading' | t) : (mode === 'login' ? 'Sign in' : 'Create account') }}</button>
+      </form>
+    </section>
+
+    <div class="message error" *ngIf="error">{{ error }}</div>
+    <div class="message success" *ngIf="success">{{ success }}</div>
+
+    <section class="profile-section" *ngIf="auth.user()">
+      <header class="section-head compact">
+        <div>
+          <h2>Informations personnelles</h2>
+          <p>Configurez votre identité et votre rattachement dans KeltiaWave.</p>
+        </div>
+        <span class="unsaved-badge" *ngIf="profileDirty">Modifications non enregistrees</span>
+      </header>
+
+      <div class="profile-photo-card">
+        <img [src]="draftAvatar" alt="">
+        <div class="profile-photo-copy">
+          <strong>Photo du compte</strong>
+          <span>Utilisez un avatar KeltiaWave ou importez votre propre image.</span>
+          <div class="photo-actions">
+            <button class="btn ghost small" type="button" (click)="avatarPickerOpen = !avatarPickerOpen">
+              {{ avatarPickerOpen ? 'Masquer les avatars' : 'Changer la photo' }}
+            </button>
+            <label class="btn primary small file-btn">
+              Choisir mon image
+              <input type="file" accept="image/*" (change)="onAvatarFileSelected($event)">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-avatar-picker" *ngIf="avatarPickerOpen">
+        <div class="avatar-carousel">
+          <button class="avatar-step" type="button" (click)="cycleAvatar(-1)" aria-label="Avatar precedent">‹</button>
+          <img class="avatar-preview" [src]="draftAvatar" alt="">
+          <button class="avatar-step" type="button" (click)="cycleAvatar(1)" aria-label="Avatar suivant">›</button>
+        </div>
+        <span>{{ avatarPickerLabel }}</span>
+      </div>
+
+      <div class="profile-form">
+        <label>
+          <span>Nom affiche</span>
+          <input [ngModel]="profileDraft.displayName" (ngModelChange)="updateProfileDraft('displayName', $event)" placeholder="Votre nom">
+        </label>
+        <label>
+          <span>{{ 'profile.languageLevel' | t }}</span>
+          <select [ngModel]="profileDraft.bretonLevel" (ngModelChange)="updateProfileDraft('bretonLevel', $event)">
+            <option *ngFor="let level of levels" [value]="level.value">{{ level.value }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Organisation</span>
+          <input [ngModel]="profileDraft.organization" (ngModelChange)="updateProfileDraft('organization', $event)" placeholder="Ecole, association, groupe">
+        </label>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn ghost" type="button" (click)="resetProfileDraft()" [disabled]="profileSaving || !profileDirty">Annuler</button>
+        <button class="btn primary continue" type="button" (click)="saveProfile()" [disabled]="profileSaving || !profileDirty">
+          {{ profileSaving ? ('validation.saving' | t) : 'Enregistrer les modifications' }}
+        </button>
+      </div>
+    </section>
+
+    <footer class="account-footer">
+      <span>KeltiaWave</span>
+      <span>{{ 'v2.footerMade' | t }} <span class="heart">♥</span> {{ 'v2.footerBy' | t }}</span>
+      <span>contact@keltiawave.com</span>
+    </footer>
+  </main>
+</div>

@@ -1,0 +1,122 @@
+<div class="kw-shell">
+  <header class="kw-header">
+    <div class="kw-bar">
+      <a class="brand" href="https://keltiawave.com/" aria-label="Portail KeltiaWave">
+        <span class="brand-avatar"><img src="/assets/fanch-avatar-bzh-01.webp" alt=""></span>
+        <span>
+          <span class="brand-title"><span>Keltia</span><span>Wave Komz</span></span>
+          <span class="brand-subtitle">{{ 'v2.brandSubtitle' | t }}</span>
+        </span>
+      </a>
+
+      <nav class="kw-nav" aria-label="Navigation V2">
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
+        <a *ngIf="auth.user()?.role !== 'teacher'" class="active" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/ecrire"><span class="nav-ico">✎</span>{{ 'nav.write' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'admin'" routerLink="/admin"><span class="nav-ico">⚙</span>{{ 'nav.admin' | t }}</a>
+        <a routerLink="/compte"><span class="nav-ico">◉</span>{{ 'nav.account' | t }}</a>
+      </nav>
+
+      <div class="header-tools">
+        <app-v2-session-action />
+        <label class="lang-select">
+          <span>{{ 'lang.label' | t }}</span>
+          <select [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
+            <option value="fr">FR</option>
+            <option value="br">BR</option>
+            <option value="en">EN</option>
+            <option value="cy">CY</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="kw-main">
+    <section class="work-layout">
+      <aside class="work-sidebar">
+        <section class="side-card">
+          <h2 class="side-title">{{ 'v2.progress' | t }}</h2>
+          <div class="progress-line">
+            <span>{{ 'v2.readPhrases' | t }}</span>
+            <strong>{{ currentIndex + (phrases.length ? 1 : 0) }} / {{ phrases.length }}</strong>
+            <span class="progress-bar"><span [style.width.%]="progressPercent"></span></span>
+          </div>
+          <div class="progress-line"><span>{{ 'v2.connectedQuestion' | t }}</span><strong>{{ auth.user() ? ('v2.yes' | t) : ('v2.no' | t) }}</strong></div>
+          <div class="progress-line"><span>{{ 'v2.language' | t }}</span><strong>{{ i18n.contentLanguage() | uppercase }}</strong></div>
+        </section>
+
+        <section class="side-card">
+          <h2 class="side-title">{{ 'v2.myClass' | t }}</h2>
+          <a class="class-summary class-summary-link" *ngIf="hasClassContext; else readClassInfo" routerLink="/ma-classe">
+            <span class="class-label"><span class="side-ico">◌</span>{{ classLabel }}</span>
+            <span class="class-note">{{ classHelp }}</span>
+          </a>
+          <ng-template #readClassInfo>
+            <div class="class-summary">
+              <span class="class-label"><span class="side-ico">◌</span>{{ classLabel }}</span>
+              <span class="class-note">{{ classHelp }}</span>
+            </div>
+          </ng-template>
+        </section>
+
+        <section class="help-card">
+          <h2 class="side-title">{{ 'v2.help' | t }}</h2>
+          <p>{{ 'record.suggested' | t }}</p>
+          <a class="btn ghost" routerLink="/compte">{{ 'nav.account' | t }}</a>
+        </section>
+      </aside>
+
+      <section class="work-content">
+        <div class="work-topline">
+          <strong class="phrase-count">{{ phrasePosition }}</strong>
+          <div class="language-tabs">
+            <span class="pill"><img src="/assets/flag-brittany.png" alt="">BRETON</span>
+            <span class="pill muted"><img src="/assets/flag-wales.svg" alt="">WELSH</span>
+            <span class="pill muted"><img src="/assets/flag-cornwall.svg" alt="">CORNISH</span>
+          </div>
+        </div>
+
+        <article class="focus-card">
+          <ng-container *ngIf="!loading && currentPhrase; else loadingOrEmpty">
+            <span class="status review">{{ 'v2.readStatus' | t }}</span>
+            <h1>{{ currentPhrase.texte }}</h1>
+            <p class="phrase-meta">
+              {{ currentPhrase.theme || ('domain.undefined' | t) }}
+              <span>·</span>
+              {{ currentPhrase.niveau || ('level.undefined' | t) }}
+            </p>
+            <button class="big-play" type="button" [attr.aria-label]="'nav.listen' | t">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <div class="focus-caption">{{ 'record.stepReadText' | t }}</div>
+            <div class="focus-actions">
+              <button class="btn ghost" type="button" (click)="previous()" [disabled]="currentIndex === 0">{{ 'v2.previous' | t }}</button>
+              <a class="btn primary" [routerLink]="['/lire']" [queryParams]="{ phraseId: currentPhrase.id }">{{ 'v2.recordThisPhrase' | t }}</a>
+              <button class="btn ghost" type="button" (click)="next()">{{ 'v2.next' | t }}</button>
+            </div>
+          </ng-container>
+
+          <ng-template #loadingOrEmpty>
+            <div class="empty-block" *ngIf="loading">{{ 'v2.loadingPhrases' | t }}</div>
+            <div class="empty-block error" *ngIf="!loading && error">{{ error }}</div>
+            <div class="empty-block" *ngIf="!loading && !error">{{ 'v2.noPhraseForLanguage' | t }}</div>
+          </ng-template>
+        </article>
+
+        <div class="advice">
+          <strong>{{ 'v2.tip' | t }}</strong>
+          {{ 'record.stepWriteText' | t }}
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="kw-footer">
+    <span>KeltiaWave</span>
+    <span>{{ 'v2.footerMade' | t }} <span class="heart">♥</span> {{ 'v2.footerBy' | t }}</span>
+    <span>contact@keltiawave.com</span>
+  </footer>
+</div>

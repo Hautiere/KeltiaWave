@@ -1,0 +1,101 @@
+<section class="write-page">
+  <header class="write-head">
+    <div>
+      <p class="eyebrow">{{ 'write.eyebrow' | t }}</p>
+      <h1>{{ 'write.title' | t }}</h1>
+      <p class="muted">{{ 'write.subtitle' | t }}</p>
+    </div>
+    <div class="section-steps">
+      <span class="active">{{ 'nav.write' | t }}</span>
+    </div>
+  </header>
+
+  <div class="write-layout">
+    <section class="composer" aria-label="Nouvelle phrase">
+      <div class="field-head">
+        <label for="phraseText">{{ 'write.textLabel' | t }}</label>
+        <span [class.warning]="remaining <= 20">{{ remaining }} {{ 'write.remaining' | t }}</span>
+      </div>
+
+      <textarea id="phraseText"
+                [(ngModel)]="texte"
+                rows="5"
+                maxlength="180"
+                [disabled]="submitting"
+                [placeholder]="'write.placeholder' | t"></textarea>
+
+      <div class="submit-row primary-submit">
+        <button class="btn btn-primary"
+                type="button"
+                (click)="submit()"
+                [disabled]="!canSubmit">
+          {{ submitting ? ('write.adding' | t) : ('write.add' | t) }}
+        </button>
+      </div>
+
+      <div class="metadata">
+        <div class="domain-picker">
+          <div class="domain-head">
+            <span>{{ 'write.theme' | t }}</span>
+            <small>{{ 'write.domainsHelp' | t }}</small>
+          </div>
+          <div class="domain-chips" role="group" aria-label="Domaines">
+            <button type="button"
+                    *ngFor="let item of domains"
+                    (click)="toggleDomain(item.value)"
+                    [class.active]="isDomainSelected(item.value)"
+                    [disabled]="submitting || (!isDomainSelected(item.value) && selectedDomains.length >= maxDomains)">
+              {{ item.labelKey | t }}
+            </button>
+          </div>
+        </div>
+
+        <div class="domain-picker source-picker">
+          <div class="domain-head">
+            <span>{{ 'write.source' | t }}</span>
+          </div>
+          <div class="domain-chips source-chips" role="group" aria-label="Origine">
+            <button type="button"
+                    *ngFor="let item of sources"
+                    (click)="toggleSource(item.value)"
+                    [class.active]="isSourceSelected(item.value)"
+                    [disabled]="submitting">
+              {{ item.labelKey | t }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="submit-row helper-row">
+        <p class="hint">{{ 'write.hint' | t }}</p>
+      </div>
+
+      <div class="status"
+           *ngIf="statusMessage"
+           [class.success]="statusKind === 'success'"
+           [class.error]="statusKind === 'error'"
+           role="status">
+        {{ statusMessage }}
+      </div>
+    </section>
+
+    <aside class="guidelines" aria-label="Conseils">
+      <ul>
+        <li>{{ 'write.rule1' | t }}</li>
+        <li>{{ 'write.domainsInstruction' | t }}</li>
+      </ul>
+
+      <div class="recent">
+        <h3>{{ 'write.recent' | t }}</h3>
+        <p class="muted" *ngIf="loading">{{ 'write.loading' | t }}</p>
+        <p class="muted" *ngIf="!loading && !recentPhrases.length">{{ 'write.empty' | t }}</p>
+        <article *ngFor="let phrase of recentPhrases">
+          <p>{{ phrase.texte }}</p>
+          <span>{{ phrase.theme ? domainLabel(phrase.theme) : ('write.noTheme' | t) }}</span>
+          <small *ngIf="phrase.source">{{ sourceLabel(phrase.source) }}</small>
+        </article>
+      </div>
+    </aside>
+  </div>
+</section>

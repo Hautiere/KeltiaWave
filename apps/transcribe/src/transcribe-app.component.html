@@ -1,0 +1,39 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" [href]="portalBase"><img src="assets/fanch-avatar-logo.png" alt="Fañch, le surfeur KeltiaWave"><span><strong><b>KeltiaWave</b> Transcribe</strong><small>{{ t('Audio et vidéo vers texte') }}</small></span></a>
+    <div class="top-actions"><a class="tools" [href]="portalBase"><span>▦</span> {{ t('Autres outils') }}</a><select aria-label="Langue de l’interface" [ngModel]="interfaceLanguage" (ngModelChange)="changeInterfaceLanguage($event)"><option value="fr">FR</option><option value="en">EN</option><option value="br">BR</option><option value="cy">CY</option></select></div>
+  </header>
+
+  <main>
+    <header class="page-title"><div><span class="title-icon">✦</span><h1>{{ t('Transcrire un fichier') }}</h1><p>{{ t('Transformez un audio ou une vidéo en texte breton ou gallois.') }}</p></div><ul><li>{{ t('Rapide') }}</li><li>{{ t('Fichier non conservé') }}</li><li>200 {{ t('Mo maximum') }}</li></ul></header>
+
+    <section class="workspace" [class.has-result]="result">
+      <form (submit)="$event.preventDefault(); start()">
+        <fieldset><legend><span>1</span> {{ t('Langue') }}</legend><div class="language-grid">
+          <button type="button" [class.selected]="language === 'br'" (click)="selectLanguage('br')"><img src="assets/flag-brittany.png" alt="">{{ t('Breton') }}<i></i></button>
+          <button type="button" [class.selected]="language === 'cy'" (click)="selectLanguage('cy')"><img src="assets/flag-wales.svg" alt="">{{ t('Gallois') }}<i></i></button>
+          <button type="button" disabled><img src="assets/flag-cornwall.svg" alt="">{{ t('Cornique') }}<small>{{ t('Bientôt') }}</small></button>
+        </div></fieldset>
+
+        <fieldset><legend><span>2</span> {{ t('Fichier') }}</legend><label class="drop-zone" [class.dragging]="dragging" (dragover)="$event.preventDefault(); dragging = true" (dragleave)="dragging = false" (drop)="drop($event)">
+          <input #mediaInput type="file" accept=".mp3,.wav,.mp4,.m4a,.ogg,.webm,.flac" (change)="chooseFile(mediaInput)">
+          <span class="upload-icon">⇧</span><strong>{{ file ? file.name : t('Déposez votre fichier ici') }}</strong><span>{{ file ? fileSize : t('ou cliquez pour le sélectionner') }}</span><small>MP3, WAV, MP4, M4A, OGG, WEBM ou FLAC</small>
+        </label></fieldset>
+
+        <fieldset><legend><span>3</span> {{ t('Mode') }}</legend><div class="mode-grid">
+          <button type="button" [class.selected]="mode === 'fast'" [disabled]="language === 'cy' || busy" (click)="selectMode('fast')"><b>ϟ</b><span><strong>{{ t('Rapide') }} · Vosk</strong><small>{{ t('Brouillon breton immédiat') }}</small></span><i></i></button>
+          <button type="button" [class.selected]="mode === 'quality'" [disabled]="busy" (click)="selectMode('quality')"><b>✦</b><span><strong>{{ t('Qualité') }} · Whisper</strong><small>{{ t('Breton et gallois, meilleure précision') }}</small></span><i></i></button>
+        </div></fieldset>
+
+        <div class="form-actions"><p [class.error]="error">{{ error || message }}</p><button class="start" type="submit" [disabled]="!file || busy"><span class="loader-eq" *ngIf="busy" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>{{ busy ? t('Traitement en cours…') : t('Lancer la transcription') }} <span *ngIf="!busy">→</span></button></div>
+        <div class="progress-stack" *ngIf="busy">
+          <div class="progress-row"><span>{{ t('Chargement du fichier') }}</span><strong>{{ uploadProgress }} %</strong><div class="progress"><i [style.width.%]="uploadProgress"></i></div></div>
+          <div class="progress-row" [class.indeterminate]="!transcriptionEstimate || estimateExceeded"><span>{{ t('Transcription') }} · {{ mode === 'fast' ? 'Vosk' : 'Whisper' }}</span><strong *ngIf="transcriptionEstimate && !estimateExceeded">{{ transcriptionProgress }} % · ~{{ remainingTime }}</strong><strong *ngIf="!transcriptionEstimate || estimateExceeded">{{ t('Temps écoulé') }} {{ elapsedTime }}</strong><div class="progress"><i [style.width.%]="transcriptionEstimate && !estimateExceeded ? transcriptionProgress : null"></i></div></div>
+        </div>
+      </form>
+
+      <section class="result" *ngIf="result"><header><div><small>{{ t('Résultat') }}</small><h2>{{ result.filename }}</h2></div><button type="button" (click)="reset()">{{ t('Nouveau fichier') }}</button></header><textarea [(ngModel)]="text" aria-label="Texte transcrit"></textarea><footer><span>{{ wordCount }} {{ t('mots') }} · {{ text.length }} {{ t('caractères') }}</span><button type="button" [disabled]="!text.trim()" (click)="saveText()">{{ t('Télécharger le texte') }}</button></footer></section>
+    </section>
+  </main>
+  <footer class="keltia-footer"><span>Hautiere prod, 14 Hent Prat Carbon, Beg-Meil</span><i>•</i><strong><b>Brezhoneg</b> <em>gant</em> <mark>Fañch</mark></strong><i>•</i><a href="mailto:contact@keltiawave.com">contact@keltiawave.com</a></footer>
+</div>

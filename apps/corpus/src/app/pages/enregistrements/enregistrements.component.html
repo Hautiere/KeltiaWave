@@ -1,0 +1,147 @@
+<section class="corpus-page">
+  <header class="corpus-head">
+    <div>
+      <p class="eyebrow">{{ 'corpus.eyebrow' | t }}</p>
+      <h1>{{ 'corpus.title' | t }}</h1>
+      <p>{{ 'corpus.subtitle' | t }}</p>
+    </div>
+    <div class="head-actions section-steps">
+      <button
+        class="mine-toggle"
+        type="button"
+        [class.active]="mineOnly"
+        [disabled]="!auth.user()"
+        [title]="auth.user() ? '' : ('nav.account' | t)"
+        (click)="mineOnly = !mineOnly">
+        {{ 'corpus.mineOnly' | t }}
+      </button>
+      <button type="button" (click)="refresh()" [disabled]="loading">
+        {{ loading ? ('corpus.loading' | t) : ('corpus.refresh' | t) }}
+      </button>
+    </div>
+  </header>
+
+  <section class="filters">
+    <label>
+      {{ 'corpus.status' | t }}
+      <select [(ngModel)]="statusFilter">
+        <option value="all">{{ 'corpus.all' | t }}</option>
+        <option value="pending">{{ 'corpus.pendingOne' | t }}</option>
+        <option value="approved">{{ 'corpus.approved' | t }}</option>
+        <option value="rejected">{{ 'corpus.rejected' | t }}</option>
+      </select>
+    </label>
+
+    <label>
+      {{ 'corpus.domain' | t }}
+      <select [(ngModel)]="domainFilter">
+        <option *ngFor="let item of domains" [value]="item.value">
+          {{ item.value ? (item.labelKey | t) : ('corpus.allDomains' | t) }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      {{ 'corpus.validationLevel' | t }}
+      <select [(ngModel)]="levelFilter">
+        <option *ngFor="let item of validationLevels" [value]="item.value">{{ item.labelKey | t }}</option>
+      </select>
+    </label>
+
+    <label>
+      {{ 'profile.school' | t }}
+      <select [(ngModel)]="schoolFilter">
+        <option *ngFor="let school of schools" [value]="school.value">
+          {{ school.value ? (school.labelKey | t) : ('corpus.allSchools' | t) }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      {{ 'profile.schoolLevel' | t }}
+      <select [(ngModel)]="schoolLevelFilter">
+        <option *ngFor="let level of schoolLevels" [value]="level.value">
+          {{ level.value ? (level.labelKey | t) : ('corpus.allSchoolLevels' | t) }}
+        </option>
+      </select>
+    </label>
+  </section>
+
+  <section class="summary">
+    <div>
+      <span>{{ 'corpus.total' | t }}</span>
+      <strong>{{ total }}</strong>
+    </div>
+    <div>
+      <span>{{ 'corpus.pendingOne' | t }}</span>
+      <strong>{{ pending.length }}</strong>
+    </div>
+    <div>
+      <span>{{ 'corpus.approved' | t }}</span>
+      <strong>{{ approved.length }}</strong>
+    </div>
+    <div>
+      <span>{{ 'corpus.rejected' | t }}</span>
+      <strong>{{ rejected.length }}</strong>
+    </div>
+    <div>
+      <span>{{ 'corpus.displayed' | t }}</span>
+      <strong>{{ items.length }}</strong>
+    </div>
+  </section>
+
+  <div class="state-card error" *ngIf="error">{{ error }}</div>
+  <div class="state-card" *ngIf="!loading && !error && items.length === 0">
+    {{ 'corpus.empty' | t }}
+  </div>
+
+  <section class="recording-list">
+    <article class="recording-card" *ngFor="let item of items; trackBy: trackById">
+      <div class="recording-main">
+        <div>
+          <div class="recording-title">
+            {{ 'corpus.recording' | t }} #{{ item.audio.id }}
+            <span [class.rejected]="item.audio.status === 'rejected'">{{ item.validationLabel }}</span>
+          </div>
+          <div class="meta">
+            <span>{{ 'corpus.domain' | t }} : {{ domainLabel(item.audio.domain) }}</span>
+            <span *ngIf="item.audio.contributor_school">{{ 'profile.school' | t }} : {{ schoolLabel(item.audio.contributor_school) }}</span>
+            <span *ngIf="item.audio.contributor_school_level">{{ 'profile.schoolLevel' | t }} : {{ schoolLevelLabel(item.audio.contributor_school_level) }}</span>
+            <span *ngIf="item.audio.speaker_region">{{ 'corpus.region' | t }} : {{ item.audio.speaker_region }}</span>
+            <span *ngIf="item.audio.speaker_level">{{ 'corpus.level' | t }} : {{ item.audio.speaker_level }}</span>
+            <span>{{ 'corpus.added' | t }} : {{ item.audio.created_at | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="validation-summary">
+        <strong>{{ canSeeValidationDetails ? ('corpus.adminValidation' | t) : ('corpus.publicValidation' | t) }}</strong>
+        <span>{{ validationSummary(item.audio) }}</span>
+        <em *ngIf="!canSeeValidationDetails">{{ 'corpus.restrictedDetails' | t }}</em>
+      </section>
+
+      <div class="validators" *ngIf="canSeeValidationDetails && validations(item.audio).length; else noValidationDetail">
+        <div class="validator-row" *ngFor="let validation of validations(item.audio)">
+          <span class="decision" [class.rejected]="validation.decision === 'rejected'">
+            {{ validation.decision === 'approved' ? ('corpus.yes' | t) : ('corpus.no' | t) }}
+          </span>
+          <strong>{{ validation.validator || ('corpus.unknownValidator' | t) }}</strong>
+          <span>{{ validation.validator_role || ('corpus.undefinedRole' | t) }}</span>
+          <span>{{ 'corpus.weight' | t }} {{ validation.validation_weight || 'n/a' }}</span>
+          <time>{{ validation.created_at | date:'short' }}</time>
+          <p class="validator-comment" *ngIf="validation.comment">{{ validation.comment }}</p>
+        </div>
+      </div>
+      <ng-template #noValidationDetail>
+        <div class="validators empty" *ngIf="canSeeValidationDetails">{{ 'corpus.noValidationDetail' | t }}</div>
+      </ng-template>
+
+      <section class="public-comment" *ngIf="!canSeeValidationDetails && latestComment(item.audio) as comment">
+        <strong>{{ 'corpus.validatorComment' | t }}</strong>
+        <span>{{ comment }}</span>
+      </section>
+
+      <audio controls preload="metadata" [src]="url(item.audio)"></audio>
+    </article>
+  </section>
+</section>

@@ -1,0 +1,32 @@
+<div class="cv-container">
+  <div class="cv-card">
+    <p class="cv-eyebrow">Keltia Speech</p>
+    <h1>Grow the Breton speech corpus</h1>
+    <div class="cv-phrase">
+      <span *ngIf="phrases && phrases.length; else loading">
+        {{ phrases[0]?.texte || 'No phrase available.' }}
+      </span>
+      <ng-template #loading>
+        <span>Loading phrase...</span>
+      </ng-template>
+    </div>
+
+    <div class="cv-buttons">
+      <button class="cv-btn cv-btn-record" routerLink="/legacy/enregistrement">
+        Record voice
+      </button>
+      <button class="cv-btn cv-btn-validate" routerLink="/legacy/validation">
+        Validate audio
+      </button>
+    </div>
+    <div class="cv-stats">
+      <span>{{ phrases.length }} phrases available</span>
+    </div>
+
+    <ul>
+      <li *ngFor="let phrase of phrases">
+        {{ phrase.texte }}
+      </li>
+    </ul>
+  </div>
+</div>

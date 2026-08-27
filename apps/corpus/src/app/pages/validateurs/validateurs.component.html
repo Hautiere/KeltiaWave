@@ -1,0 +1,57 @@
+<section class="validators-page">
+  <header class="validators-head">
+    <div>
+      <p class="eyebrow">{{ 'validators.eyebrow' | t }}</p>
+      <h1>{{ 'validators.title' | t }}</h1>
+      <p>{{ 'validators.subtitle' | t }}</p>
+    </div>
+    <a routerLink="/legacy/compte" class="btn">{{ 'validators.account' | t }}</a>
+  </header>
+
+  <section class="validators-note">
+    <strong>{{ 'validators.noteTitle' | t }}</strong>
+    <span>{{ 'validators.noteText' | t }}</span>
+  </section>
+
+  <section class="validator-section">
+    <h2>{{ 'validators.nativeTitle' | t }}</h2>
+    <div class="validators-grid">
+      <article class="validator-card" *ngFor="let profile of nativeSpeakers">
+        <ng-container *ngTemplateOutlet="profileCard; context: { profile: profile }"></ng-container>
+      </article>
+    </div>
+  </section>
+
+  <section class="validator-section">
+    <h2>{{ 'validators.teacherTitle' | t }}</h2>
+    <div class="validators-grid">
+      <article class="validator-card" *ngFor="let profile of teachers">
+        <ng-container *ngTemplateOutlet="profileCard; context: { profile: profile }"></ng-container>
+      </article>
+    </div>
+  </section>
+
+  <ng-template #profileCard let-profile="profile">
+    <div class="avatar" [class]="profile.tone" aria-hidden="true">
+      <span>{{ profile.initials }}</span>
+    </div>
+    <div class="profile-copy">
+      <p class="role">{{ profile.roleKey | t }}</p>
+      <h3>{{ profile.name }}</h3>
+      <dl>
+        <div>
+          <dt>{{ 'validators.origin' | t }}</dt>
+          <dd>{{ profile.origin }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'validators.level' | t }}</dt>
+          <dd>{{ profile.levelKey | t }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'validators.focus' | t }}</dt>
+          <dd>{{ profile.focusKey | t }}</dd>
+        </div>
+      </dl>
+    </div>
+  </ng-template>
+</section>

@@ -1,0 +1,136 @@
+services:
+  backend:
+    build: ../backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    ports:
+      - "8100:8100"
+    environment:
+      MODELS_ROOT: /models
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-keltiawave}
+      AUDIO_STORAGE: s3
+      MINIO_ENDPOINT_URL: http://minio:9000
+      MINIO_BUCKET: ${MINIO_BUCKET:-keltiawave-media}
+      LEARNING_MINIO_BUCKET: ${LEARNING_MINIO_BUCKET:-keltiawave-media}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      S3_REGION: us-east-1
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      TOKEN_TTL_SECONDS: ${TOKEN_TTL_SECONDS:-86400}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_DISPLAY_NAME: ${BOOTSTRAP_ADMIN_DISPLAY_NAME:-}
+      BOOTSTRAP_CLASS_USERS: ${BOOTSTRAP_CLASS_USERS:-false}
+      BOOTSTRAP_CLASS_PASSWORD: ${BOOTSTRAP_CLASS_PASSWORD:-classe123}
+      LEARNING_MAX_VIDEO_BYTES: ${LEARNING_MAX_VIDEO_BYTES:-524288000}
+      MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-200}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE: ${WHISPER_COMPUTE:-int8}
+      TRANSCRIPTION_DEFAULT_RTF_VOSK_BR: ${TRANSCRIPTION_DEFAULT_RTF_VOSK_BR:-0.45}
+      TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR:-1.25}
+      TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY:-1.25}
+      CORS_ALLOW_ORIGINS: http://localhost:4200,http://localhost:4300,http://localhost:4400,http://localhost:4500,http://localhost:4600
+    volumes:
+      - ../backend/models:/models:ro
+      - backend_data:/app/data
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-keltiawave}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-keltiawave}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    expose:
+      - "9000"
+      - "9001"
+    volumes:
+      - minio_data:/data
+
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      - minio
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}; do sleep 2; done;
+      mc mb --ignore-existing local/${MINIO_BUCKET:-keltiawave-media};
+      exit 0;
+      "
+
+  portal:
+    build:
+      context: ..
+      dockerfile: apps/portal/Dockerfile
+    ports:
+      - "4100:80"
+
+  corpus:
+    build:
+      context: ..
+      dockerfile: apps/corpus/Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+  learning:
+    build:
+      context: ..
+      dockerfile: apps/learning/Dockerfile
+    ports:
+      - "4300:80"
+    depends_on:
+      - backend
+
+  record:
+    build:
+      context: ..
+      dockerfile: apps/record/Dockerfile
+    ports:
+      - "4400:80"
+    depends_on:
+      - backend
+
+  transcribe:
+    build:
+      context: ..
+      dockerfile: apps/transcribe/Dockerfile
+    ports:
+      - "4500:80"
+    depends_on:
+      - backend
+
+  subtitles:
+    build:
+      context: ..
+      dockerfile: apps/subtitles/Dockerfile
+    ports:
+      - "4600:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  minio_data:
+  backend_data:

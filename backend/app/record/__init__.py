@@ -1,0 +1,1 @@
+"""KeltiaWave Record domain."""

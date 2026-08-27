@@ -1,0 +1,497 @@
+<div class="kw-shell">
+  <header class="kw-header">
+    <div class="kw-bar">
+      <a class="brand" href="https://keltiawave.com/" aria-label="Portail KeltiaWave">
+        <span class="brand-avatar"><img src="/assets/fanch-avatar-bzh-01.webp" alt=""></span>
+        <span>
+          <span class="brand-title"><span>Keltia</span><span>Wave Komz</span></span>
+          <span class="brand-subtitle">{{ 'v2.brandSubtitle' | t }}</span>
+        </span>
+      </a>
+
+      <nav class="kw-nav" aria-label="Navigation V2">
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
+        <a *ngIf="auth.user()?.role !== 'teacher'" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/ecrire"><span class="nav-ico">✎</span>{{ 'nav.write' | t }}</a>
+        <a *ngIf="auth.user()?.role === 'admin'" class="active" routerLink="/admin"><span class="nav-ico">⚙</span>{{ 'nav.admin' | t }}</a>
+        <a routerLink="/compte"><span class="nav-ico">◉</span>{{ 'nav.account' | t }}</a>
+      </nav>
+
+      <div class="header-tools">
+        <app-v2-session-action />
+        <label class="lang-select">
+          <span>{{ 'lang.label' | t }}</span>
+          <select [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
+            <option value="fr">FR</option>
+            <option value="br">BR</option>
+            <option value="en">EN</option>
+            <option value="cy">CY</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="kw-main">
+    <section class="admin-layout">
+      <aside class="admin-sidebar">
+        <section class="side-card">
+          <h2 class="side-title">{{ 'nav.admin' | t }}</h2>
+          <a class="admin-tab" [class.active]="isSection('recordings')" routerLink="/admin">▥ {{ 'adminData.recordings' | t }}</a>
+          <a class="admin-tab" [class.active]="isSection('phrases')" routerLink="/admin" [queryParams]="{ section: 'phrases' }">▤ Phrases proposées</a>
+          <a class="admin-tab" [class.active]="isSection('accounts')" routerLink="/admin" [queryParams]="{ section: 'accounts' }">◎ {{ 'nav.adminAccounts' | t }}</a>
+          <a class="admin-tab" [class.active]="isSection('data')" routerLink="/admin" [queryParams]="{ section: 'data' }">◌ {{ 'nav.adminData' | t }}</a>
+        </section>
+
+        <section class="side-card">
+          <h2 class="side-title">{{ 'adminData.audio' | t }}</h2>
+          <div class="progress-line"><span>Backend</span><strong>{{ storage?.backend || '-' }}</strong></div>
+          <div class="progress-line"><span>{{ 'adminData.missingFiles' | t }}</span><strong>{{ quality?.missing_storage_audio_ids?.length || 0 }}</strong></div>
+          <button class="btn ghost full" type="button" (click)="runStorageCheck()" [disabled]="loading || !isAdmin">{{ 'adminData.verifyFiles' | t }}</button>
+        </section>
+      </aside>
+
+      <section class="admin-content">
+        <section class="locked-card" *ngIf="!isAdmin">
+          <span class="status review">{{ 'adminData.status' | t }}</span>
+          <h1>{{ 'nav.admin' | t }}</h1>
+          <p>Connecte-toi avec un compte administrateur pour consulter et gerer les enregistrements.</p>
+          <a class="btn primary" routerLink="/compte">{{ 'v2.login' | t }}</a>
+        </section>
+
+        <ng-container *ngIf="isAdmin">
+          <div class="admin-head" *ngIf="isSection('recordings')">
+            <div>
+              <span class="status review">{{ 'nav.admin' | t }}</span>
+              <h1>{{ 'adminData.recordings' | t }}</h1>
+              <p>{{ 'adminData.subtitle' | t }}</p>
+            </div>
+            <button class="btn primary" type="button" (click)="load()" [disabled]="loading">{{ 'corpus.refresh' | t }}</button>
+          </div>
+
+          <div class="admin-head" *ngIf="isSection('accounts')">
+            <div>
+              <span class="status review">{{ 'nav.adminAccounts' | t }}</span>
+              <h1>{{ 'nav.adminAccounts' | t }}</h1>
+              <p>Consultez les comptes, les roles et les rattachements de classe.</p>
+            </div>
+            <button class="btn primary" type="button" (click)="load()" [disabled]="loading">{{ 'corpus.refresh' | t }}</button>
+          </div>
+
+          <div class="admin-head" *ngIf="isSection('phrases')">
+            <div>
+              <span class="status review">Corpus</span>
+              <h1>Phrases proposées</h1>
+              <p>Classez, corrigez ou supprimez les phrases proposées par les professeurs et administrateurs.</p>
+            </div>
+            <a class="btn primary" routerLink="/ecrire">Ajouter une phrase</a>
+          </div>
+
+          <div class="admin-head" *ngIf="isSection('data')">
+            <div>
+              <span class="status review">{{ 'nav.adminData' | t }}</span>
+              <h1>{{ 'nav.adminData' | t }}</h1>
+              <p>Controlez les datasets, le stockage et les anomalies du corpus.</p>
+            </div>
+            <button class="btn primary" type="button" (click)="runStorageCheck()" [disabled]="loading">{{ 'adminData.verifyFiles' | t }}</button>
+          </div>
+
+          <div class="message error" *ngIf="error">{{ error }}</div>
+          <div class="message success" *ngIf="success">{{ success }}</div>
+
+          <section class="stats-grid" *ngIf="isSection('recordings')">
+            <article class="stat-card"><span>{{ 'adminData.audios' | t }}</span><strong>{{ overview?.audios || 0 }}</strong></article>
+            <article class="stat-card"><span>{{ 'adminData.pending' | t }}</span><strong>{{ overview?.pending || 0 }}</strong></article>
+            <article class="stat-card"><span>{{ 'adminData.approved' | t }}</span><strong>{{ overview?.approved || 0 }}</strong></article>
+            <article class="stat-card"><span>{{ 'adminData.rejected' | t }}</span><strong>{{ overview?.rejected || 0 }}</strong></article>
+          </section>
+
+          <section class="admin-panel" *ngIf="isSection('recordings')">
+            <div class="filters recording-search">
+              <input [(ngModel)]="query" type="search" [placeholder]="'adminData.searchPlaceholder' | t" (keyup.enter)="loadSegments()">
+            </div>
+
+            <div class="table-wrap">
+              <div class="record-row header">
+                <button class="sortable-head" type="button" (click)="sortRecordingsBy('phrase')">{{ 'home.phrase' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'phrase'">{{ recordingSortIndicator('phrase') }}</span></button>
+                <button class="sortable-head" type="button" (click)="sortRecordingsBy('dataset')">{{ 'adminData.dataset' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'dataset'">{{ recordingSortIndicator('dataset') }}</span></button>
+                <button class="sortable-head" type="button" (click)="sortRecordingsBy('status')">{{ 'adminData.status' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'status'">{{ recordingSortIndicator('status') }}</span></button>
+                <span>{{ 'adminData.audio' | t }}</span>
+                <span>{{ 'adminData.actions' | t }}</span>
+              </div>
+              <article class="record-row" *ngFor="let segment of displayedSegments" [class.selected]="selectedSegment?.id === segment.id">
+                <span class="identity">
+                  <strong>{{ segment.texte }}</strong>
+                  <small>{{ segment.domain || ('adminData.noDomain' | t) }} · #{{ segment.id }}</small>
+                </span>
+                <span class="dataset-cell">{{ segment.dataset }}</span>
+                <span class="status" [class]="statusClass(segment.status)">{{ statusLabel(segment.status) }}</span>
+                <span class="admin-audio-preview">
+                  <button class="play-btn" type="button" [class.playing]="isSegmentPlaying(segment)" (click)="toggleSegmentAudio(segment)" [attr.aria-label]="isSegmentPlaying(segment) ? 'Pause' : 'Lire'">
+                    {{ isSegmentPlaying(segment) ? 'Ⅱ' : '▶' }}
+                  </button>
+                  <span class="waveform" [class.active]="isSegmentPlaying(segment)" aria-hidden="true">
+                    <i *ngFor="let height of waveformBars; let i = index" [style.height.px]="height" [class.primary]="i < 8"></i>
+                  </span>
+                </span>
+                <span class="row-actions">
+                  <button class="link-btn" type="button" (click)="edit(segment)">{{ 'adminData.edit' | t }}</button>
+                  <a class="link-btn" [href]="segment.audio_url" download>{{ 'adminData.download' | t }}</a>
+                  <button
+                    class="trash-btn"
+                    type="button"
+                    (click)="requestDelete(segment)"
+                    [disabled]="deletingSegmentId !== null"
+                    [attr.aria-label]="('adminData.delete' | t) + ' #' + segment.id"
+                    [attr.title]="'adminData.delete' | t"
+                  >
+                    <span *ngIf="deletingSegmentId === segment.id; else trashIcon">…</span>
+                    <ng-template #trashIcon>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
+                      </svg>
+                    </ng-template>
+                  </button>
+                </span>
+              </article>
+              <div class="empty-state" *ngIf="!loading && !segments.length">{{ 'v2.noRecordings' | t }}</div>
+              <div class="empty-state" *ngIf="loading">{{ 'corpus.loading' | t }}</div>
+            </div>
+          </section>
+
+          <section class="stats-grid" *ngIf="isSection('accounts')">
+            <article class="stat-card"><span>{{ 'nav.adminAccounts' | t }}</span><strong>{{ users.length }}</strong></article>
+            <article class="stat-card"><span>Admins</span><strong>{{ adminUsersCount }}</strong></article>
+            <article class="stat-card"><span>Enseignants</span><strong>{{ teacherUsersCount }}</strong></article>
+            <article class="stat-card"><span>Actifs</span><strong>{{ activeUsersCount }}</strong></article>
+          </section>
+
+          <section class="admin-panel" *ngIf="isSection('phrases')">
+            <div class="filters phrase-filters">
+              <input [(ngModel)]="phraseQuery" type="search" placeholder="Rechercher une phrase, un auteur ou une source…">
+            </div>
+            <div class="table-wrap">
+              <div class="phrase-row header">
+                <button class="sortable-head" type="button" (click)="sortPhrasesBy('phrase')">
+                  Phrase <span class="sort-arrows" [class.active]="phraseSort === 'phrase'">{{ phraseSort === 'phrase' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
+                </button>
+                <button class="sortable-head" type="button" (click)="sortPhrasesBy('author')">
+                  Auteur <span class="sort-arrows" [class.active]="phraseSort === 'author'">{{ phraseSort === 'author' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
+                </button>
+                <button class="sortable-head" type="button" (click)="sortPhrasesBy('theme')">
+                  Thème <span class="sort-arrows" [class.active]="phraseSort === 'theme'">{{ phraseSort === 'theme' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
+                </button>
+                <button class="sortable-head" type="button" (click)="sortPhrasesBy('level')">
+                  Niveau <span class="sort-arrows" [class.active]="phraseSort === 'level'">{{ phraseSort === 'level' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
+                </button>
+                <button class="sortable-head" type="button" (click)="sortPhrasesBy('source')">
+                  Source <span class="sort-arrows" [class.active]="phraseSort === 'source'">{{ phraseSort === 'source' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
+                </button>
+                <span>Actions</span>
+              </div>
+              <article class="phrase-row" *ngFor="let phrase of filteredPhrases">
+                <span class="identity"><strong>{{ phrase.texte }}</strong><small>#{{ phrase.id }} · {{ phrase.traduction_fr || 'Sans traduction' }}</small></span>
+                <span>{{ phrase.auteur || 'Auteur non renseigné' }}</span>
+                <span class="status review">{{ phrase.theme || 'À classer' }}</span>
+                <span>{{ phrase.niveau || '—' }}</span>
+                <span>{{ phrase.source || '—' }}</span>
+                <span class="row-actions">
+                  <button class="link-btn" type="button" (click)="editPhrase(phrase)">Modifier</button>
+                  <button class="trash-btn" type="button" (click)="phraseDeletionCandidate = phrase" aria-label="Supprimer la phrase">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" /></svg>
+                  </button>
+                </span>
+              </article>
+              <div class="empty-state" *ngIf="!filteredPhrases.length">Aucune phrase ne correspond aux filtres.</div>
+            </div>
+          </section>
+
+          <section class="admin-panel" *ngIf="isSection('accounts')">
+            <div class="table-wrap">
+              <div class="user-row header">
+                <span>Compte</span>
+                <span>Role</span>
+                <span>Niveau</span>
+                <span>Classe / organisation</span>
+                <span>Statut</span>
+                <span>Actions</span>
+              </div>
+              <article class="user-row" *ngFor="let user of users" [class.selected]="selectedUser?.id === user.id">
+                <span class="identity">
+                  <strong>{{ user.display_name || user.email }}</strong>
+                  <small>{{ user.email }}</small>
+                </span>
+                <span>{{ user.role }}</span>
+                <span>{{ user.breton_level || '-' }}</span>
+                <span>{{ user.organization || user.school || '-' }}<small *ngIf="user.school_level"> · {{ user.school_level }}</small></span>
+                <span class="status" [class.ok]="user.active" [class.review]="!user.active">{{ user.active ? 'Actif' : 'Inactif' }}</span>
+                <span class="row-actions">
+                  <button class="link-btn" type="button" (click)="editUser(user)">Modifier</button>
+                  <button
+                    class="link-btn danger-link"
+                    type="button"
+                    (click)="editUser(user); toggleSelectedUserActive(false)"
+                    [disabled]="isCurrentUser(user) || !user.active"
+                  >Verrouiller</button>
+                </span>
+              </article>
+              <div class="empty-state" *ngIf="!loading && !users.length">Aucun compte a afficher.</div>
+              <div class="empty-state" *ngIf="loading">{{ 'corpus.loading' | t }}</div>
+            </div>
+          </section>
+
+          <section class="stats-grid" *ngIf="isSection('data')">
+            <article class="stat-card"><span>Datasets</span><strong>{{ overview?.datasets || 0 }}</strong></article>
+            <article class="stat-card"><span>Phrases</span><strong>{{ overview?.phrases || 0 }}</strong></article>
+            <article class="stat-card"><span>Sans audio</span><strong>{{ overview?.phrases_without_audio || 0 }}</strong></article>
+            <article class="stat-card"><span>Audios orphelins</span><strong>{{ overview?.audios_without_text || 0 }}</strong></article>
+          </section>
+
+          <section class="data-grid" *ngIf="isSection('data')">
+            <article class="admin-panel">
+              <div class="record-row header dataset-row">
+                <span>Dataset</span>
+                <span>Phrases</span>
+                <span>Audios</span>
+                <span>Imports</span>
+                <span>Utilisateurs</span>
+                <span>{{ 'adminData.approved' | t }}</span>
+                <span>Actions</span>
+              </div>
+              <div class="record-row dataset-row" *ngFor="let dataset of datasets">
+                <span class="identity"><strong>{{ dataset.name }}</strong><small>{{ dataset.created_at | date:'d MMM yyyy' }}</small></span>
+                <span>{{ dataset.phrases }}</span>
+                <span>{{ dataset.audios }}</span>
+                <span>{{ dataset.dataset_audios }}</span>
+                <span>{{ dataset.user_audios }}</span>
+                <span>{{ dataset.approved }}</span>
+                <span class="row-actions">
+                  <button class="link-btn" type="button" (click)="exportDataset(dataset)">Exporter</button>
+                  <button class="link-btn" type="button" (click)="previewCleanDataset(dataset)">Analyser</button>
+                  <button class="link-btn danger-link" type="button" (click)="clearImportedDataset(dataset)" [disabled]="!dataset.dataset_audios">Vider imports</button>
+                </span>
+              </div>
+              <div class="empty-state" *ngIf="!datasets.length">{{ 'v2.noRecordings' | t }}</div>
+            </article>
+
+            <article class="side-card quality-card">
+              <h2 class="side-title">Qualite des donnees</h2>
+              <div class="progress-line"><span>Stockage</span><strong>{{ storage?.backend || '-' }}</strong></div>
+              <div class="progress-line"><span>{{ 'adminData.missingFiles' | t }}</span><strong>{{ quality?.missing_storage_audio_ids?.length || 0 }}</strong></div>
+              <div class="progress-line"><span>Phrases sans audio</span><strong>{{ quality?.phrases_without_audio?.length || 0 }}</strong></div>
+              <div class="progress-line"><span>Audios sans texte</span><strong>{{ quality?.audios_without_text?.length || 0 }}</strong></div>
+              <div class="progress-line"><span>Textes dupliques</span><strong>{{ quality?.duplicate_texts?.length || 0 }}</strong></div>
+              <button class="btn ghost full" type="button" (click)="runStorageCheck()" [disabled]="loading">{{ 'adminData.verifyFiles' | t }}</button>
+            </article>
+          </section>
+        </ng-container>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" *ngIf="selectedSegment" (click)="selectedSegment = null">
+    <aside class="edit-panel" (click)="$event.stopPropagation()">
+      <div class="edit-head">
+        <div>
+          <span class="status review">Audio #{{ selectedSegment.id }}</span>
+          <h2>{{ 'adminData.editRecording' | t }}</h2>
+        </div>
+        <button class="icon-btn" type="button" (click)="selectedSegment = null" aria-label="Fermer">x</button>
+      </div>
+
+      <div class="edit-form">
+        <label class="full">
+          <span>{{ 'adminData.text' | t }}</span>
+          <textarea [(ngModel)]="selectedSegment.texte"></textarea>
+        </label>
+        <label class="full">
+          <span>Traduction française</span>
+          <textarea [(ngModel)]="selectedSegment.traduction_fr" placeholder="Optionnel"></textarea>
+        </label>
+        <label>
+          <span>{{ 'adminData.source' | t }}</span>
+          <input [(ngModel)]="selectedSegment.source">
+        </label>
+        <label>
+          <span>{{ 'adminData.domain' | t }}</span>
+          <input [(ngModel)]="selectedSegment.domain">
+        </label>
+        <label>
+          <span>{{ 'adminData.status' | t }}</span>
+          <select [(ngModel)]="selectedSegment.status">
+            <option value="pending">{{ 'adminData.pending' | t }}</option>
+            <option value="approved">{{ 'corpus.valid' | t }}</option>
+            <option value="rejected">{{ 'adminData.rejected' | t }}</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="edit-actions">
+        <button class="btn danger" type="button" (click)="deleteSelected()" [disabled]="saving || deletingSegmentId !== null">{{ 'adminData.delete' | t }}</button>
+        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="selectedUser" (click)="closeUserEditor()">
+    <aside class="edit-panel" (click)="$event.stopPropagation()">
+      <div class="edit-head">
+        <div>
+          <span class="status" [class.ok]="selectedUser.active" [class.review]="!selectedUser.active">
+            {{ selectedUser.active ? 'Actif' : 'Verrouille' }}
+          </span>
+          <span class="status todo" *ngIf="selectedUserDirty">Modifications non enregistrees</span>
+          <h2>{{ selectedUser.display_name || selectedUser.email }}</h2>
+        </div>
+        <button class="icon-btn" type="button" (click)="closeUserEditor()" aria-label="Fermer">x</button>
+      </div>
+
+      <div class="edit-form">
+        <label>
+          <span>Nom affiche</span>
+          <input [(ngModel)]="selectedUser.display_name">
+        </label>
+        <label>
+          <span>Email</span>
+          <input [value]="selectedUser.email" readonly>
+        </label>
+        <label>
+          <span>Role</span>
+          <select [(ngModel)]="selectedUser.role">
+            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Niveau breton</span>
+          <select [(ngModel)]="selectedUser.breton_level">
+            <option *ngFor="let level of bretonLevels" [value]="level">{{ level }}</option>
+          </select>
+        </label>
+        <label>
+          <span>Organisation</span>
+          <input [(ngModel)]="selectedUser.organization" placeholder="Ex. skol-an-emsav">
+        </label>
+        <label>
+          <span>Ecole</span>
+          <input [(ngModel)]="selectedUser.school" placeholder="Ex. Ti ar Vretonned">
+        </label>
+        <label>
+          <span>Classe / niveau</span>
+          <input [(ngModel)]="selectedUser.school_level" placeholder="Ex. niveau-3, 6A">
+        </label>
+        <label class="check-row">
+          <input type="checkbox" [(ngModel)]="selectedUser.must_change_password">
+          <span>Forcer le changement de mot de passe</span>
+        </label>
+        <label class="full">
+          <span>Commentaires internes</span>
+          <textarea [(ngModel)]="selectedUser.comments" placeholder="Notes visibles par l'administration"></textarea>
+        </label>
+      </div>
+
+      <div class="edit-actions">
+        <button
+          class="btn danger"
+          type="button"
+          (click)="toggleSelectedUserActive(false)"
+          [disabled]="userSaving || isCurrentUser(selectedUser) || !selectedUser.active"
+        >Verrouiller</button>
+        <button
+          class="btn ghost"
+          type="button"
+          (click)="toggleSelectedUserActive(true)"
+          [disabled]="userSaving || selectedUser.active"
+        >Deverrouiller</button>
+        <button class="btn primary" type="button" (click)="saveSelectedUser()" [disabled]="userSaving || !selectedUserDirty">
+          {{ userSaving ? ('validation.saving' | t) : 'Enregistrer le profil' }}
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="selectedPhrase as phrase" (click)="selectedPhrase = null">
+    <aside class="edit-panel" (click)="$event.stopPropagation()">
+      <div class="edit-head">
+        <div><span class="status review">Phrase #{{ phrase.id }}</span><h2>Modifier et classer la phrase</h2></div>
+        <button class="icon-btn" type="button" (click)="selectedPhrase = null" aria-label="Fermer">x</button>
+      </div>
+      <div class="edit-form">
+        <label class="full"><span>Phrase bretonne *</span><textarea [(ngModel)]="phrase.texte"></textarea></label>
+        <label class="full"><span>Traduction française</span><textarea [(ngModel)]="phrase.traduction_fr"></textarea></label>
+        <label><span>Auteur</span><input [(ngModel)]="phrase.auteur"></label>
+        <label><span>Thème *</span><select [(ngModel)]="phrase.theme"><option *ngFor="let theme of phraseThemes" [value]="theme">{{ theme }}</option></select></label>
+        <label><span>Niveau *</span><select [(ngModel)]="phrase.niveau"><option *ngFor="let level of phraseLevels" [value]="level">{{ level }}</option></select></label>
+        <label>
+          <span>Source</span>
+          <select [ngModel]="selectedPhraseSourceChoice" (ngModelChange)="changeSelectedPhraseSource($event)">
+            <option value="">Sans source</option>
+            <option *ngFor="let source of phraseSources" [value]="source.value">{{ source.label }}</option>
+          </select>
+        </label>
+        <label *ngIf="selectedPhraseSourceChoice === 'autre'">
+          <span>Autre source</span>
+          <input [(ngModel)]="phrase.source" placeholder="Précisez la source">
+        </label>
+      </div>
+      <div class="edit-actions">
+        <button class="btn danger" type="button" (click)="phraseDeletionCandidate = phrase">Supprimer</button>
+        <button class="btn primary" type="button" (click)="saveSelectedPhrase()" [disabled]="saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau">Enregistrer</button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="confirm-backdrop" *ngIf="phraseDeletionCandidate as phrase" (click)="phraseDeletionCandidate = null">
+    <section class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">!</div>
+      <div class="confirm-copy">
+        <h2>Supprimer cette phrase ?</h2>
+        <p>Cette action est définitive. Une phrase possédant déjà des enregistrements sera protégée.</p>
+        <div class="confirm-target"><strong>{{ phrase.texte }}</strong><span>#{{ phrase.id }} · {{ phrase.auteur || 'Auteur non renseigné' }}</span></div>
+      </div>
+      <div class="confirm-actions">
+        <button class="btn ghost" type="button" (click)="phraseDeletionCandidate = null" [disabled]="saving">Annuler</button>
+        <button class="btn danger" type="button" (click)="confirmPhraseDelete()" [disabled]="saving">Supprimer définitivement</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="confirm-backdrop" *ngIf="deletionCandidate as segment" (click)="cancelDelete()">
+    <section
+      class="confirm-dialog"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-dialog-title"
+      aria-describedby="delete-dialog-description"
+      (click)="$event.stopPropagation()"
+    >
+      <span class="confirm-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" />
+        </svg>
+      </span>
+      <div class="confirm-copy">
+        <h2 id="delete-dialog-title">Supprimer cet audio ?</h2>
+        <p id="delete-dialog-description">Cette action supprimera définitivement l’audio du corpus.</p>
+        <div class="confirm-target">
+          <strong>{{ segment.texte }}</strong>
+          <span>#{{ segment.id }} · {{ segment.dataset }}</span>
+        </div>
+      </div>
+      <div class="confirm-actions">
+        <button class="btn ghost" type="button" (click)="cancelDelete()" [disabled]="deletingSegmentId !== null">Annuler</button>
+        <button class="btn danger" type="button" (click)="confirmDelete()" [disabled]="deletingSegmentId !== null">
+          {{ deletingSegmentId === segment.id ? 'Suppression…' : 'Supprimer définitivement' }}
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="kw-footer">
+    <span>KeltiaWave</span>
+    <span>{{ 'v2.footerMade' | t }} <span class="heart">♥</span> {{ 'v2.footerBy' | t }}</span>
+    <span>contact@keltiawave.com</span>
+  </footer>
+  <audio #adminPlayer class="admin-player" preload="none" (ended)="onSegmentPlaybackStopped()" (pause)="onSegmentPlaybackStopped()" (error)="onSegmentPlaybackStopped()"></audio>
+</div>

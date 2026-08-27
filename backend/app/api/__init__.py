@@ -1,0 +1,1 @@
+"""KeltiaWave API package."""

@@ -1,0 +1,171 @@
+name: keltiawave-${DEPLOY_SLOT:-candidate}
+
+services:
+  backend:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-backend
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      MODELS_ROOT: /models
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-keltiawave}
+      AUDIO_STORAGE: s3
+      MINIO_ENDPOINT_URL: http://minio:9000
+      MINIO_BUCKET: ${MINIO_BUCKET:-keltiawave-media}
+      LEARNING_MINIO_BUCKET: ${LEARNING_MINIO_BUCKET:-keltiawave-media}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      S3_REGION: us-east-1
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      TOKEN_TTL_SECONDS: ${TOKEN_TTL_SECONDS:-86400}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_DISPLAY_NAME: ${BOOTSTRAP_ADMIN_DISPLAY_NAME:-}
+      BOOTSTRAP_CLASS_USERS: ${BOOTSTRAP_CLASS_USERS:-false}
+      BOOTSTRAP_CLASS_PASSWORD: ${BOOTSTRAP_CLASS_PASSWORD:-classe123}
+      LEARNING_MAX_VIDEO_BYTES: ${LEARNING_MAX_VIDEO_BYTES:-524288000}
+      MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-200}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE: ${WHISPER_COMPUTE:-int8}
+      TRANSCRIPTION_DEFAULT_RTF_VOSK_BR: ${TRANSCRIPTION_DEFAULT_RTF_VOSK_BR:-0.45}
+      TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR:-1.25}
+      TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY:-1.25}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://127.0.0.1:14100,http://127.0.0.1:14200,http://127.0.0.1:14300,http://127.0.0.1:14400,http://127.0.0.1:14500,http://127.0.0.1:14600}
+    volumes:
+      - ${MODELS_DIR:?Set MODELS_DIR to an existing directory on the server}:/models:ro
+      - backend_data:/app/data
+    ports:
+      - 127.0.0.1:${BACKEND_CANDIDATE_PORT:-18100}:8100
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8100/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-keltiawave}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-keltiawave}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+
+  minio-init:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      - minio
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}; do sleep 2; done;
+      mc mb --ignore-existing local/${MINIO_BUCKET:-keltiawave-media};
+      exit 0;
+      "
+
+  portal:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-portal
+    build:
+      context: ../..
+      dockerfile: apps/portal/Dockerfile
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${PORTAL_CANDIDATE_PORT:-14100}:80
+    healthcheck: &frontend-health
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  corpus:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-corpus
+    build:
+      context: ../..
+      dockerfile: apps/corpus/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${CORPUS_CANDIDATE_PORT:-14200}:80
+    healthcheck: *frontend-health
+
+  learning:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-learning
+    build:
+      context: ../..
+      dockerfile: apps/learning/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${LEARNING_CANDIDATE_PORT:-14300}:80
+    healthcheck: *frontend-health
+
+  record:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-record
+    build:
+      context: ../..
+      dockerfile: apps/record/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${RECORD_CANDIDATE_PORT:-14400}:80
+    healthcheck: *frontend-health
+
+  transcribe:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-transcribe
+    build:
+      context: ../..
+      dockerfile: apps/transcribe/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${TRANSCRIBE_CANDIDATE_PORT:-14500}:80
+    healthcheck: *frontend-health
+
+  subtitles:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-subtitles
+    build:
+      context: ../..
+      dockerfile: apps/subtitles/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${SUBTITLES_CANDIDATE_PORT:-14600}:80
+    healthcheck: *frontend-health
+
+volumes:
+  postgres_data:
+  minio_data:
+  backend_data:

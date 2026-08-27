@@ -1,0 +1,220 @@
+<section class="login-page">
+  <div class="account-shell">
+    <aside class="account-intro">
+      <p class="eyebrow">{{ 'login.eyebrow' | t }}</p>
+      <p>{{ 'login.subtitle' | t }}</p>
+      <div class="account-state compact" [class.verified]="!!auth.user()">
+        <div>
+          <strong>{{ accountStateKey | t }}</strong>
+          <small>{{ 'account.currentImpact' | t }} {{ weight }}</small>
+        </div>
+        <span>{{ accountHelpKey | t }}</span>
+      </div>
+      <div class="account-links">
+        <a routerLink="/legacy/validateurs" class="validators-link">{{ 'account.validatorsLink' | t }}</a>
+        <button class="link-button" type="button" (click)="useAsVisitor()">{{ 'account.continueVisitor' | t }}</button>
+      </div>
+    </aside>
+
+    <section class="login-panel" *ngIf="!auth.token(); else connectedAccount">
+      <div class="mode-tabs" role="tablist">
+        <button type="button" [class.active]="mode === 'login'" (click)="mode = 'login'">
+          {{ 'account.loginTab' | t }}
+        </button>
+        <button type="button" [class.active]="mode === 'register'" (click)="mode = 'register'">
+          {{ 'account.registerTab' | t }}
+        </button>
+      </div>
+
+      <section class="demo-panel" *ngIf="mode === 'login'">
+        <div class="demo-head">
+          <strong>Profils de test</strong>
+          <span>Connexion directe, sans saisir le mot de passe.</span>
+        </div>
+        <div class="demo-grid">
+          <button class="demo-profile"
+                  type="button"
+                  *ngFor="let demo of demoProfiles"
+                  (click)="loginDemo(demo)"
+                  [disabled]="busy">
+            <span>{{ demo.group }}</span>
+            <strong>{{ demo.name }}</strong>
+            <small>{{ demo.detail }}</small>
+          </button>
+        </div>
+      </section>
+
+      <form class="auth-form">
+        <label *ngIf="mode === 'register'">
+          {{ 'profile.displayName' | t }}
+          <input type="text"
+                 [ngModel]="profile.displayName"
+                 (ngModelChange)="update('displayName', $event)"
+                 name="displayName"
+                 autocomplete="name">
+        </label>
+
+        <label *ngIf="mode === 'register'">
+          {{ 'profile.languageLevel' | t }}
+          <select [ngModel]="profile.bretonLevel"
+                  (ngModelChange)="update('bretonLevel', $event)"
+                  name="bretonLevel">
+            <option *ngFor="let level of levels" [value]="level.value">{{ level.labelKey | t }}</option>
+          </select>
+        </label>
+
+        <label *ngIf="mode === 'register'">
+          {{ 'profile.organization' | t }}
+          <input type="text"
+                 [ngModel]="profile.organization"
+                 (ngModelChange)="update('organization', $event)"
+                 name="organization"
+                 [placeholder]="'profile.organizationPlaceholder' | t">
+        </label>
+
+        <label *ngIf="mode === 'register'" class="full">
+          {{ 'profile.comments' | t }}
+          <textarea [ngModel]="profile.comments"
+                    (ngModelChange)="update('comments', $event)"
+                    name="comments"
+                    [placeholder]="'profile.commentsPlaceholder' | t"></textarea>
+        </label>
+
+        <label>
+          {{ 'profile.email' | t }}
+          <input type="email"
+                 [ngModel]="profile.email"
+                 (ngModelChange)="update('email', $event)"
+                 name="email"
+                 autocomplete="email"
+                 placeholder="nom@example.org">
+        </label>
+
+        <label>
+          {{ 'account.password' | t }}
+          <input type="password"
+                 [(ngModel)]="password"
+                 name="password"
+                 minlength="8"
+                 autocomplete="current-password">
+        </label>
+      </form>
+
+      <div class="login-actions">
+        <span *ngIf="successKey">{{ successKey | t }}</span>
+        <span class="error" *ngIf="error">{{ error }}</span>
+        <button class="btn btn-primary" type="button" (click)="save()" [disabled]="busy || !profile.email || !password || (mode === 'register' && password.length < 8)">
+          {{ busy ? ('account.sending' | t) : (mode === 'login' ? ('account.loginAction' | t) : ('account.createAction' | t)) }}
+        </button>
+      </div>
+      <p class="mode-help" *ngIf="mode === 'login'">{{ 'account.loginHelp' | t }}</p>
+    </section>
+  </div>
+
+  <ng-template #connectedAccount>
+    <section class="login-panel account-panel">
+      <section class="password-panel" [class.required]="auth.user()?.must_change_password">
+        <div>
+          <h2>{{ (auth.user()?.must_change_password ? 'account.passwordRequiredTitle' : 'account.passwordTitle') | t }}</h2>
+          <p>{{ (auth.user()?.must_change_password ? 'account.passwordRequiredHelp' : 'account.passwordHelp') | t }}</p>
+        </div>
+        <div class="password-form">
+          <label>
+            {{ 'account.currentPassword' | t }}
+            <input type="password"
+                   [(ngModel)]="currentPassword"
+                   name="currentPassword"
+                   autocomplete="current-password">
+          </label>
+          <label>
+            {{ 'account.newPassword' | t }}
+            <input type="password"
+                   [(ngModel)]="newPassword"
+                   name="newPassword"
+                   autocomplete="new-password">
+          </label>
+          <label>
+            {{ 'account.confirmPassword' | t }}
+            <input type="password"
+                   [(ngModel)]="confirmPassword"
+                   name="confirmPassword"
+                   autocomplete="new-password">
+          </label>
+        </div>
+        <div class="login-actions password-actions">
+          <span class="error" *ngIf="passwordError">{{ passwordError }}</span>
+          <button class="btn btn-primary"
+                  type="button"
+                  (click)="changePassword()"
+                  [disabled]="changingPassword || !currentPassword || !newPassword || !confirmPassword">
+            {{ changingPassword ? ('account.sending' | t) : ('account.changePassword' | t) }}
+          </button>
+        </div>
+      </section>
+
+      <form class="profile-form">
+        <label>
+          {{ 'profile.displayName' | t }}
+          <input type="text"
+                 [ngModel]="profile.displayName"
+                 (ngModelChange)="update('displayName', $event)"
+                 name="displayName"
+                 autocomplete="name">
+        </label>
+
+      <label>
+        {{ 'profile.email' | t }}
+        <input type="email"
+               [ngModel]="profile.email"
+               (ngModelChange)="update('email', $event)"
+               name="email"
+               autocomplete="email"
+               disabled
+               placeholder="nom@example.org">
+      </label>
+
+      <label>
+        {{ 'profile.role' | t }}
+        <select [ngModel]="profile.role" (ngModelChange)="update('role', $event)" name="role" disabled>
+          <option *ngFor="let role of roles" [value]="role.value">{{ roleLabelFor(role.value) }}</option>
+        </select>
+      </label>
+
+      <label>
+        {{ 'profile.languageLevel' | t }}
+        <select [ngModel]="profile.bretonLevel"
+                (ngModelChange)="update('bretonLevel', $event)"
+                name="bretonLevel">
+          <option *ngFor="let level of levels" [value]="level.value">{{ level.labelKey | t }}</option>
+        </select>
+      </label>
+
+      <label>
+        {{ 'profile.organization' | t }}
+        <input type="text"
+               [ngModel]="profile.organization"
+               (ngModelChange)="update('organization', $event)"
+               name="organization"
+               [placeholder]="'profile.organizationPlaceholder' | t">
+      </label>
+
+      <label class="full">
+        {{ 'profile.comments' | t }}
+        <textarea [ngModel]="profile.comments"
+                  (ngModelChange)="update('comments', $event)"
+                  name="comments"
+                  [placeholder]="'profile.commentsPlaceholder' | t"></textarea>
+      </label>
+      </form>
+
+      <div class="login-actions">
+        <span *ngIf="successKey">{{ successKey | t }}</span>
+        <span class="error" *ngIf="error">{{ error }}</span>
+        <button class="btn btn-primary" type="button" (click)="saveProfile()" [disabled]="savingProfile">
+          {{ savingProfile ? ('account.sending' | t) : ('account.saveProfile' | t) }}
+        </button>
+        <button class="btn" type="button" (click)="logout()">{{ 'account.logout' | t }}</button>
+      </div>
+    </section>
+  </ng-template>
+</section>

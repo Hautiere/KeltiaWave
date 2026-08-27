@@ -1,0 +1,237 @@
+<section class="admin-page" [class.data-section]="section === 'data'">
+  <header *ngIf="section === 'users' || !isAdmin" class="admin-hero">
+    <div>
+      <p class="eyebrow">{{ (section === 'data' ? 'adminData.eyebrow' : 'admin.eyebrow') | t }}</p>
+      <h1>{{ (section === 'data' ? 'adminData.title' : 'admin.title') | t }}</h1>
+      <p>{{ (section === 'data' ? 'adminData.subtitle' : 'admin.subtitle') | t }}</p>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="refreshCurrentSection()" [disabled]="loading || dataLoading || !isAdmin">
+      {{ (loading || dataLoading) ? ('admin.loading' | t) : ('admin.refresh' | t) }}
+    </button>
+  </header>
+
+  <div *ngIf="!isAdmin" class="panel locked">
+    <h2>{{ 'admin.lockedTitle' | t }}</h2>
+    <p>{{ 'admin.lockedText' | t }}</p>
+  </div>
+
+  <ng-container *ngIf="isAdmin">
+    <p *ngIf="message" class="notice ok">{{ message }}</p>
+    <p *ngIf="error" class="notice error">{{ error }}</p>
+
+    <ng-container *ngIf="section === 'users'">
+    <section class="stats">
+      <article class="stat">
+        <span>{{ 'admin.total' | t }}</span>
+        <strong>{{ users.length }}</strong>
+      </article>
+      <article class="stat">
+        <span>{{ 'admin.learners' | t }}</span>
+        <strong>{{ learnerCount }}</strong>
+      </article>
+      <article class="stat">
+        <span>{{ 'admin.admins' | t }}</span>
+        <strong>{{ adminCount }}</strong>
+      </article>
+      <article class="stat">
+        <span>{{ 'admin.teachers' | t }}</span>
+        <strong>{{ teacherCount }}</strong>
+      </article>
+    </section>
+
+    <section class="panel accounts-admin-panel">
+      <div class="users-panel">
+        <div class="filters">
+          <input [(ngModel)]="query" type="search" [placeholder]="'admin.search' | t">
+
+          <select [(ngModel)]="roleFilter">
+            <option value="all">{{ 'admin.allRoles' | t }}</option>
+            <option *ngFor="let role of roles" [ngValue]="role.value">{{ roleLabelFor(role.value) }}</option>
+          </select>
+
+        </div>
+
+        <div class="table-title">
+          <h2>{{ 'admin.accounts' | t }}</h2>
+          <span>{{ filteredUsers.length }} / {{ users.length }}</span>
+        </div>
+
+        <div class="users-table">
+          <div class="user-row header">
+            <span>{{ 'admin.name' | t }}</span>
+            <span>{{ 'admin.email' | t }}</span>
+            <span>{{ 'profile.role' | t }}</span>
+            <span>{{ 'profile.languageLevel' | t }}</span>
+            <span>{{ 'admin.actions' | t }}</span>
+          </div>
+
+          <article class="user-row"
+                   *ngFor="let user of filteredUsers"
+                   [class.selected]="selected?.id === user.id"
+                   [class.inactive]="!user.active"
+                   (click)="edit(user)">
+            <span class="identity">
+              <strong>{{ user.display_name }}</strong>
+              <small>{{ user.organization || ('admin.noAffiliation' | t) }}</small>
+            </span>
+            <span class="email">{{ user.email }}</span>
+            <span class="badge role">{{ roleLabelFor(user.role) }}</span>
+            <span class="level-cell">{{ levelLabelFor(user.breton_level) }}</span>
+            <span class="row-actions" (click)="$event.stopPropagation()">
+              <button type="button" class="link-btn" (click)="edit(user)">{{ 'admin.edit' | t }}</button>
+              <button type="button"
+                      class="link-btn danger"
+                      (click)="delete(user)"
+                      [disabled]="savingId === user.id || user.id === currentUser?.id">
+                {{ 'admin.delete' | t }}
+              </button>
+            </span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+      <div class="modal-backdrop" *ngIf="selected" (click)="cancelEdit()">
+        <aside class="panel edit-panel account-edit-panel" (click)="$event.stopPropagation()">
+          <div class="edit-header">
+            <div>
+              <p class="eyebrow">{{ 'admin.editAccount' | t }}</p>
+              <h2>{{ selected.display_name }}</h2>
+              <span>{{ selected.email }}</span>
+            </div>
+            <button type="button" class="icon-btn" (click)="cancelEdit()" aria-label="Fermer">x</button>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              {{ 'admin.name' | t }}
+              <input [(ngModel)]="selected.display_name">
+            </label>
+
+            <label>
+              {{ 'admin.email' | t }}
+              <input [ngModel]="selected.email" disabled>
+            </label>
+
+            <label>
+              {{ 'profile.role' | t }}
+              <select [(ngModel)]="selected.role" [disabled]="selected.id === currentUser?.id">
+                <option *ngFor="let role of roles" [ngValue]="role.value">{{ roleLabelFor(role.value) }}</option>
+              </select>
+            </label>
+
+            <label>
+              {{ 'profile.languageLevel' | t }}
+              <select [(ngModel)]="selected.breton_level">
+                <option *ngFor="let level of levels" [ngValue]="level.value">{{ level.labelKey | t }}</option>
+              </select>
+            </label>
+
+            <label>
+              {{ 'profile.organization' | t }}
+              <input [(ngModel)]="selected.organization">
+            </label>
+
+            <label class="full">
+              {{ 'profile.comments' | t }}
+              <textarea [(ngModel)]="selected.comments" [placeholder]="'profile.commentsPlaceholder' | t"></textarea>
+            </label>
+
+          </div>
+
+          <div class="panel-actions">
+            <button type="button" class="btn" (click)="cancelEdit()">{{ 'admin.cancel' | t }}</button>
+            <button type="button" class="btn btn-primary" (click)="saveSelected()" [disabled]="savingId === selected.id">
+              {{ savingId === selected.id ? ('admin.saving' | t) : ('admin.save' | t) }}
+            </button>
+          </div>
+        </aside>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="section === 'data'">
+      <p *ngIf="dataError" class="notice error">{{ dataError }}</p>
+
+      <section class="panel audio-admin-panel">
+        <div class="audio-admin-head">
+          <div>
+            <p class="eyebrow">{{ 'adminData.eyebrow' | t }}</p>
+            <h2>{{ 'adminData.recordings' | t }}</h2>
+          </div>
+          <div class="audio-summary">
+            <span><strong>{{ overview?.audios || 0 }}</strong> {{ 'adminData.audios' | t }}</span>
+            <span><strong>{{ overview?.approved || 0 }}</strong> {{ 'adminData.approved' | t }}</span>
+            <span><strong>{{ quality?.missing_storage_audio_ids?.length || 0 }}</strong> {{ 'adminData.missingFiles' | t }}</span>
+          </div>
+          <div class="audio-admin-actions">
+            <button type="button" class="btn" (click)="loadData()" [disabled]="dataLoading">
+              {{ dataLoading ? ('admin.loading' | t) : ('admin.refresh' | t) }}
+            </button>
+          </div>
+        </div>
+
+        <div class="users-panel">
+          <div class="filters segment-filters">
+            <input [(ngModel)]="segmentQuery" type="search" [placeholder]="'adminData.searchPlaceholder' | t" (keyup.enter)="loadSegments()">
+            <select [(ngModel)]="datasetFilter" (change)="loadSegments()">
+              <option value="">{{ 'adminData.allDatasets' | t }}</option>
+              <option *ngFor="let dataset of datasets" [value]="dataset.name">{{ dataset.name }}</option>
+            </select>
+            <select [(ngModel)]="segmentStatusFilter" (change)="loadSegments()">
+              <option value="">{{ 'adminData.allStatuses' | t }}</option>
+              <option value="pending">{{ 'adminData.pending' | t }}</option>
+              <option value="approved">{{ 'adminData.approved' | t }}</option>
+              <option value="rejected">{{ 'adminData.rejected' | t }}</option>
+            </select>
+            <button type="button" class="btn" (click)="loadSegments()" [disabled]="dataLoading">{{ 'adminData.search' | t }}</button>
+          </div>
+
+          <div class="table-title"><h2>{{ 'adminData.recordings' | t }}</h2><span>{{ segments.length }} {{ 'adminData.displayed' | t }}</span></div>
+          <div class="users-table segments-table">
+            <div class="segment-row header">
+              <span>{{ 'adminData.text' | t }}</span><span>{{ 'adminData.dataset' | t }}</span><span>{{ 'adminData.status' | t }}</span><span>{{ 'adminData.audio' | t }}</span><span>{{ 'adminData.actions' | t }}</span>
+            </div>
+            <article class="segment-row" *ngFor="let segment of segments" [class.selected]="selectedSegment?.id === segment.id">
+              <span class="identity"><strong>{{ segment.texte }}</strong><small>{{ segment.domain || ('adminData.noDomain' | t) }}</small></span>
+              <span>{{ segment.dataset }}</span>
+              <span class="badge" [class.verified]="segment.status === 'approved'">{{ segment.status }}</span>
+              <audio [src]="segment.audio_url" controls preload="none"></audio>
+              <span class="row-actions">
+                <button type="button" class="link-btn" (click)="editSegment(segment)">{{ 'adminData.edit' | t }}</button>
+                <a class="link-btn" [href]="segment.audio_url" download>{{ 'adminData.download' | t }}</a>
+                <button type="button" class="link-btn danger" (click)="deleteSegmentAudio(segment)" [disabled]="savingSegmentId === segment.id">
+                  {{ 'adminData.delete' | t }}
+                </button>
+              </span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel audio-edit-panel" *ngIf="selectedSegment">
+          <div class="edit-header">
+            <div><p class="eyebrow">{{ 'adminData.editRecording' | t }}</p><h2>Audio #{{ selectedSegment.id }}</h2></div>
+            <button type="button" class="icon-btn" (click)="selectedSegment = null" aria-label="Fermer">x</button>
+          </div>
+          <div class="form-grid">
+            <label class="full">{{ 'adminData.text' | t }}<textarea [(ngModel)]="selectedSegment.texte"></textarea></label>
+            <label>{{ 'adminData.source' | t }}<input [(ngModel)]="selectedSegment.source"></label>
+            <label>{{ 'adminData.domain' | t }}<input [(ngModel)]="selectedSegment.domain"></label>
+            <label>{{ 'adminData.status' | t }}
+              <select [(ngModel)]="selectedSegment.status">
+                <option value="pending">{{ 'adminData.pending' | t }}</option>
+                <option value="approved">{{ 'adminData.approved' | t }}</option>
+                <option value="rejected">{{ 'adminData.rejected' | t }}</option>
+              </select>
+            </label>
+          </div>
+          <div class="panel-actions segment-actions">
+            <button type="button" class="btn danger-btn" (click)="deleteSegmentAudio(selectedSegment)">{{ 'adminData.delete' | t }}</button>
+            <button type="button" class="btn btn-primary" (click)="saveSegment()" [disabled]="savingSegmentId === selectedSegment.id">
+              {{ savingSegmentId === selectedSegment.id ? ('admin.saving' | t) : ('admin.save' | t) }}
+            </button>
+          </div>
+      </aside>
+    </ng-container>
+  </ng-container>
+</section>

@@ -1,0 +1,61 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" [href]="portalUrl"><img class="mascot" src="assets/fanch-avatar-logo.png" alt="Fañch, le surfeur KeltiaWave"><span><strong>KeltiaWave Record</strong><small>{{ t('Tools for Brittonic languages') }}</small></span></a>
+    <div class="header-actions"><a class="tools-link" [href]="portalUrl"><span>▦</span> {{ t('Other tools') }}</a><select aria-label="Interface language" [ngModel]="interfaceLanguage" (ngModelChange)="changeInterfaceLanguage($event)"><option value="en">EN</option><option value="fr">FR</option><option value="br">BR</option><option value="cy">CY</option></select></div>
+  </header>
+
+  <main>
+    <header class="page-title"><h1>Record</h1><p>{{ t('Record your voice and get real-time transcription.') }}</p></header>
+
+    <section class="quick-settings">
+      <label class="quick-item"><span class="quick-icon">🏴</span><span><small>{{ t('Language') }}</small><select [(ngModel)]="language" [disabled]="recording"><option value="br">{{ t('Breton') }}</option><option value="cy">{{ t('Welsh') }}</option></select></span><b>⌄</b></label>
+      <div class="quick-item"><span class="quick-icon turquoise">≋</span><span><small>{{ t('Mode') }}</small><strong>{{ t(language === 'br' ? 'Live + Quality' : 'Whisper quality') }}</strong></span><b>⌄</b></div>
+      <div class="quick-item tip-item"><span class="quick-icon">♧</span><span><small>{{ t('Tip') }}</small><strong>{{ t('Speak clearly, at a steady pace') }}</strong></span></div>
+    </section>
+
+    <section class="record-workspace">
+      <div class="capture-panel">
+        <p class="state"><i [class.recording]="recording"></i>{{ t(recording ? 'Recording in progress' : (audioFile ? 'Recording ready' : 'Ready to record')) }}</p>
+        <button class="microphone" type="button" [class.stop]="recording" [disabled]="busy" (click)="toggleRecording()" [attr.aria-label]="t(recording ? 'Stop recording' : 'Start recording')">
+          <svg *ngIf="!recording" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"></path></svg><span *ngIf="recording">■</span>
+        </button>
+        <time>{{ elapsed }}</time>
+        <small>{{ t(recording ? 'Tap to stop' : (audioFile ? 'Tap to record again' : 'Click the microphone to start')) }}</small>
+        <div class="mini-wave" [class.active]="recording || live"><i *ngFor="let height of bars | slice:0:18" [style.height.px]="height / 2"></i></div>
+        <audio *ngIf="audioUrl" [src]="audioUrl" controls preload="metadata"></audio>
+      </div>
+
+      <section class="live-transcript">
+        <header><h2>{{ t(improved ? 'Transcription versions' : 'Transcription (real-time)') }}</h2><span [class.online]="live">● {{ live ? t('Live') : (improved ? '2 ' + t('versions') : t('Ready')) }}</span></header>
+        <textarea *ngIf="!improved" [(ngModel)]="draft" [placeholder]="t(language === 'br' ? 'Your transcription will appear here while you speak…' : 'Record first, then generate the Welsh transcription with Whisper…')"></textarea>
+        <div class="transcript-comparison" *ngIf="improved">
+          <section><header><strong>Vosk</strong><span>{{ t('Live draft') }}</span></header><textarea [(ngModel)]="draft" aria-label="Version Vosk"></textarea><footer><span>{{ countWords(draft) }} {{ t('words') }}</span><i>•</i><span>{{ draft.length }} {{ t('characters') }}</span></footer></section>
+          <section><header><strong>Whisper</strong><span>{{ t('High accuracy') }}</span></header><textarea [(ngModel)]="improved" aria-label="Version Whisper"></textarea><footer><span>{{ countWords(improved) }} {{ t('words') }}</span><i>•</i><span>{{ improved.length }} {{ t('characters') }}</span></footer></section>
+        </div>
+        <footer *ngIf="!improved"><span>{{ t('Words') }}: {{ wordCount }}</span><i>•</i><span>{{ t('Characters') }}: {{ characterCount }}</span></footer>
+        <footer class="versions-kept" *ngIf="improved"><strong>{{ t('Vosk and Whisper are both kept and editable') }}</strong></footer>
+      </section>
+    </section>
+
+    <details class="record-settings">
+      <summary><span>⚙</span> {{ t('Recording settings') }} <b>⌄</b></summary>
+      <div><label><span>{{ t('Microphone') }}</span><select [(ngModel)]="microphoneId" [disabled]="recording"><option value="">{{ t('Default microphone') }}</option><option *ngFor="let mic of microphones; let i = index" [value]="mic.deviceId">{{ mic.label || (t('Microphone') + ' ' + (i + 1)) }}</option></select></label><button type="button" (click)="reset()">{{ t('Clear recording') }}</button></div>
+    </details>
+
+    <section class="whisper-notice">
+      <span class="info-icon">ⓘ</span><p><strong>Whisper ({{ t('High accuracy') }})</strong> {{ t('is available after recording to improve the Vosk draft.') }}</p>
+      <button type="button" [disabled]="!canUseWhisper" (click)="runWhisper()">{{ busy ? t('Processing…') : whisperLabel }} <span>→</span></button>
+    </section>
+    <section class="whisper-progress" *ngIf="busy" aria-live="polite"><div><span>Whisper · {{ t('Processing…') }}</span><strong>{{ whisperProgress }} %</strong></div><div class="progress-track"><i [style.width.%]="whisperProgress"></i></div><small>{{ t('Estimated progress — completion is confirmed only when the result is received.') }}</small></section>
+
+    <p class="message" [class.error]="error">{{ error || message }}</p>
+    <section class="downloads" *ngIf="audioFile">
+      <button type="button" (click)="saveAudio()">{{ t('Download audio') }}</button>
+      <button *ngIf="!improved" type="button" [disabled]="!draft.trim()" (click)="saveText()">{{ t('Download text') }}</button>
+      <button *ngIf="improved" type="button" [disabled]="!draft.trim()" (click)="saveVoskText()">{{ t('Save Vosk') }}</button>
+      <button *ngIf="improved" type="button" [disabled]="!improved.trim()" (click)="saveWhisperText()">{{ t('Save Whisper') }}</button>
+      <button *ngIf="improved" class="save-both" type="button" [disabled]="!draft.trim() && !improved.trim()" (click)="saveBothTexts()">{{ t('Save both') }}</button>
+    </section>
+  </main>
+  <footer class="keltia-footer"><span>Hautiere prod, 14 Hent Prat Carbon, Beg-Meil</span><i>•</i><strong><b>Brezhoneg</b> <em>gant</em> <mark>Fañch</mark></strong><i>•</i><a href="mailto:contact@keltiawave.com">contact@keltiawave.com</a></footer>
+</div>

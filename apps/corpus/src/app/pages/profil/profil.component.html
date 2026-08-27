@@ -1,0 +1,120 @@
+<section class="profile-page">
+  <header class="profile-hero">
+    <div>
+      <p class="eyebrow">{{ 'profile.eyebrow' | t }}</p>
+      <h1>{{ 'profile.title' | t }}</h1>
+      <p>
+        {{ 'profile.subtitle' | t }}
+      </p>
+    </div>
+
+    <aside class="weight-card" aria-label="Poids de validation">
+      <span>{{ 'profile.currentWeight' | t }}</span>
+      <strong>{{ weight }}</strong>
+      <small>{{ roleLabel }}</small>
+    </aside>
+  </header>
+
+  <div class="profile-grid">
+    <form class="panel identity-panel">
+      <h2>{{ 'profile.identityTitle' | t }}</h2>
+      <p class="panel-help">
+        {{ 'profile.identityHelp' | t }}
+      </p>
+
+      <label>
+        {{ 'profile.displayName' | t }}
+        <input
+          type="text"
+          [ngModel]="profile.displayName"
+          (ngModelChange)="update('displayName', $event)"
+          name="displayName"
+          autocomplete="name">
+      </label>
+
+      <label>
+        {{ 'profile.email' | t }}
+        <input
+          type="email"
+          [ngModel]="profile.email"
+          (ngModelChange)="update('email', $event)"
+          name="email"
+          autocomplete="email"
+          placeholder="nom@example.org">
+      </label>
+
+      <label>
+        {{ 'profile.organization' | t }}
+        <input
+          type="text"
+          [ngModel]="profile.organization"
+          (ngModelChange)="update('organization', $event)"
+          name="organization"
+          [placeholder]="'profile.organizationPlaceholder' | t">
+      </label>
+
+    </form>
+
+    <form class="panel validation-panel">
+      <h2>{{ 'profile.languageTitle' | t }}</h2>
+      <p class="panel-help">
+        {{ 'profile.languageHelp' | t }}
+      </p>
+
+      <label>
+        {{ 'profile.role' | t }}
+        <select
+          [ngModel]="profile.role"
+          (ngModelChange)="update('role', $event)"
+          name="role">
+          <option *ngFor="let role of roles" [value]="role.value">{{ roleLabelFor(role.value) }}</option>
+        </select>
+      </label>
+
+      <label class="full">
+        {{ 'profile.comments' | t }}
+        <textarea
+          [ngModel]="profile.comments"
+          (ngModelChange)="update('comments', $event)"
+          name="comments"
+          [placeholder]="'profile.commentsPlaceholder' | t"></textarea>
+      </label>
+
+      <label>
+        {{ 'profile.languageLevel' | t }}
+        <select
+          [ngModel]="profile.bretonLevel"
+          (ngModelChange)="update('bretonLevel', $event)"
+          name="bretonLevel">
+          <option *ngFor="let level of levels" [value]="level.value">{{ level.labelKey | t }}</option>
+        </select>
+      </label>
+
+      <div class="actions">
+        <span class="saved" *ngIf="saved">{{ 'profile.saved' | t }}</span>
+        <button type="button" class="btn" (click)="reset()">{{ 'profile.reset' | t }}</button>
+      </div>
+    </form>
+  </div>
+
+  <section class="panel roles-panel">
+    <div class="roles-header">
+      <div>
+        <h2>{{ 'profile.weightsTitle' | t }}</h2>
+        <p class="panel-help">
+          {{ 'profile.weightsHelp' | t }}
+        </p>
+      </div>
+    </div>
+
+    <div class="roles-list">
+      <article class="role-row" *ngFor="let role of roles" [class.active]="role.value === profile.role">
+        <div>
+          <h3>{{ roleLabelFor(role.value) }}</h3>
+          <p>{{ roleDescriptionFor(role.value) }}</p>
+        </div>
+        <strong>x{{ role.baseWeight }}</strong>
+      </article>
+    </div>
+  </section>
+</section>

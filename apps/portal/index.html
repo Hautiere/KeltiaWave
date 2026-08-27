@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KeltiaWave - Tools for Brittonic languages</title>
+  <meta name="description" content="Free and open source tools to transcribe, learn and share Brittonic languages.">
+  <style>
+    :root {
+      --ink: #071943;
+      --text: #20345f;
+      --muted: #617294;
+      --line: #dbe8fa;
+      --blue: #145df4;
+      --green: #109852;
+      --orange: #ff6b19;
+      --purple: #7c3aed;
+      --panel: rgba(255, 255, 255, .86);
+      --shadow: 0 18px 46px rgba(12, 34, 76, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      color: var(--ink);
+      background: #f7fbff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    .page {
+      min-height: 100dvh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.90), rgba(255,255,255,.96) 58%, #fff 100%),
+        #f7fbff;
+    }
+
+    .hero-stage {
+      min-height: 470px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.90) 24%, rgba(255,255,255,.48) 44%, rgba(255,255,255,.12) 72%),
+        linear-gradient(180deg, rgba(255,255,255,.66) 0%, rgba(255,255,255,.20) 34%, rgba(255,255,255,.68) 100%),
+        url("assets/la torche bro kerne.png");
+      background-position: center -70px;
+      background-size: cover;
+    }
+
+    .topbar {
+      min-height: 76px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto minmax(250px, 1fr);
+      align-items: center;
+      gap: 28px;
+      width: min(100% - 72px, 1720px);
+      margin: 0 auto;
+      padding: 12px 0 8px;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      justify-self: start;
+    }
+
+    .brand-avatar {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      object-position: center bottom;
+      filter: drop-shadow(0 12px 18px rgba(9, 25, 67, .14));
+    }
+
+    .brand-name {
+      display: block;
+      color: var(--ink);
+      font-size: 28px;
+      line-height: .96;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .brand-subtitle {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.1;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(20px, 2.6vw, 46px);
+      font-size: 15px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .nav a {
+      position: relative;
+      padding: 11px 0 13px;
+    }
+
+    .nav a.active,
+    .nav a:hover {
+      color: var(--blue);
+    }
+
+    .nav a.active::after {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--blue);
+      content: "";
+    }
+
+    .language-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 18px;
+    }
+
+    .lang-button {
+      min-width: 76px;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--ink);
+      background: rgba(255,255,255,.88);
+      box-shadow: 0 12px 24px rgba(12, 34, 76, .08);
+      font-size: 14px;
+      font-weight: 900;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .lang-button.active {
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .lang-button img {
+      width: 22px;
+      height: 14px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(7, 25, 67, .10);
+    }
+
+    .hero {
+      width: min(100% - 72px, 1720px);
+      margin: 0 auto;
+      padding: 20px 0 6px;
+    }
+
+    .hero-copy {
+      width: min(920px, 100%);
+      display: grid;
+      gap: 13px;
+    }
+
+    .pill {
+      width: max-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 31px;
+      border-radius: 999px;
+      padding: 0 16px;
+      color: var(--blue);
+      background: #e8f1ff;
+      font-size: 13px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(38px, 3.1vw, 48px);
+      line-height: .98;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+
+    .script {
+      display: inline-block;
+      margin: 0 0 0 12px;
+      color: var(--blue);
+      font-family: "Comic Sans MS", "Segoe Print", cursive;
+      font-size: clamp(28px, 2.4vw, 34px);
+      line-height: 1;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .script::after {
+      display: block;
+      width: 96px;
+      margin: 3px auto 0;
+      color: var(--blue);
+      font-family: inherit;
+      font-size: 22px;
+      line-height: 1;
+      content: "~~";
+    }
+
+    .hero p {
+      max-width: 820px;
+      margin: 0;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 22px;
+      margin-top: 0;
+    }
+
+    .button {
+      min-width: 190px;
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid #a9c6ff;
+      border-radius: 7px;
+      padding: 0 24px;
+      color: var(--blue);
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 12px 26px rgba(12, 34, 76, .06);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .button.primary {
+      color: #fff;
+      border-color: var(--blue);
+      background: linear-gradient(180deg, #1d6aff 0%, #1155df 100%);
+      box-shadow: 0 18px 34px rgba(20, 93, 244, .24);
+    }
+
+    .location-card {
+      width: max-content;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+      margin: 12px 0 0 auto;
+      padding: 12px 18px;
+      border-radius: 12px;
+      color: var(--ink);
+      background: rgba(255,255,255,.28);
+      backdrop-filter: blur(8px);
+      font-size: 14px;
+      line-height: 1.25;
+      font-weight: 750;
+    }
+
+    .location-card small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .content {
+      width: min(100% - 72px, 1720px);
+      display: grid;
+      gap: 10px;
+      margin: -18px auto 0;
+      padding-bottom: 8px;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .tool-card {
+      min-height: 264px;
+      display: grid;
+      grid-template-rows: 152px 1fr;
+      align-items: stretch;
+      gap: 0;
+      overflow: hidden;
+      border: 1px solid rgba(218, 231, 250, .95);
+      border-radius: 16px;
+      padding: 0;
+      background: rgba(255,255,255,.94);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 24px 55px rgba(12, 34, 76, .14);
+    }
+
+    .tool-copy {
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      grid-row: 2;
+      min-width: 0;
+      padding: 18px 18px 16px;
+    }
+
+    .tool-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      font-size: 24px;
+      font-weight: 950;
+    }
+
+    .tool-icon.purple { color: var(--purple); background: #efe5ff; }
+    .tool-icon.green { color: var(--green); background: #e0f7e9; }
+    .tool-icon.orange { color: var(--orange); background: #ffe9d8; }
+    .tool-icon.blue { color: var(--blue); background: #e8f1ff; }
+
+    .tool-card h2 {
+      margin: 1px 0 7px;
+      font-size: clamp(20px, 1.45vw, 23px);
+      line-height: 1.05;
+      font-weight: 950;
+    }
+
+    .tool-card p {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.32;
+      font-weight: 550;
+    }
+
+    .tool-card a {
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .purple-link { color: var(--purple); }
+    .green-link { color: var(--green); }
+    .orange-link { color: var(--orange); }
+    .blue-link { color: var(--blue); }
+
+    .tool-photo {
+      width: 100%;
+      height: 152px;
+      grid-row: 1;
+      border-radius: 16px 16px 0 0;
+      object-fit: contain;
+      object-position: center;
+      background: linear-gradient(180deg, #f6fbff, #ffffff);
+      box-shadow: inset 0 -1px 0 rgba(218, 231, 250, .95);
+      transition: transform .18s ease, filter .18s ease;
+    }
+
+    .tool-card:hover .tool-photo {
+      transform: scale(1.035);
+      filter: saturate(1.04);
+    }
+
+    .tool-photo.transcribe,
+    .tool-photo.studio,
+    .tool-photo.record,
+    .tool-photo.corpus { object-position: center; }
+
+    .language-panel {
+      border: 1px solid rgba(218, 231, 250, .95);
+      border-radius: 14px;
+      background: rgba(247, 251, 255, .90);
+      box-shadow: 0 14px 32px rgba(12, 34, 76, .06);
+      backdrop-filter: blur(12px);
+    }
+
+    .language-panel {
+      min-height: 82px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+      padding: 6px 16px;
+    }
+
+    .language-card {
+      display: grid;
+      grid-template-columns: 64px 70px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 18px;
+      min-height: 70px;
+      padding: 0 24px;
+      border-right: 1px solid #cfdff5;
+    }
+
+    .language-card:last-child { border-right: 0; }
+
+    .language-avatar {
+      width: 64px;
+      height: 76px;
+      object-fit: contain;
+      object-position: center bottom;
+    }
+
+    .flag-box {
+      width: 64px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+    }
+
+    .flag-box img {
+      max-width: 64px;
+      max-height: 40px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 12px rgba(12, 34, 76, .10));
+    }
+
+    .language-card h2 {
+      margin: 0 0 4px;
+      color: var(--ink);
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .language-card p {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      min-height: 30px;
+      border-radius: 999px;
+      padding: 0 18px;
+      color: var(--green);
+      background: #dcf6e6;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .badge.soon {
+      color: var(--orange);
+      background: #fff0db;
+    }
+
+    .footer {
+      width: min(100% - 72px, 1220px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      margin: 0 auto;
+      padding: 10px 0 14px;
+      color: #52658a;
+      font-size: 13px;
+      font-weight: 550;
+      text-align: center;
+    }
+
+    .footer strong {
+      color: var(--blue);
+      font-size: 16px;
+      font-weight: 950;
+    }
+
+    .footer strong .yellow { color: #f2c230; }
+    .footer strong .orange { color: var(--orange); }
+
+    @media (max-width: 1220px) {
+      .topbar {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 8px;
+      }
+
+      .brand,
+      .language-actions {
+        justify-self: center;
+      }
+
+      .hero-stage { min-height: auto; }
+      .location-card { margin-top: 80px; }
+      .content { margin-top: -54px; }
+      .tool-grid { grid-template-columns: repeat(2, 1fr); }
+      .language-panel { grid-template-columns: 1fr; }
+      .language-card { border-right: 0; border-bottom: 1px solid #cfdff5; }
+      .language-card:last-child { border-bottom: 0; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar,
+      .hero,
+      .content,
+      .footer {
+        width: min(100% - 24px, 1720px);
+      }
+
+      .hero-stage {
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(255,255,255,.72) 42%, rgba(255,255,255,.88) 100%),
+          url("assets/la torche bro kerne.png");
+        background-position: center top;
+        background-size: auto 520px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+        gap: 10px;
+        padding: 10px 0 8px;
+      }
+
+      .brand {
+        grid-template-columns: 52px minmax(0, 1fr);
+        justify-self: start;
+        gap: 10px;
+      }
+
+      .brand-avatar {
+        width: 52px;
+        height: 52px;
+      }
+
+      .brand-name {
+        font-size: 29px;
+      }
+
+      .brand-subtitle {
+        white-space: normal;
+        font-size: 13px;
+      }
+
+      .language-actions {
+        justify-content: flex-start;
+        order: 2;
+      }
+
+      .nav {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        gap: 18px;
+        padding: 2px 0 8px;
+        font-size: 14px;
+        scrollbar-width: none;
+      }
+
+      .nav::-webkit-scrollbar { display: none; }
+
+      .nav a { padding: 8px 0 10px; }
+
+      .language-actions { gap: 8px; }
+      .lang-button {
+        min-width: 62px;
+        min-height: 34px;
+        border-radius: 9px;
+      }
+
+      .hero {
+        padding: 24px 0 0;
+      }
+
+      .hero-copy {
+        width: 100%;
+        gap: 12px;
+      }
+
+      .pill {
+        min-height: 28px;
+        padding: 0 12px;
+        font-size: 12px;
+      }
+
+      .hero h1 {
+        max-width: 360px;
+        font-size: 40px;
+        line-height: 1;
+      }
+
+      .hero p {
+        max-width: 340px;
+        font-size: 15px;
+        line-height: 1.38;
+        white-space: normal;
+      }
+
+      .script {
+        white-space: normal;
+        font-size: 28px;
+        display: block;
+        margin: 8px 0 0;
+      }
+
+      .script::after {
+        width: 64px;
+        margin-left: 70px;
+        font-size: 18px;
+      }
+
+      .button-row {
+        gap: 12px;
+        max-width: 340px;
+      }
+
+      .button {
+        width: 100%;
+        min-height: 44px;
+      }
+
+      .location-card {
+        margin: 34px 0 0;
+        padding: 10px 14px;
+        background: rgba(255,255,255,.58);
+      }
+
+      .tool-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .tool-card {
+        grid-template-columns: 1fr;
+        grid-template-rows: 180px 1fr;
+        min-height: auto;
+      }
+
+      .tool-photo {
+        width: 100%;
+        height: 180px;
+      }
+
+      .language-card {
+        grid-template-columns: 58px 56px minmax(0, 1fr) auto;
+        gap: 12px;
+        min-height: 72px;
+        padding: 10px 0;
+      }
+
+      .language-avatar {
+        width: 58px;
+        height: 66px;
+      }
+
+      .flag-box {
+        width: 56px;
+        height: 38px;
+      }
+
+      .flag-box img {
+        max-width: 56px;
+        max-height: 36px;
+      }
+
+      .language-card h2 {
+        font-size: 20px;
+      }
+
+      .language-card p {
+        font-size: 14px;
+      }
+
+      .badge {
+        grid-column: auto;
+        justify-self: end;
+        min-width: 64px;
+        min-height: 28px;
+        padding: 0 12px;
+        font-size: 12px;
+      }
+
+      .footer {
+        flex-direction: column;
+        display: flex;
+        gap: 8px;
+        padding: 12px 0 16px;
+        font-size: 12px;
+      }
+
+      .footer > span:nth-of-type(2),
+      .footer > span:nth-of-type(3) {
+        display: none;
+      }
+
+      .footer strong { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero-stage">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="KeltiaWave portal">
+          <img class="brand-avatar" src="assets/fanch-avatar-logo.png" alt="">
+          <span>
+            <span class="brand-name">KeltiaWave</span>
+            <span class="brand-subtitle" data-i18n="brandSubtitle">Tools for Brittonic languages</span>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+          <a class="active" href="index.html" data-i18n="navHome">Home</a>
+          <a data-language-link data-local-app="transcribe" href="https://transcription.keltiawave.com/transcribe.html" data-i18n="navTranscribe">Transcribe</a>
+          <a data-language-link data-local-app="record" href="https://transcription.keltiawave.com/record.html" data-i18n="navRecord">Record</a>
+          <a data-language-link data-local-app="subtitles" href="https://transcription.keltiawave.com/studio.html" data-i18n="navStudio">Subtitle Studio</a>
+          <a data-language-link data-local-app="corpus" href="https://corpus.keltiawave.com/">Corpus</a>
+          <a data-language-link href="https://transcription.keltiawave.com/about.html" data-i18n="navAbout">About</a>
+          <a data-language-link href="https://transcription.keltiawave.com/contribute.html" data-i18n="navCommunity">Community</a>
+        </nav>
+
+        <div class="language-actions" aria-label="Languages">
+          <button class="lang-button" type="button" data-portal-language="en" aria-label="English">
+            <img src="assets/flag-united-kingdom.svg" alt=""> <span>EN</span>
+          </button>
+          <button class="lang-button" type="button" data-portal-language="cy" aria-label="Cymraeg">
+            <img src="assets/flag-wales.svg" alt=""> <span>CY</span>
+          </button>
+          <button class="lang-button" type="button" data-portal-language="br" aria-label="Brezhoneg">
+            <img src="assets/flag-brittany.png" alt=""> <span>BR</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <span class="pill" data-i18n="beta">⚗ We are in beta</span>
+          <h1 data-i18n-html="heroTitle">Surfing the digital wave<br><span class="script">for Brittonic languages</span></h1>
+          <p data-i18n="heroText">Digital tools to transcribe, learn and share Brittonic languages.</p>
+          <div class="button-row">
+            <a class="button primary" data-language-link data-local-app="transcribe" href="https://transcription.keltiawave.com/transcribe.html" data-i18n="getStarted">Get started →</a>
+            <a class="button" data-language-link href="https://transcription.keltiawave.com/about.html" data-i18n="discover">Discover the project →</a>
+          </div>
+        </div>
+
+        <div class="location-card" aria-label="Photo location">
+          <span>⌖</span>
+          <span><strong>Beg an Dorchenn</strong><small>Penn-ar-Bed, Breizh</small></span>
+        </div>
+      </div>
+    </section>
+
+    <main class="content">
+      <section class="tool-grid" aria-label="KeltiaWave tools">
+        <article class="tool-card">
+          <div class="tool-copy">
+            <span class="tool-icon purple">≋</span>
+            <div>
+              <h2 data-i18n="toolTranscribe">Transcribe</h2>
+              <p data-i18n="toolTranscribeText">Audio/video to text</p>
+              <a class="purple-link" data-language-link data-local-app="transcribe" href="https://transcription.keltiawave.com/transcribe.html" data-i18n="openTranscribe">Open Transcribe →</a>
+            </div>
+          </div>
+          <img class="tool-photo transcribe" src="assets/service-photo-transcribe.png" alt="Transcription interface on a laptop">
+        </article>
+
+        <article class="tool-card">
+          <div class="tool-copy">
+            <span class="tool-icon green">♩</span>
+            <div>
+              <h2 data-i18n="toolRecord">Record</h2>
+              <p data-i18n="toolRecordText">Voice recording and transcription</p>
+              <a class="green-link" data-language-link data-local-app="record" href="https://transcription.keltiawave.com/record.html" data-i18n="openRecord">Open Record →</a>
+            </div>
+          </div>
+          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Recording microphone">
+        </article>
+
+        <article class="tool-card" id="subtitle">
+          <div class="tool-copy">
+            <span class="tool-icon orange">▣</span>
+            <div>
+              <h2 data-i18n="toolStudio">Subtitle Studio</h2>
+              <p data-i18n="toolStudioText">Create and edit subtitles</p>
+              <a class="orange-link" data-language-link data-local-app="subtitles" href="https://transcription.keltiawave.com/studio.html" data-i18n="openStudio">Open Studio →</a>
+            </div>
+          </div>
+          <img class="tool-photo studio" src="assets/service-photo-studio.png" alt="Subtitle editing interface">
+        </article>
+
+        <article class="tool-card">
+          <div class="tool-copy">
+            <span class="tool-icon blue">▥</span>
+            <div>
+              <h2>Corpus</h2>
+              <p data-i18n="toolCorpusText">Breton corpus for now</p>
+              <a class="blue-link" data-language-link data-local-app="corpus" href="https://corpus.keltiawave.com/" data-i18n="openCorpus">Open Corpus →</a>
+            </div>
+          </div>
+          <img class="tool-photo corpus" src="assets/service-photo-corpus.png" alt="Corpus interface on a laptop">
+        </article>
+      </section>
+
+      <section class="language-panel" id="about" aria-label="Languages">
+        <article class="language-card">
+          <img class="language-avatar" src="assets/fanch-avatar-bzh-01.webp" alt="">
+          <span class="flag-box"><img src="assets/flag-brittany.png" alt="Breton flag"></span>
+          <span><h2>Breizh</h2><p data-i18n="languageBreton">Breton</p></span>
+          <span class="badge" data-i18n="badgeBeta">Beta</span>
+        </article>
+
+        <article class="language-card">
+          <img class="language-avatar" src="assets/fanch-avatar-cymru-rugby2.webp" alt="">
+          <span class="flag-box"><img src="assets/flag-wales.svg" alt="Welsh flag"></span>
+          <span><h2>Cymru</h2><p data-i18n="languageWelsh">Welsh</p></span>
+          <span class="badge" data-i18n="badgeBeta">Beta</span>
+        </article>
+
+        <article class="language-card">
+          <img class="language-avatar" src="assets/fanch-avatar-hoodie2.webp" alt="">
+          <span class="flag-box"><img src="assets/flag-cornwall.svg" alt="Cornish flag"></span>
+          <span><h2>Kernow</h2><p data-i18n="languageCornish">Cornish</p></span>
+          <span class="badge soon" data-i18n="badgeSoon">Coming soon</span>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Hautiere prod, 14 Hent Prat Carbon, Beg-Meil</span>
+      <span>•</span>
+      <strong>Brezhoneg <span class="yellow">gant</span> <span class="orange">Fañch</span></strong>
+      <span>•</span>
+      <a href="mailto:contact@keltiawave.com">contact@keltiawave.com</a>
+    </footer>
+  </div>
+  <script>
+    (() => {
+      const storageKey = "keltiawave-portal-language";
+      const supportedLanguages = new Set(["en", "cy", "br"]);
+      const links = Array.from(document.querySelectorAll("[data-language-link]"));
+      const buttons = Array.from(document.querySelectorAll("[data-portal-language]"));
+      const textNodes = Array.from(document.querySelectorAll("[data-i18n]"));
+      const htmlNodes = Array.from(document.querySelectorAll("[data-i18n-html]"));
+      const localTools = {
+        corpus: "http://127.0.0.1:4200/",
+        record: "http://127.0.0.1:4400/",
+        transcribe: "http://127.0.0.1:4500/",
+        subtitles: "http://127.0.0.1:4600/"
+      };
+      const isLocalPortal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+      if (isLocalPortal) {
+        links.forEach((link) => {
+          const localUrl = localTools[link.dataset.localApp];
+          if (localUrl) link.href = localUrl;
+        });
+      }
+      const translations = {
+        en: {
+          brandSubtitle: "Tools for Brittonic languages",
+          navHome: "Home",
+          navTranscribe: "Transcribe",
+          navRecord: "Record",
+          navStudio: "Subtitle Studio",
+          navAbout: "About",
+          navCommunity: "Community",
+          beta: "⚗ We are in beta",
+          heroTitle: 'Surfing the digital wave<br><span class="script">for Brittonic languages</span>',
+          heroText: "Digital tools to transcribe, learn and share Brittonic languages.",
+          getStarted: "Get started →",
+          discover: "Discover the project →",
+          toolTranscribe: "Transcribe",
+          toolTranscribeText: "Audio/video to text",
+          openTranscribe: "Open Transcribe →",
+          toolRecord: "Record",
+          toolRecordText: "Voice recording and transcription",
+          openRecord: "Open Record →",
+          toolStudio: "Subtitle Studio",
+          toolStudioText: "Create and edit subtitles",
+          openStudio: "Open Studio →",
+          toolCorpusText: "Breton corpus for now",
+          openCorpus: "Open Corpus →",
+          languageBreton: "Breton",
+          languageWelsh: "Welsh",
+          languageCornish: "Cornish",
+          badgeBeta: "Beta",
+          badgeSoon: "Coming soon"
+        },
+        cy: {
+          brandSubtitle: "Offer ar gyfer ieithoedd Brythonaidd",
+          navHome: "Hafan",
+          navTranscribe: "Trawsgrifio",
+          navRecord: "Recordio",
+          navStudio: "Stiwdio Isdeitlau",
+          navAbout: "Amdanom",
+          navCommunity: "Cymuned",
+          beta: "⚗ Rydym mewn beta",
+          heroTitle: 'Syrffio’r don ddigidol<br><span class="script">ar gyfer ieithoedd Brittonic</span>',
+          heroText: "Offer digidol i drawsgrifio, dysgu a rhannu ieithoedd Brythonaidd.",
+          getStarted: "Dechrau →",
+          discover: "Darganfod y prosiect →",
+          toolTranscribe: "Trawsgrifio",
+          toolTranscribeText: "Sain/fideo i destun",
+          openTranscribe: "Agor Trawsgrifio →",
+          toolRecord: "Recordio",
+          toolRecordText: "Recordio llais a thrawsgrifio",
+          openRecord: "Agor Recordio →",
+          toolStudio: "Stiwdio Isdeitlau",
+          toolStudioText: "Creu a golygu isdeitlau",
+          openStudio: "Agor y Stiwdio →",
+          toolCorpusText: "Corpws Llydaweg am y tro",
+          openCorpus: "Agor y Corpws →",
+          languageBreton: "Llydaweg",
+          languageWelsh: "Cymraeg",
+          languageCornish: "Cernyweg",
+          badgeBeta: "Beta",
+          badgeSoon: "Yn dod yn fuan"
+        },
+        br: {
+          brandSubtitle: "Ostilhoù evit ar yezhoù predenek",
+          navHome: "Degemer",
+          navTranscribe: "Treuzskrivañ",
+          navRecord: "Enrollañ",
+          navStudio: "Studio istitloù",
+          navAbout: "Diwar-benn",
+          navCommunity: "Kumuniezh",
+          beta: "⚗ E beta emaomp",
+          heroTitle: 'Surfing war ar wagenn niverel<br><span class="script">evit ar yezhoù Brittonic</span>',
+          heroText: "Ostilhoù niverel evit treuzskrivañ, deskiñ ha rannañ ar yezhoù predenek.",
+          getStarted: "Kregiñ →",
+          discover: "Dizoleiñ ar raktres →",
+          toolTranscribe: "Treuzskrivañ",
+          toolTranscribeText: "Audio/video da destenn",
+          openTranscribe: "Digeriñ Treuzskrivañ →",
+          toolRecord: "Enrollañ",
+          toolRecordText: "Enrollañ mouezh ha treuzskrivañ",
+          openRecord: "Digeriñ Enrollañ →",
+          toolStudio: "Studio istitloù",
+          toolStudioText: "Krouiñ ha reizhañ istitloù",
+          openStudio: "Digeriñ ar Studio →",
+          toolCorpusText: "Korpus brezhoneg evit poent",
+          openCorpus: "Digeriñ ar c’horpus →",
+          languageBreton: "Brezhoneg",
+          languageWelsh: "Kembraeg",
+          languageCornish: "Kerneveureg",
+          badgeBeta: "Beta",
+          badgeSoon: "A-benn nebeut"
+        }
+      };
+
+      function cleanLanguage(value) {
+        return supportedLanguages.has(value) ? value : "en";
+      }
+
+      function initialLanguage() {
+        const queryLanguage = new URLSearchParams(window.location.search).get("lang");
+        if (queryLanguage) return cleanLanguage(queryLanguage);
+        try {
+          return cleanLanguage(localStorage.getItem(storageKey));
+        } catch {
+          return "en";
+        }
+      }
+
+      function withLanguage(href, language) {
+        const url = new URL(href, window.location.href);
+        url.searchParams.set("lang", language);
+        return url.toString();
+      }
+
+      function applyTranslations(language) {
+        const dictionary = translations[language] || translations.en;
+        textNodes.forEach((node) => {
+          const value = dictionary[node.dataset.i18n];
+          if (value) node.textContent = value;
+        });
+        htmlNodes.forEach((node) => {
+          const value = dictionary[node.dataset.i18nHtml];
+          if (value) node.innerHTML = value;
+        });
+      }
+
+      function setLanguage(language) {
+        const nextLanguage = cleanLanguage(language);
+        document.documentElement.lang = nextLanguage;
+        applyTranslations(nextLanguage);
+        links.forEach((link) => {
+          link.href = withLanguage(link.href, nextLanguage);
+        });
+        buttons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.portalLanguage === nextLanguage);
+          button.setAttribute("aria-pressed", String(button.dataset.portalLanguage === nextLanguage));
+        });
+        try {
+          localStorage.setItem(storageKey, nextLanguage);
+        } catch {
+          /* Language persistence is optional. */
+        }
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setLanguage(button.dataset.portalLanguage));
+      });
+
+      setLanguage(initialLanguage());
+    })();
+  </script>
+</body>
+</html>

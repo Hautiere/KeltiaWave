@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190">
+  <defs>
+    <linearGradient id="gTop" x1="12%" y1="92%" x2="88%" y2="8%">
+      <stop offset="0" stop-color="#2458EA"/>
+      <stop offset=".52" stop-color="#168FE9"/>
+      <stop offset="1" stop-color="#08B8D4"/>
+    </linearGradient>
+    <linearGradient id="gMain" x1="12%" y1="88%" x2="86%" y2="12%">
+      <stop offset="0" stop-color="#2760EB"/>
+      <stop offset=".50" stop-color="#1599E6"/>
+      <stop offset="1" stop-color="#08BCD0"/>
+    </linearGradient>
+    <linearGradient id="gLow" x1="10%" y1="18%" x2="92%" y2="82%">
+      <stop offset="0" stop-color="#1258E6"/>
+      <stop offset=".55" stop-color="#2865EC"/>
+      <stop offset="1" stop-color="#4C48E3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- upper ribbon / crest -->
+  <path fill="url(#gTop)" d="
+    M55 79
+    C77 77 91 60 105 43
+    C124 21 149 11 178 12
+    C198 12 217 18 232 27
+    C239 31 241 38 238 43
+    C235 48 229 49 222 47
+    C202 41 184 41 168 47
+    C147 54 132 68 117 83
+    C101 99 85 108 70 108
+    C60 108 53 104 51 97
+    C49 90 51 84 55 79 Z"/>
+
+  <!-- central rising/curling wave -->
+  <path fill="url(#gMain)" d="
+    M66 145
+    C82 124 99 105 116 88
+    C135 69 153 56 174 50
+    C164 61 157 73 154 86
+    C151 101 154 115 164 124
+    C175 135 190 140 206 139
+    C222 138 236 132 249 123
+    C255 119 261 121 263 126
+    C265 131 263 136 259 140
+    C246 153 228 161 207 164
+    C187 167 167 163 149 153
+    C133 144 122 134 111 131
+    C98 128 86 134 66 145 Z"/>
+
+  <!-- lower wave -->
+  <path fill="url(#gLow)" d="
+    M54 158
+    C75 144 95 133 114 129
+    C131 125 145 129 158 138
+    C173 148 188 153 205 152
+    C221 151 237 146 253 138
+    C244 151 231 161 215 167
+    C197 174 177 174 158 168
+    C141 162 128 153 114 151
+    C98 148 82 152 63 161
+    C58 163 54 162 52 160
+    C51 159 52 159 54 158 Z"/>
+
+  <!-- KeltiaWave wordmark -->
+  <text x="300" y="123"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="72"
+        font-weight="700"
+        letter-spacing="-3">
+    <tspan fill="#0B1D3A">Keltia</tspan><tspan fill="#00A6B8">Wave</tspan>
+  </text>
+
+</svg>

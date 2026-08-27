@@ -1,0 +1,46 @@
+<section class="hero">
+  <div class="hero-text">
+    <a class="brand-visual" href="https://keltiawave.com" aria-label="KeltiaWave">
+      <img class="brand-avatar" [src]="avatarSrc()" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+    </a>
+    <div class="brand-copy">
+      <div class="eyebrow">{{ 'home.eyebrow' | t }}</div>
+      <h1 class="title-accent">{{ 'home.title' | t }}</h1>
+      <p>
+        {{ 'home.subtitle' | t }}
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/legacy/enregistrement" class="btn btn-primary">{{ 'home.primaryAction' | t }}</a>
+        <a routerLink="/legacy/validation" class="btn">{{ 'home.listen' | t }}</a>
+        <a routerLink="/legacy/enregistrements" class="btn">{{ 'home.corpusAction' | t }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="stat" [class.loading]="loading">
+    <div class="label">{{ 'home.pending' | t }}</div>
+    <div class="value">{{ loading ? '—' : pending }}</div>
+  </div>
+  <div class="stat ok" [class.loading]="loading">
+    <div class="label">{{ 'home.approved' | t }}</div>
+    <div class="value">{{ loading ? '—' : approved }}</div>
+  </div>
+  <div class="stat danger" [class.loading]="loading">
+    <div class="label">{{ 'home.rejected' | t }}</div>
+    <div class="value">{{ loading ? '—' : rejected }}</div>
+  </div>
+</section>
+
+<section class="corpus-entry">
+  <div>
+    <h2>{{ 'home.corpusTitle' | t }}</h2>
+    <p>{{ 'home.corpusText' | t }}</p>
+  </div>
+  <div class="corpus-actions">
+    <a routerLink="/legacy/ecrire" class="btn">{{ 'home.write' | t }}</a>
+    <a routerLink="/legacy/enregistrements" class="btn">{{ 'home.corpusAction' | t }}</a>
+  </div>
+  <p class="error" *ngIf="error">{{ error }}</p>
+</section>

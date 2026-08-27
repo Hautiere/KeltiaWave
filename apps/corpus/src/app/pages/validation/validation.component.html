@@ -1,0 +1,132 @@
+<section class="listen-page">
+  <header class="listen-head">
+    <div>
+      <p class="eyebrow">{{ 'nav.listen' | t }}</p>
+      <h1>{{ 'validation.title' | t }}</h1>
+      <p class="validator-line">
+        Validation par
+        <strong>{{ profileService.profile().displayName || 'Anonyme' }}</strong>
+        <span>{{ profileService.roleOption().label }}</span>
+        <span>poids {{ profileService.validationWeight() }}</span>
+      </p>
+    </div>
+    <div class="section-steps">
+      <span class="active">{{ 'nav.listen' | t }}</span>
+      <span>{{ selectedIndex + (audios.length ? 1 : 0) }} / {{ audios.length }}</span>
+    </div>
+  </header>
+
+  <div class="state-card" *ngIf="loading">
+    {{ 'validation.loading' | t }}
+  </div>
+
+  <div class="state-card error" *ngIf="!loading && error">
+    {{ error }}
+  </div>
+
+  <div class="state-card" *ngIf="!loading && !error && audios.length === 0">
+    {{ 'validation.empty' | t }}
+  </div>
+
+  <section class="review-stage" *ngIf="!loading && !error && current as cur">
+    <div class="review-main">
+      <div class="prompt">
+        <span>{{ 'validation.listenPrompt' | t }}</span>
+      </div>
+
+      <article class="phrase-card">
+        <p>{{ phraseText || '...' }}</p>
+      </article>
+
+      <audio #player preload="metadata" [src]="url(cur)"></audio>
+
+      <section class="listen-controls">
+        <div class="play-action">
+          <button class="play-btn" [class.dragon-theme]="isDragonTheme" type="button" (click)="playCurrent()" [disabled]="acting" aria-label="Play audio">
+            <span class="play-symbol" aria-hidden="true">
+              <svg *ngIf="isDragonTheme; else playTriskell"
+                   class="dragon-symbol"
+                   viewBox="0 0 120 96"
+                   focusable="false">
+                <path class="dragon-body" d="M14 65c17-19 31-29 45-35 7-3 12-8 16-16 1 9-2 17-9 24 12 0 24 4 36 12-14-2-26-1-37 4 12 6 21 14 27 25-14-9-28-13-43-11-12 2-24 8-36 17 8-13 17-22 28-28-9-3-17-2-27 8Z"/>
+                <path class="dragon-neck" d="M24 43c11-6 23-5 35 2"/>
+                <path class="dragon-wing" d="M70 39c10-8 22-13 37-15-10 7-17 15-21 24 8 2 15 6 21 12-13-4-25-5-36-1-5 2-10 5-15 9 2-12 7-22 14-29Z"/>
+                <path class="dragon-sweep" d="M12 72c24 10 52 9 86-6"/>
+                <path class="dragon-mouth" d="M18 51c8-4 17-4 27 0"/>
+                <ellipse class="dragon-eye" cx="58" cy="29" rx="3.6" ry="2.3"/>
+                <circle class="dragon-dot" cx="67" cy="70" r="3"/>
+                <circle class="dragon-dot" cx="78" cy="70" r="3"/>
+              </svg>
+              <ng-template #playTriskell>
+                <img [class.blue-triskell]="isBlueTriskell" src="/assets/brand/brezhoneg-fanch-triskell-transparent.png" alt="">
+              </ng-template>
+            </span>
+            <span>{{ 'validation.play' | t }}</span>
+          </button>
+        </div>
+
+        <div class="review-actions" aria-label="Validation actions">
+          <button class="choice-btn yes" type="button" (click)="approve()" [disabled]="acting">
+            <span class="choice-icon approve-mark" aria-hidden="true"></span>
+            <span>{{ 'validation.yes' | t }}</span>
+          </button>
+          <button class="choice-btn no" type="button" (click)="reject()" [disabled]="acting">
+            <span class="choice-icon reject-mark" aria-hidden="true"></span>
+            <span>{{ 'validation.no' | t }}</span>
+          </button>
+        </div>
+
+        <section class="quality-panel approve-panel" *ngIf="approveMode" aria-label="Approval details">
+          <textarea [(ngModel)]="validationComment"
+                    [disabled]="acting"
+                    rows="2"
+                    maxlength="240"
+                    [placeholder]="'validation.approveCommentPlaceholder' | t"></textarea>
+
+          <div class="quality-actions">
+            <button class="btn ghost" type="button" (click)="cancelApprove()" [disabled]="acting">
+              {{ 'validation.cancel' | t }}
+            </button>
+            <button class="btn confirm-ok" type="button" (click)="confirmApprove()" [disabled]="acting">
+              {{ 'validation.confirmApprove' | t }}
+            </button>
+          </div>
+        </section>
+
+        <section class="quality-panel reject-panel" *ngIf="rejectMode" aria-label="Rejection details">
+          <textarea [(ngModel)]="validationComment"
+                    [disabled]="acting"
+                    rows="2"
+                    maxlength="240"
+                    [placeholder]="'validation.commentPlaceholder' | t"></textarea>
+
+          <div class="quality-actions">
+            <button class="btn ghost" type="button" (click)="cancelReject()" [disabled]="acting">
+              {{ 'validation.cancel' | t }}
+            </button>
+            <button class="btn confirm-ko" type="button" (click)="confirmReject()" [disabled]="acting">
+              {{ 'validation.confirmReject' | t }}
+            </button>
+          </div>
+        </section>
+
+        <button class="skip-btn" type="button" (click)="next()" [disabled]="acting || !audios.length">
+          {{ 'validation.next' | t }}
+        </button>
+
+        <div class="status-message" *ngIf="statusMsg">{{ statusMsg }}</div>
+      </section>
+    </div>
+
+    <aside class="queue-rail" aria-label="Queue">
+      <button type="button"
+              *ngFor="let audio of audios.slice(0, 5); let i = index"
+              (click)="select(i)"
+              [class.active]="i === selectedIndex"
+              [disabled]="acting">
+        <span *ngIf="i === selectedIndex">🔊</span>
+        <span>{{ i + 1 }}</span>
+      </button>
+    </aside>
+  </section>
+</section>

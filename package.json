@@ -1,0 +1,13 @@
+{
+  "name": "keltiawave",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:portal && npm run build:corpus && npm run build:learning && npm run build:record && npm run build:transcribe && npm run build:subtitles",
+    "build:portal": "npm --prefix apps/portal run build",
+    "build:corpus": "npm --prefix apps/corpus run build",
+    "build:learning": "npm --prefix apps/learning run build",
+    "build:record": "npm --prefix apps/record run build",
+    "build:transcribe": "npm --prefix apps/transcribe run build",
+    "build:subtitles": "npm --prefix apps/subtitles run build"
+  }
+}

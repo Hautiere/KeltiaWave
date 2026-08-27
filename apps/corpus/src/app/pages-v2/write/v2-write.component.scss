@@ -1,0 +1,50 @@
+@use "../admin/v2-admin.component.scss";
+
+.write-page { border: 1px solid #e5eaf3; border-radius: 12px; background: rgba(255,255,255,.92); padding: 34px; }
+.write-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+.write-head h1 { display: inline; margin: 0 0 10px 10px; font-size: 28px; }
+.write-head p { margin: 0; }
+.write-layout { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 32px; align-items: start; }
+.composer-card, .rules-card, .recent-card { border: 1px solid #e5eaf3; border-radius: 8px; background: #fff; }
+.composer-card { padding: 24px; }
+.field-head, .meta-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-weight: 850; }
+.field-head span, .meta-head span, .recent-card time, .empty { color: #64748b; font-size: 13px; }
+.field-head span.warning { color: #ea580c; }
+textarea { width: 100%; min-height: 210px; resize: vertical; border: 1px solid #d9e2ee; border-radius: 8px; padding: 18px; color: #0b1533; background: #fff; font-size: 18px; line-height: 1.5; }
+.translation-field { display: grid; gap: 10px; margin-top: 18px; color: #0b1533; font-size: 14px; font-weight: 850; }
+.translation-field small { color: #64748b; font-size: 12px; font-weight: 750; }
+.translation-field textarea { min-height: 96px; font-size: 15px; }
+.submit-row { display: flex; justify-content: flex-end; margin-top: 16px; }
+.metadata { display: grid; grid-template-columns: 1.3fr .7fr 1fr; gap: 18px; margin-top: 28px; padding-top: 24px; border-top: 1px solid #e5eaf3; }
+.meta-panel { border: 1px solid #dbe4f0; border-radius: 8px; padding: 18px; background: #fbfdff; }
+.level-field { display: grid; gap: 8px; color: #52627a; font-size: 12px; font-weight: 800; }
+.level-field select { min-height: 42px; border: 1px solid #dbe4f0; border-radius: 8px; padding: 0 12px; color: #0b1533; background: #fff; font-weight: 800; }
+.meta-head h2 { margin: 0; font-size: 15px; }
+.chip-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip-grid button { min-height: 38px; border: 1px solid #d9e2ee; border-radius: 999px; padding: 0 14px; background: #f8fafc; color: #0b1533; cursor: pointer; font-size: 13px; }
+.chip-grid button.active { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+.hint { margin-top: 24px; border-radius: 8px; padding: 14px 16px; background: #eef5ff; color: #1e40af; font-size: 13px; }
+.rules-card { padding: 22px; }
+.rules-card ul { margin: 0; color: #0f2f7a; line-height: 1.8; }
+.recent-card { margin-top: 28px; padding: 22px; }
+.recent-card h2 { margin: 0 0 18px; }
+.recent-card article { display: grid; grid-template-columns: 1fr auto; gap: 14px; padding: 18px 0; border-bottom: 1px solid #e5eaf3; }
+.recent-card p { margin: 0 0 8px; }
+.recent-card em { display: block; margin: -2px 0 8px; color: #475569; font-size: 12px; font-style: normal; }
+.recent-card span, .recent-card small { font-size: 11px; }
+
+@media (max-width: 1080px) {
+  .write-layout { grid-template-columns: 1fr; }
+  .metadata { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .write-page { padding: 18px; border-radius: 8px; }
+  .write-head { align-items: stretch; flex-direction: column; }
+  .write-head h1 { display: block; margin: 0; font-size: 24px; }
+  .composer-card, .rules-card, .recent-card, .meta-panel { padding: 16px; }
+  .field-head, .meta-head { align-items: flex-start; flex-direction: column; }
+  textarea { min-height: 170px; padding: 14px; font-size: 16px; }
+  .submit-row .btn { width: 100%; }
+  .recent-card article { grid-template-columns: 1fr; }
+}

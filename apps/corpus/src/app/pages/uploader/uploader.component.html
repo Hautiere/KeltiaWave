@@ -1,0 +1,30 @@
+<section class="card">
+  <header class="head">
+    <h2>Write and upload</h2>
+    <div class="muted">Enter your sentence, then attach an audio file (MP3, M4A, OGG, WAV, WEBM).</div>
+  </header>
+
+  <div class="form">
+    <label for="customText">Your sentence</label>
+    <textarea id="customText" rows="3" [(ngModel)]="customText" placeholder="Type your sentence here..."></textarea>
+
+    <div class="file-row">
+      <input id="audioFile" type="file" accept="audio/*,video/mp4" (change)="onCustomFile($event)" hidden>
+      <label for="audioFile" class="btn-file">Choose audio file</label>
+      <span class="filename" [class.empty]="!customFile">
+        {{ customFile?.name || 'No file selected' }}
+      </span>
+    </div>
+
+    <div class="preview" *ngIf="customPreviewUrl as src">
+      <audio controls preload="metadata" [src]="src"></audio>
+    </div>
+
+    <p class="error" *ngIf="customError">{{ customError }}</p>
+
+    <div class="actions">
+      <button class="btn" (click)="reset()" [disabled]="submitting">Reset</button>
+      <button class="btn btn-primary" (click)="submit()" [disabled]="submitting">Submit</button>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,72 @@
+<router-outlet *ngIf="isV2Route"></router-outlet>
+
+<div class="app-shell" *ngIf="!isV2Route">
+  <header class="app-header">
+    <div class="bar">
+      <a class="home-avatar" routerLink="/legacy" aria-label="Accueil" (click)="closeMoreMenu()">
+        <img src="/assets/fanch-avatar-bzh-01.webp" alt="">
+      </a>
+      <div class="portal-lockup">
+        <a class="portal-brand" href="https://keltiawave.com" aria-label="Portail KeltiaWave">
+          <span>Keltia</span><span>Wave</span>
+        </a>
+        <span class="construction-note">Site under construction</span>
+      </div>
+      <nav class="nav">
+        <a routerLink="/legacy/enregistrement" routerLinkActive="active" (click)="closeMoreMenu()">{{ 'nav.speak' | t }}</a>
+        <a routerLink="/legacy/validation" routerLinkActive="active" (click)="closeMoreMenu()">{{ 'nav.listen' | t }}</a>
+        <a routerLink="/legacy/ecrire" routerLinkActive="active" (click)="closeMoreMenu()">{{ 'nav.write' | t }}</a>
+        <details #moreMenu class="more-menu">
+          <summary>{{ 'nav.more' | t }}</summary>
+          <div class="more-menu-links">
+            <a routerLink="/legacy/enregistrements" routerLinkActive="active" (click)="closeMoreMenu()">{{ 'nav.corpus' | t }}</a>
+            <a *ngIf="!auth.user()" routerLink="/legacy/compte" routerLinkActive="active" (click)="closeMoreMenu()">{{ 'nav.account' | t }}</a>
+          </div>
+        </details>
+        <details *ngIf="auth.user()?.role === 'admin'" #adminMenu class="more-menu admin-menu">
+          <summary>{{ 'nav.admin' | t }}</summary>
+          <div class="more-menu-links">
+            <a routerLink="/legacy/admin" [queryParams]="{ section: 'users' }" (click)="closeMoreMenu()">{{ 'nav.adminAccounts' | t }}</a>
+            <a routerLink="/legacy/admin" [queryParams]="{ section: 'data' }" (click)="closeMoreMenu()">{{ 'nav.adminData' | t }}</a>
+          </div>
+        </details>
+      </nav>
+      <div class="header-tools">
+        <label class="language-select">
+          <span>{{ 'lang.label' | t }}</span>
+          <select [value]="i18n.language()" (change)="setLanguage($any($event.target).value)">
+            <option value="fr">FR</option>
+            <option value="br">BR</option>
+            <option value="en">EN</option>
+            <option value="cy">CY</option>
+          </select>
+        </label>
+        <details *ngIf="auth.user() as user" #sessionMenu class="more-menu session-menu">
+          <summary>{{ user.display_name || user.email }}</summary>
+          <div class="more-menu-links session-menu-links">
+            <div class="session-identity">
+              <strong>{{ user.display_name || user.email }}</strong>
+              <span>{{ user.email }}</span>
+            </div>
+            <a routerLink="/legacy/compte" routerLinkActive="active" (click)="closeMoreMenu()">{{ 'nav.profile' | t }}</a>
+            <button type="button" (click)="logout()">{{ 'account.logout' | t }}</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <router-outlet></router-outlet>
+  </main>
+  <footer class="app-footer">
+    <span class="footer-product">Hautiere prod</span>
+    <span class="footer-dot">-</span>
+    <a class="brand-rainbow" href="https://keltiawave.com" aria-label="KeltiaWave">
+      <span>Brezhoneg</span>
+      <span>gant</span>
+      <span>Fañch</span>
+    </a>
+    <span class="footer-dot">-</span>
+    <a class="footer-contact" href="mailto:contact@keltiawave.com">contact@keltiawave.com</a>
+  </footer>
+</div>

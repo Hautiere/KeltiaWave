@@ -1,0 +1,160 @@
+<section class="voice-page">
+  <header class="voice-head">
+    <div>
+      <p class="eyebrow">{{ 'record.eyebrow' | t }}</p>
+      <h1>{{ 'record.title' | t }}</h1>
+    </div>
+    <div class="progress-steps" aria-label="Etapes">
+      <span [class.active]="!blobUrl && !isRecording">{{ 'record.stepRead' | t }}</span>
+      <span [class.active]="isRecording">{{ 'record.stepRecord' | t }}</span>
+      <span [class.active]="blobUrl">{{ 'record.stepSend' | t }}</span>
+    </div>
+  </header>
+
+  <section class="voice-workspace">
+    <section class="sentence-stage">
+    <div class="mode-row">
+      <div class="mode-switch" role="group" aria-label="Sentence mode">
+        <button type="button"
+                [class.active]="phraseMode === 'suggested'"
+                (click)="setPhraseMode('suggested')"
+                [disabled]="isRecording || submitting">
+          {{ 'record.suggested' | t }}
+        </button>
+        <button type="button"
+                [class.active]="phraseMode === 'custom'"
+                (click)="setPhraseMode('custom')"
+                [disabled]="isRecording || submitting">
+          {{ 'record.custom' | t }}
+        </button>
+      </div>
+      <button class="btn btn-sm"
+              *ngIf="phraseMode === 'suggested'"
+              (click)="loadRandomPhrase(true)"
+              [disabled]="isRecording || loadingPhrase || submitting">
+        {{ 'record.change' | t }}
+      </button>
+    </div>
+
+    <div class="phrase" *ngIf="phraseMode === 'suggested'">
+      <div class="txt" *ngIf="!loadingPhrase && !phraseError; else phraseState">
+        {{ phraseText || ('record.auto' | t) }}
+      </div>
+
+      <ng-template #phraseState>
+        <div class="txt">
+          <span *ngIf="loadingPhrase">{{ 'record.loading' | t }}</span>
+          <span *ngIf="!loadingPhrase && phraseError" class="error">{{ phraseError }}</span>
+        </div>
+      </ng-template>
+    </div>
+
+    <div class="custom-phrase" *ngIf="phraseMode === 'custom'">
+      <label for="customPhrase">{{ 'record.textLabel' | t }}</label>
+      <textarea id="customPhrase"
+                rows="4"
+                [(ngModel)]="customPhrase"
+                [disabled]="isRecording || submitting"
+                [placeholder]="'record.textPlaceholder' | t"></textarea>
+      <div class="hint">{{ customPhrase.trim().length }} {{ 'record.characters' | t }}</div>
+    </div>
+
+    <div class="domain-field" *ngIf="!canEditDomains; else adminDomains">
+      {{ 'corpus.domain' | t }}
+      <div class="readonly-domain">{{ domainLabel(domain) }}</div>
+    </div>
+    <ng-template #adminDomains>
+      <div class="domain-field">
+        {{ 'corpus.domain' | t }}
+        <div class="domain-chips" role="group" aria-label="Domaines">
+          <button type="button"
+                  *ngFor="let item of editableDomains"
+                  (click)="toggleDomain(item.value)"
+                  [class.active]="isDomainSelected(item.value)"
+                  [disabled]="isRecording || submitting">
+            {{ item.labelKey | t }}
+          </button>
+        </div>
+      </div>
+    </ng-template>
+    </section>
+
+    <section class="record-panel">
+    <button *ngIf="!isRecording && !blobUrl"
+            class="rec-btn"
+            [class.dragon-theme]="isDragonTheme"
+            aria-label="Start recording"
+            (click)="startRec()"
+            [disabled]="!canRecord()">
+      <span class="record-mark" aria-hidden="true">
+        <svg *ngIf="isDragonTheme; else recordTriskell"
+             class="dragon-mark"
+             viewBox="0 0 120 96"
+             focusable="false">
+          <path class="dragon-body" d="M14 65c17-19 31-29 45-35 7-3 12-8 16-16 1 9-2 17-9 24 12 0 24 4 36 12-14-2-26-1-37 4 12 6 21 14 27 25-14-9-28-13-43-11-12 2-24 8-36 17 8-13 17-22 28-28-9-3-17-2-27 8Z"/>
+          <path class="dragon-neck" d="M24 43c11-6 23-5 35 2"/>
+          <path class="dragon-wing" d="M70 39c10-8 22-13 37-15-10 7-17 15-21 24 8 2 15 6 21 12-13-4-25-5-36-1-5 2-10 5-15 9 2-12 7-22 14-29Z"/>
+          <path class="dragon-sweep" d="M12 72c24 10 52 9 86-6"/>
+          <path class="dragon-mouth" d="M18 51c8-4 17-4 27 0"/>
+          <ellipse class="dragon-eye" cx="58" cy="29" rx="3.6" ry="2.3"/>
+          <circle class="dragon-dot" cx="67" cy="70" r="3"/>
+          <circle class="dragon-dot" cx="78" cy="70" r="3"/>
+        </svg>
+        <ng-template #recordTriskell>
+          <img [class.blue-triskell]="isBlueTriskell" src="/assets/brand/brezhoneg-fanch-triskell-transparent.png" alt="">
+        </ng-template>
+      </span>
+      <span>{{ 'record.button' | t }}</span>
+    </button>
+
+    <div *ngIf="isRecording" class="rec-state">
+      <div class="pulse"></div>
+      <div class="time">{{ mmss(durationSec) }}</div>
+      <div class="actions">
+        <button class="btn btn-danger" (click)="stopRec()">{{ 'record.stop' | t }}</button>
+        <button class="btn" (click)="cancel()">{{ 'record.cancel' | t }}</button>
+      </div>
+    </div>
+
+    <div *ngIf="!isRecording && blobUrl" class="preview">
+      <div class="preview-title">{{ 'record.listenBeforeSend' | t }}</div>
+      <audio controls preload="metadata" [src]="blobUrl"></audio>
+      <div class="actions">
+        <button class="btn" (click)="retry()" [disabled]="submitting">{{ 'record.retry' | t }}</button>
+        <button class="btn btn-primary" (click)="submit()" [disabled]="submitting">
+          {{ submitting ? ('record.sending' | t) : ('record.send' | t) }}
+        </button>
+      </div>
+    </div>
+    </section>
+
+    <section class="speaker-details" aria-label="Speaker context">
+      <details>
+        <summary class="speaker-head">{{ 'record.optionalVoice' | t }}</summary>
+      <div class="profile-form">
+        <label>
+          {{ 'record.region' | t }}
+          <select [(ngModel)]="speakerRegion" [disabled]="isRecording || submitting">
+            <option *ngFor="let region of regions" [value]="region.value">{{ region.label }}</option>
+          </select>
+        </label>
+
+        <label>
+          {{ 'record.level' | t }}
+          <select [(ngModel)]="speakerLevel" [disabled]="isRecording || submitting">
+            <option *ngFor="let level of levels" [value]="level.value">{{ level.labelKey | t }}</option>
+          </select>
+        </label>
+      </div>
+      </details>
+    </section>
+  </section>
+
+  <div class="status"
+       *ngIf="statusMessage"
+       [class.success]="statusKind === 'success'"
+       [class.error]="statusKind === 'error'"
+       role="status">
+    {{ statusMessage }}
+  </div>
+</section>
