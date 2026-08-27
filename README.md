@@ -24,6 +24,14 @@ même backend FastAPI (`8100`) ; Portal reste une page statique sans API :
 - PostgreSQL pour les données relationnelles en production ;
 - MinIO/S3 pour les fichiers audio, vidéo et ressources Learning.
 
+![Architecture Docker KeltiaWave](docs/assets/architecture-docker-keltiawave.png)
+
+Le trafic public arrive en HTTPS par Caddy. Les applications web transmettent
+leurs appels `/api` au backend FastAPI sur le réseau Docker privé. PostgreSQL,
+MinIO et les modèles vocaux ne sont jamais interrogés directement par les
+navigateurs. Portal est une application statique et n'utilise actuellement pas
+l'API.
+
 L'estimation de durée de Transcribe est calibrée dans
 `backend/data/transcription-calibration.json`. Ce profil appartient au serveur,
 survit aux redémarrages grâce au volume `backend_data` et profite immédiatement
@@ -84,11 +92,17 @@ Ne versionnez jamais `.env`, les mots de passe, les jetons ou les clés MinIO.
 ## Docker
 
 Copiez `.env.example` vers `.env`, remplacez impérativement `SECRET_KEY`,
-`POSTGRES_PASSWORD` et `MINIO_ROOT_PASSWORD`, puis lancez :
+`POSTGRES_PASSWORD` et `MINIO_ROOT_PASSWORD`, puis lancez la pile locale et ses
+contrôles de santé :
 
 ```bash
-docker compose --env-file .env -f deploy/docker-compose.yml up --build
+./scripts/start-docker.sh
 ```
+
+Le script construit et démarre tous les conteneurs, vérifie le backend et les
+six interfaces, puis ouvre Portal sur <http://127.0.0.1:4100>. Utilisez
+`--no-build` pour réutiliser les images existantes ou `--no-browser` pour ne pas
+ouvrir le navigateur.
 
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`

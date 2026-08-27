@@ -15,12 +15,13 @@ main {
 .title { height: 52px; }
 
 .brand img {
-  width: 156px;
+  width: 43px !important;
   height: 58px;
   object-fit: contain;
 }
 
 .brand strong { font-size: 18px; }
+.brand strong b { color: #f97316; }
 .brand small { white-space: nowrap; }
 
 .workspace {
@@ -171,4 +172,396 @@ main {
     grid-template-rows: 230px auto minmax(300px, 1fr);
   }
   .keltia-footer { min-height: 54px; flex-wrap: wrap; gap: 5px 14px; padding: 10px 16px; text-align: center; }
+}
+
+/* Balanced Subtitles layout shared with Komz and Record. */
+@media (min-width: 701px) {
+  :host {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(37, 99, 235, .045), transparent 30%),
+      #f8fafc;
+  }
+
+  .app {
+    grid-template-rows: 68px minmax(0, 1fr) 28px;
+  }
+
+  .topbar {
+    height: 68px;
+    padding-inline: max(24px, calc((100vw - 1440px) / 2));
+    box-shadow: none;
+  }
+
+  .brand img {
+    width: 132px;
+    height: 50px;
+  }
+
+  .brand strong {
+    font-size: 17px;
+  }
+
+  .brand small {
+    font-size: 9px;
+  }
+
+  .actions a,
+  .actions select {
+    min-height: 34px;
+    border-radius: 8px;
+  }
+
+  main {
+    width: min(100% - 48px, 1440px);
+    margin: 0 auto;
+    padding: 10px 0;
+  }
+
+  .title {
+    height: 45px;
+    margin-bottom: 8px;
+  }
+
+  .title > div:first-child {
+    grid-template-columns: 34px auto;
+    column-gap: 9px;
+  }
+
+  .title > div:first-child > span {
+    width: 34px;
+    height: 34px;
+  }
+
+  .title h1 {
+    font-size: 21px;
+  }
+
+  .workspace {
+    height: calc(100% - 53px);
+    grid-template-columns: 270px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .workspace > aside,
+  .editor {
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(34, 65, 104, .045);
+  }
+
+  .workspace > aside {
+    padding: 11px;
+  }
+
+  .workspace aside section {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .picker {
+    min-height: 48px;
+  }
+
+  .engine-choices button {
+    min-height: 48px;
+  }
+
+  .primary {
+    min-height: 34px;
+  }
+
+  .editor {
+    grid-template-rows: minmax(170px, 46%) auto minmax(0, 1fr);
+  }
+
+  .preview {
+    margin: 10px 10px 0;
+  }
+
+  .overlay {
+    right: 10%;
+    bottom: 11%;
+    left: 10%;
+    font-size: clamp(15px, 1.5vw, 20px);
+  }
+
+  .cue-header {
+    padding: 7px 12px 6px;
+  }
+
+  .cue-table {
+    margin: 0 10px 10px;
+  }
+
+  .row {
+    min-height: 48px;
+    grid-template-columns: 34px 78px 78px minmax(220px, 1fr) 30px;
+    padding: 4px 7px;
+  }
+
+  .row textarea {
+    height: 36px;
+    line-height: 1.35;
+  }
+
+  .keltia-footer {
+    min-height: 28px;
+    gap: 24px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 700px) {
+  :host {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    background: #f8fafc;
+  }
+
+  .app {
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: auto;
+    min-height: 49px;
+    padding: max(5px, env(safe-area-inset-top)) 10px 5px;
+    box-shadow: none;
+  }
+
+  .brand {
+    min-width: 0;
+    gap: 5px;
+  }
+
+  .brand img {
+    width: 91px;
+    height: 37px;
+  }
+
+  .brand span {
+    min-width: 0;
+  }
+
+  .brand strong {
+    overflow: hidden;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  .actions {
+    gap: 5px;
+  }
+
+  .actions a,
+  .actions select {
+    min-height: 32px;
+    border-radius: 8px;
+  }
+
+  .actions a {
+    width: 36px;
+  }
+
+  .actions select {
+    width: 46px;
+    padding: 0 6px;
+    font-size: 10px;
+  }
+
+  main {
+    width: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 9px 10px calc(16px + env(safe-area-inset-bottom));
+    scrollbar-width: none;
+  }
+
+  main::-webkit-scrollbar {
+    display: none;
+  }
+
+  .title {
+    height: auto;
+    min-height: 39px;
+    margin-bottom: 8px;
+  }
+
+  .title > div:first-child {
+    grid-template-columns: 31px auto;
+    column-gap: 7px;
+  }
+
+  .title > div:first-child > span {
+    width: 31px;
+    height: 31px;
+    font-size: 14px;
+  }
+
+  .title h1 {
+    font-size: 19px;
+  }
+
+  .file-actions {
+    gap: 5px;
+  }
+
+  .file-actions label,
+  .file-actions button {
+    min-width: 34px;
+    min-height: 34px;
+    overflow: hidden;
+    padding: 0 8px;
+    font-size: 0;
+    white-space: nowrap;
+  }
+
+  .file-actions label::first-letter,
+  .file-actions button::first-letter {
+    font-size: 15px;
+  }
+
+  .workspace {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .editor {
+    order: 1;
+    min-height: 560px;
+    grid-template-rows: 215px auto minmax(290px, 1fr);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(34, 65, 104, .04);
+  }
+
+  .preview {
+    margin: 8px 8px 0;
+    border-radius: 9px;
+  }
+
+  .overlay {
+    right: 5%;
+    bottom: 16%;
+    left: 5%;
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .cue-header {
+    padding: 7px 10px 5px;
+  }
+
+  .cue-header h2 {
+    font-size: 10px;
+  }
+
+  .cue-table {
+    margin: 0 8px 8px;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .row {
+    min-width: 540px;
+    min-height: 48px;
+    grid-template-columns: 32px 68px 68px minmax(290px, 1fr) 28px;
+    padding: 4px 6px;
+  }
+
+  .row.head {
+    min-height: 29px;
+  }
+
+  .row input,
+  .row textarea {
+    font-size: 12px;
+  }
+
+  .row textarea {
+    height: 36px;
+    line-height: 1.25;
+  }
+
+  .workspace > aside {
+    order: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    overflow: visible;
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  .workspace aside section {
+    min-width: 0;
+    margin: 0;
+    border: 1px solid #e5ebf2;
+    border-radius: 9px;
+    padding: 9px;
+  }
+
+  .workspace aside section:first-child,
+  .workspace aside section:last-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .workspace h2 {
+    font-size: 9px;
+  }
+
+  .picker {
+    min-height: 47px;
+  }
+
+  .picker strong {
+    max-width: 230px;
+  }
+
+  .choices button {
+    min-height: 39px;
+    padding-inline: 6px;
+  }
+
+  .engine-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .engine-choices button {
+    min-height: 45px;
+  }
+
+  .settings input,
+  .row input,
+  .row textarea {
+    font-size: 16px;
+  }
+
+  .subtitle-preview {
+    display: none;
+  }
+
+  .job,
+  .status {
+    grid-column: 1 / -1;
+  }
+
+  .keltia-footer {
+    display: none;
+  }
+}
+
+@media (min-width: 601px) {
+  .brand strong { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 22px !important; font-weight: 850; line-height: 1; letter-spacing: -.045em; }
 }

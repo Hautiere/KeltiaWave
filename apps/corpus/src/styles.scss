@@ -23,6 +23,7 @@
   --gap:14px;
 }
 
+
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -699,15 +700,24 @@ body .kw-shell .brand-avatar img {
 
 body .kw-shell .brand-title {
   color: #071943;
-  font-size: 28px !important;
-  line-height: .96 !important;
-  font-weight: 950 !important;
-  letter-spacing: 0;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 25px !important;
+  line-height: 1 !important;
+  font-weight: 850 !important;
+  letter-spacing: -.045em;
 }
 
 body .kw-shell .brand-title span:first-child,
 body .kw-shell .brand-title span:last-child {
   color: #071943;
+}
+
+body .kw-shell .brand-title span.brand-product {
+  color: #10a66a !important;
+}
+
+body .kw-shell .brand-title span.brand-product.library-product {
+  color: #f59e0b !important;
 }
 
 body .kw-shell .brand-subtitle {
@@ -854,4 +864,676 @@ body .kw-shell .account-chip.connected {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+/* Komz mobile: one compact, touch-friendly language across every V2 screen. */
+@media (min-width: 701px) {
+  body .kw-shell {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(37, 99, 235, .045), transparent 30%),
+      #f8fafc;
+  }
+
+  body .kw-shell .kw-header {
+    min-height: 68px !important;
+  }
+
+  body .kw-shell .kw-bar,
+  body .kw-shell .kw-main,
+  body .kw-shell .kw-footer {
+    width: min(100% - 48px, 1440px);
+  }
+
+  body .kw-shell .kw-bar {
+    min-height: 68px !important;
+    grid-template-columns: minmax(225px, .8fr) auto minmax(220px, .8fr) !important;
+    gap: 22px !important;
+  }
+
+  body .kw-shell .kw-header .brand {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  body .kw-shell .brand-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  body .kw-shell .brand-title {
+    font-size: 23px !important;
+  }
+
+  body .kw-shell .brand-subtitle {
+    margin-top: 3px;
+    font-size: 11px !important;
+  }
+
+  body .kw-shell .kw-nav {
+    gap: clamp(14px, 1.7vw, 28px) !important;
+  }
+
+  body .kw-shell .kw-nav a {
+    padding: 10px 0 12px !important;
+    font-size: 13px !important;
+  }
+
+  body .kw-shell .header-tools {
+    gap: 10px;
+  }
+
+  body .kw-shell .account-chip,
+  body .kw-shell .lang-select {
+    min-height: 34px !important;
+    padding: 0 11px;
+    font-size: 12px !important;
+    box-shadow: 0 6px 16px rgba(12, 34, 76, .05);
+  }
+
+  body .kw-shell .lang-select select {
+    font-size: 12px !important;
+  }
+
+  body .kw-shell .kw-main {
+    padding-top: 16px;
+    padding-bottom: 14px;
+  }
+
+  body .kw-shell .kw-footer {
+    padding: 7px 0 9px;
+    font-size: 11px;
+  }
+
+  body .kw-shell .work-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  body .kw-shell .work-sidebar,
+  body .kw-shell .library-sidebar,
+  body .kw-shell .admin-sidebar {
+    gap: 14px;
+  }
+
+  body .kw-shell .side-card,
+  body .kw-shell .help-card,
+  body .kw-shell .side-section,
+  body .kw-shell .about-card {
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .035);
+  }
+
+  body .kw-shell .side-title {
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+
+  body .kw-shell .library-content,
+  body .kw-shell .class-content {
+    gap: 16px;
+  }
+
+  body .kw-shell .library-hero {
+    min-height: 164px;
+    grid-template-columns: minmax(0, .62fr) minmax(320px, .8fr);
+  }
+
+  body .kw-shell .library-hero-copy {
+    gap: 7px;
+    padding: 24px 28px;
+  }
+
+  body .kw-shell .library-hero h1 {
+    font-size: clamp(27px, 2.5vw, 35px);
+  }
+
+  body .kw-shell .library-hero p {
+    max-width: 540px;
+    font-size: 13px;
+  }
+
+  body .kw-shell .library-hero-visual {
+    min-height: 164px;
+  }
+
+  body .kw-shell .language-pills {
+    top: 12px;
+    right: 12px;
+    gap: 7px;
+  }
+
+  body .kw-shell .pill {
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  body .kw-shell .pill img {
+    width: 25px;
+    height: 16px;
+  }
+
+  body .kw-shell .search-row {
+    grid-template-columns: minmax(320px, 560px) auto;
+  }
+
+  body .kw-shell .search-box,
+  body .kw-shell .reset-btn {
+    min-height: 38px;
+  }
+
+  body .kw-shell .theme-strip {
+    gap: 8px;
+  }
+
+  body .kw-shell .theme-strip > div {
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  body .kw-shell .theme-strip button {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  body .kw-shell .theme-strip .theme-glyph {
+    width: 23px;
+    height: 23px;
+    font-size: 13px;
+  }
+
+  body .kw-shell .audio-section {
+    gap: 10px;
+  }
+
+  body .kw-shell .audio-section h2 {
+    margin-bottom: 3px;
+    font-size: 18px;
+  }
+
+  body .kw-shell .audio-section header p {
+    font-size: 12px;
+  }
+
+  body .kw-shell .audio-row {
+    min-height: 52px;
+    gap: 10px;
+    padding: 7px 12px;
+  }
+
+  body .kw-shell .matrix-header {
+    min-height: 38px;
+  }
+
+  body .kw-shell .focus-card {
+    min-height: 0;
+    gap: 12px;
+    padding: 24px 32px;
+  }
+
+  body .kw-shell .focus-card h1 {
+    font-size: clamp(25px, 2.5vw, 34px);
+  }
+
+  body .kw-shell .big-play {
+    width: 76px;
+    height: 76px;
+  }
+
+  body .kw-shell .advice {
+    margin-top: 10px;
+    padding: 12px 14px;
+  }
+
+  body .kw-shell .class-hero,
+  body .kw-shell .admin-head,
+  body .kw-shell .locked-card,
+  body .kw-shell .page-top {
+    padding: 20px 22px;
+  }
+
+  body .kw-shell .class-hero h1,
+  body .kw-shell .admin-head h1,
+  body .kw-shell .page-top h1 {
+    font-size: clamp(26px, 2.5vw, 34px);
+  }
+
+  body .kw-shell .summary-grid,
+  body .kw-shell .stats-grid {
+    gap: 10px;
+  }
+
+  body .kw-shell .summary-grid article,
+  body .kw-shell .stat-card {
+    padding: 14px 16px;
+  }
+
+  body .kw-shell .summary-grid strong,
+  body .kw-shell .stat-card strong {
+    font-size: 25px;
+  }
+
+  body .kw-shell .student-progress {
+    gap: 14px;
+    padding: 13px 18px;
+  }
+
+  body .kw-shell .write-page {
+    padding: 22px;
+  }
+
+  body .kw-shell .write-head {
+    margin-bottom: 16px;
+  }
+
+  body .kw-shell .write-layout {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 20px;
+  }
+
+  body .kw-shell .composer-card,
+  body .kw-shell .rules-card,
+  body .kw-shell .recent-card {
+    padding: 17px;
+  }
+
+  body .kw-shell textarea {
+    min-height: 132px;
+    padding: 13px;
+    font-size: 15px;
+  }
+
+  body .kw-shell .translation-field textarea {
+    min-height: 72px;
+  }
+
+  body .kw-shell .metadata {
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 16px;
+  }
+
+  body .kw-shell .meta-panel {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 700px) {
+  html,
+  body {
+    min-width: 0;
+    overflow: hidden;
+    background: #f8fafc;
+  }
+
+  body .kw-shell {
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  body .kw-shell .kw-header {
+    min-height: 0 !important;
+  }
+
+  body .kw-shell .kw-bar {
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 0 8px !important;
+    padding-top: max(6px, env(safe-area-inset-top));
+  }
+
+  body .kw-shell .kw-header .brand {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 7px;
+    min-width: 0;
+  }
+
+  body .kw-shell .brand-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  body .kw-shell .brand-title {
+    overflow: hidden;
+    font-size: 17px !important;
+    line-height: 1 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body .kw-shell .brand-subtitle {
+    display: none;
+  }
+
+  body .kw-shell .header-tools {
+    width: auto;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  body .kw-shell .account-chip,
+  body .kw-shell .lang-select {
+    min-height: 32px !important;
+    max-width: 110px;
+    padding: 0 8px;
+    font-size: 11px !important;
+    box-shadow: none;
+  }
+
+  body .kw-shell .lang-select {
+    max-width: 48px;
+  }
+
+  body .kw-shell .lang-select select {
+    max-width: 38px;
+    padding: 0;
+    font-size: 11px !important;
+  }
+
+  body .kw-shell .kw-nav {
+    order: 3;
+    grid-column: 1 / -1;
+    gap: 4px !important;
+    margin-top: 5px;
+    padding: 0 0 5px;
+    scroll-snap-type: x proximity;
+  }
+
+  body .kw-shell .kw-nav a {
+    min-width: max-content;
+    min-height: 34px !important;
+    padding: 9px 10px !important;
+    border-radius: 8px;
+    font-size: 11px !important;
+    scroll-snap-align: start;
+  }
+
+  body .kw-shell .kw-nav a.active {
+    background: #eef5ff;
+  }
+
+  body .kw-shell .kw-nav a.active::after {
+    right: 9px;
+    bottom: 2px !important;
+    left: 9px;
+    height: 2px;
+  }
+
+  body .kw-shell .kw-main {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px 12px calc(22px + env(safe-area-inset-bottom));
+    scrollbar-width: none;
+  }
+
+  body .kw-shell .kw-main::-webkit-scrollbar {
+    display: none;
+  }
+
+  body .kw-shell .kw-footer {
+    display: none;
+  }
+
+  body .kw-shell h1 {
+    font-size: clamp(22px, 7vw, 28px) !important;
+    line-height: 1.08 !important;
+  }
+
+  body .kw-shell h2 {
+    font-size: 17px;
+  }
+
+  body .kw-shell p {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  body .kw-shell .work-layout,
+  body .kw-shell .kw-main.library-main,
+  body .kw-shell .kw-main.admin-main,
+  body .kw-shell .admin-layout {
+    display: block;
+  }
+
+  body .kw-shell .work-sidebar,
+  body .kw-shell .library-sidebar {
+    display: none !important;
+  }
+
+  body .kw-shell .work-content,
+  body .kw-shell .library-content,
+  body .kw-shell .admin-content {
+    min-width: 0;
+    gap: 14px;
+  }
+
+  body .kw-shell .work-topline {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  body .kw-shell .phrase-count {
+    font-size: 12px;
+  }
+
+  body .kw-shell .language-tabs,
+  body .kw-shell .language-pills {
+    gap: 6px;
+  }
+
+  body .kw-shell .pill {
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  body .kw-shell .pill img {
+    width: 23px;
+    height: 15px;
+  }
+
+  body .kw-shell .focus-card {
+    min-height: 0;
+    gap: 12px;
+    border-radius: 12px;
+    padding: 18px 14px;
+  }
+
+  body .kw-shell .focus-card h1 {
+    font-size: clamp(23px, 7.5vw, 31px) !important;
+  }
+
+  body .kw-shell .big-play {
+    width: 68px;
+    height: 68px;
+  }
+
+  body .kw-shell .focus-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    gap: 6px;
+    width: 100%;
+  }
+
+  body .kw-shell .focus-actions .btn {
+    width: auto;
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  body .kw-shell .advice,
+  body .kw-shell .help-card {
+    display: none;
+  }
+
+  body .kw-shell .library-hero {
+    min-height: 0;
+    display: block;
+    border-radius: 12px;
+  }
+
+  body .kw-shell .library-hero-copy {
+    gap: 6px;
+    padding: 16px;
+  }
+
+  body .kw-shell .library-hero-copy p,
+  body .kw-shell .library-hero-visual {
+    display: none;
+  }
+
+  body .kw-shell .eyebrow {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  body .kw-shell .search-row {
+    display: block;
+  }
+
+  body .kw-shell .search-box {
+    min-height: 42px;
+  }
+
+  body .kw-shell .reset-btn {
+    display: none;
+  }
+
+  body .kw-shell .theme-strip {
+    gap: 7px;
+  }
+
+  body .kw-shell .theme-strip h2 {
+    font-size: 12px;
+  }
+
+  body .kw-shell .theme-strip > div {
+    overflow-x: auto;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+  }
+
+  body .kw-shell .theme-strip > div::-webkit-scrollbar {
+    display: none;
+  }
+
+  body .kw-shell .theme-strip button {
+    min-height: 34px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  body .kw-shell .theme-strip .theme-glyph {
+    width: 22px;
+    height: 22px;
+    font-size: 13px;
+  }
+
+  body .kw-shell .audio-section header p {
+    display: none;
+  }
+
+  body .kw-shell .matrix-list,
+  body .kw-shell .table-wrap,
+  body .kw-shell .student-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body .kw-shell .audio-row {
+    min-width: 0 !important;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 5px 9px;
+    padding: 11px 10px;
+  }
+
+  body .kw-shell .audio-row.matrix-header {
+    display: none;
+  }
+
+  body .kw-shell .audio-row > strong {
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body .kw-shell .audio-row .tag {
+    grid-column: 2;
+    width: fit-content;
+    font-size: 9px;
+  }
+
+  body .kw-shell .audio-row .waveform {
+    grid-column: 2;
+    width: 92px;
+  }
+
+  body .kw-shell .audio-row .validation-summary {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    max-width: 112px;
+    padding: 5px 7px;
+    font-size: 9px;
+  }
+
+  body .kw-shell .audio-row .region-cell,
+  body .kw-shell .audio-row .speaker,
+  body .kw-shell .audio-row time {
+    display: none;
+  }
+
+  body .kw-shell .play-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  body .kw-shell .summary-grid,
+  body .kw-shell .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  body .kw-shell .summary-grid > *,
+  body .kw-shell .stats-grid > *,
+  body .kw-shell .stat-card {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  body .kw-shell .admin-head,
+  body .kw-shell .class-hero,
+  body .kw-shell .page-top,
+  body .kw-shell .write-head {
+    padding: 14px;
+  }
+
+  body .kw-shell input,
+  body .kw-shell select,
+  body .kw-shell textarea,
+  body .kw-shell button,
+  body .kw-shell .btn {
+    font-size: 16px;
+  }
+
+  body .kw-shell button,
+  body .kw-shell .btn,
+  body .kw-shell select {
+    min-height: 42px;
+  }
+}
+
+@media (min-width: 601px) {
+  body .kw-shell .brand-title { font-size: 22px !important; }
 }

@@ -1,8 +1,8 @@
 <header class="topbar">
-  <button class="brand" type="button" (click)="navigate('learn')" aria-label="Accueil KeltiaWave Learn">
+  <a class="brand" href="http://127.0.0.1:4100/" aria-label="Portail local KeltiaWave">
     <img class="brand-mascot" src="/assets/keltiawave-mascot.webp" alt="">
-    <span><b><i>Keltia</i><em>Wave</em></b><small>Breton learning</small></span>
-  </button>
+    <span><b><i>KeltiaWave</i> Play</b><small>Test your listening skills</small></span>
+  </a>
   <nav aria-label="Navigation principale">
     <button type="button" [class.active]="mode === 'learn' && screen !== 'progression'" (click)="navigate('learn')">{{ t('lessons') }}</button>
     <button type="button" *ngIf="api.user()?.role === 'admin'" [class.active]="mode === 'admin'" (click)="navigate('admin')">{{ t('admin') }}</button>
@@ -14,13 +14,22 @@
       <span><b>{{ api.user() ? (api.user()?.display_name || api.user()?.email) : t('signin') }}</b><small *ngIf="api.user()">{{ api.user()?.role === 'admin' ? t('administrator') : t('connectedUser') }}</small></span><i>⌄</i>
     </button>
     <section class="account-menu" *ngIf="accountOpen">
-      <form *ngIf="!api.user(); else connectedMenu" (ngSubmit)="loginFromHeader()">
-        <header><b>{{ t('signin') }}</b><p>{{ t('accountHelp') }}</p></header>
-        <label><span>{{ t('email') }}</span><input type="email" name="headerEmail" [(ngModel)]="learnerEmail" autocomplete="username" required></label>
-        <label><span>{{ t('password') }}</span><input type="password" name="headerPassword" [(ngModel)]="learnerPassword" autocomplete="current-password" required></label>
+      <form class="signin-menu" *ngIf="!api.user(); else connectedMenu" (ngSubmit)="loginFromHeader()">
+        <button class="personal-login" type="button" (click)="manualLoginOpen = !manualLoginOpen">
+          <span aria-hidden="true">◉</span><b>{{ uiLanguage === 'br' ? 'Kevreañ gant ma c’hont' : uiLanguage === 'en' ? 'Sign in with my account' : 'Se connecter avec mon compte' }}</b><i>{{ manualLoginOpen ? '⌃' : '⌄' }}</i>
+        </button>
+        <div class="credentials" *ngIf="manualLoginOpen">
+          <label><span>{{ t('email') }}</span><input type="email" name="headerEmail" [(ngModel)]="learnerEmail" autocomplete="username" required></label>
+          <label><span>{{ t('password') }}</span><input type="password" name="headerPassword" [(ngModel)]="learnerPassword" autocomplete="current-password" required></label>
+          <button class="primary" type="submit" [disabled]="learnerBusy || !learnerEmail || !learnerPassword">{{ learnerBusy ? '…' : t('signin') }}</button>
+        </div>
+        <div class="demo-menu-head"><strong>{{ uiLanguage === 'br' ? 'Profiloù diskouez' : uiLanguage === 'en' ? 'Demo profiles' : 'Profils de démonstration' }}</strong><span>{{ uiLanguage === 'br' ? 'Kevreañ diouzhtu' : uiLanguage === 'en' ? 'Instant sign-in' : 'Connexion immédiate' }}</span></div>
+        <button class="demo-login" type="button" *ngFor="let profile of testProfiles" (click)="loginTestProfile(profile)" [disabled]="learnerBusy">
+          <span class="demo-avatar" [class]="'demo-avatar ' + profile.tone">{{ profile.name.charAt(0) }}</span>
+          <span class="demo-label"><strong>{{ profile.label }}</strong><small>{{ profile.name }}</small></span>
+          <span aria-hidden="true">›</span>
+        </button>
         <p class="account-error" *ngIf="learnerMessage">{{ learnerMessage }}</p>
-        <button class="primary" type="submit" [disabled]="learnerBusy || !learnerEmail || !learnerPassword">{{ learnerBusy ? '…' : t('signin') }}</button>
-        <button class="test-profile-link" type="button" (click)="openTestProfiles()">⚗ {{ t('profiles') }}</button><small>{{ t('optional') }}</small>
       </form>
       <ng-template #connectedMenu><div class="connected-menu"><header><span class="account-avatar large">{{ (api.user()?.display_name || api.user()?.email)?.charAt(0)?.toUpperCase() }}</span><div><b>{{ api.user()?.display_name }}</b><small>{{ api.user()?.email }}</small><em>{{ api.user()?.role === 'admin' ? t('administrator') : t('connectedUser') }}</em></div></header><button type="button" *ngIf="api.user()?.role === 'admin'" (click)="accountOpen = false; navigate('admin')">⚙ {{ t('admin') }}</button><button type="button" (click)="accountOpen = false; openProgression()">▦ {{ t('myProgress') }}</button><button type="button" (click)="openTestProfiles()">⚗ {{ t('profiles') }}</button><button class="sign-out" type="button" (click)="signOut()">{{ t('signout') }}</button></div></ng-template>
     </section>

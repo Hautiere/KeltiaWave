@@ -91,7 +91,7 @@ interface QuickDemoProfile {
       background: #fff;
       color: #145be7;
       font: inherit;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 850;
       text-decoration: none;
       cursor: pointer;

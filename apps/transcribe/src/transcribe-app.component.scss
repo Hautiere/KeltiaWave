@@ -7,3 +7,97 @@
 .start{display:inline-flex;align-items:center;justify-content:center;gap:9px}.loader-eq{height:19px;display:inline-flex;align-items:flex-end;gap:3px}.loader-eq i{width:3px;height:6px;border-radius:5px;background:linear-gradient(180deg,#bfdbfe 0%,#60a5fa 50%,#fff 100%);transform-origin:bottom;animation:eqBounce .75s infinite ease-in-out}.loader-eq i:nth-child(2){animation-delay:.06s}.loader-eq i:nth-child(3){animation-delay:.12s}.loader-eq i:nth-child(4){animation-delay:.18s}.loader-eq i:nth-child(5){animation-delay:.24s}@keyframes eqBounce{0%,100%{height:6px;filter:brightness(1)}50%{height:19px;filter:brightness(1.3)}}@media(prefers-reduced-motion:reduce){.loader-eq i{animation:none;height:12px}}
 
 .top-actions select{min-height:39px;appearance:none;border:1px solid #d8e3ef;border-radius:9px;padding:0 30px 0 13px;color:#17233d;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2317233d' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;font-size:11px;font-weight:800;cursor:pointer}
+
+/* Balanced Transcribe layout shared with Komz, Record and Subtitles. */
+@media (min-width: 701px) {
+  :host { background: radial-gradient(circle at 18% 0%, rgba(37,99,235,.045), transparent 30%), #f8fafc; }
+  .topbar { height: 68px; padding-inline: max(24px, calc((100vw - 1440px) / 2)); }
+  .brand img { width: 40px; height: 50px; }
+  .brand strong { font-size: 19px; }
+  .brand small { font-size: 9px; }
+  .top-actions a, .top-actions select { min-height: 34px; border-radius: 8px; }
+  main { width: min(100% - 48px, 1320px); padding: 13px 0 11px; }
+  .page-title { margin-bottom: 10px; }
+  .page-title > div { grid-template-columns: 37px auto; column-gap: 10px; }
+  .title-icon { width: 37px; height: 37px; border-radius: 9px; font-size: 17px; }
+  .page-title h1 { font-size: 25px; }
+  .page-title p { margin-top: 3px; }
+  .page-title ul { gap: 13px; font-size: 9px; }
+  .workspace { height: calc(100% - 50px); gap: 11px; }
+  .workspace.has-result { grid-template-columns: minmax(390px,.82fr) minmax(430px,1.18fr); }
+  form, .result { border-radius: 13px; box-shadow: 0 8px 24px rgba(15,23,42,.04); }
+  form { padding: 14px 18px; }
+  fieldset { padding: 9px 0; }
+  legend { margin-bottom: 6px; }
+  .language-grid { gap: 7px; }
+  .language-grid button, .mode-grid button { min-height: 43px; border-radius: 8px; }
+  .drop-zone { min-height: 88px; }
+  .drop-zone .upload-icon { font-size: 21px; }
+  .mode-grid button { min-height: 46px; }
+  .form-actions { padding-top: 9px; }
+  .start { min-height: 35px; }
+  .progress-stack { gap: 9px; margin-top: 7px; }
+  .result > header { padding: 12px 14px; }
+  .result textarea { padding: 15px; font-size: 12px; }
+  .result footer { padding: 8px 13px; }
+}
+
+@media (max-width: 700px) {
+  :host { height: 100dvh; min-height: 0; overflow: hidden; background: #f8fafc; }
+  .app-shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0,1fr); overflow: hidden; }
+  .topbar { height: auto; min-height: 49px; padding: max(5px, env(safe-area-inset-top)) 10px 5px; }
+  .brand { min-width: 0; gap: 6px; }
+  .brand img { width: 31px; height: 38px; }
+  .brand span { min-width: 0; }
+  .brand strong { overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+  .brand small { display: none; }
+  .top-actions { gap: 5px; }
+  .tools, .top-actions select { min-height: 32px; border-radius: 8px; }
+  .tools { width: 36px; }
+  .top-actions select { width: 46px; padding: 0 18px 0 6px; background-position: right 4px center; font-size: 10px; }
+  main { width: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 10px 12px calc(18px + env(safe-area-inset-bottom)); scrollbar-width: none; }
+  main::-webkit-scrollbar { display: none; }
+  .page-title { margin-bottom: 9px; }
+  .page-title > div { grid-template-columns: 32px auto; column-gap: 8px; }
+  .title-icon { width: 32px; height: 32px; border-radius: 8px; font-size: 15px; }
+  .page-title h1 { font-size: 20px; }
+  .page-title p { max-width: none; margin-top: 2px; font-size: 10px; }
+  .page-title ul { display: none; }
+  .workspace, .workspace.has-result { height: auto; display: grid; grid-template-columns: 1fr; gap: 9px; }
+  form { padding: 11px 12px; border-radius: 12px; }
+  fieldset { padding: 8px 0; }
+  fieldset:first-child { padding-top: 0; }
+  legend { margin-bottom: 6px; font-size: 10px; }
+  legend > span { width: 18px; height: 18px; font-size: 8px; }
+  .language-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .language-grid button:last-child { display: none; }
+  .language-grid button { min-height: 43px; padding: 6px 8px; font-size: 10px; }
+  .language-grid img { width: 29px; height: 19px; }
+  .drop-zone { min-height: 92px; border-radius: 9px; }
+  .drop-zone .upload-icon { font-size: 21px; }
+  .drop-zone strong { font-size: 11px; }
+  .drop-zone > span:not(.upload-icon) { font-size: 9px; }
+  .drop-zone small { font-size: 7px; }
+  .mode-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
+  .mode-grid button { min-height: 54px; gap: 5px; padding: 6px 7px; }
+  .mode-grid button > b { width: 22px; font-size: 19px; }
+  .mode-grid button strong { font-size: 10px; }
+  .mode-grid small { overflow: hidden; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+  .mode-grid i { width: 13px; height: 13px; }
+  .form-actions { align-items: stretch; flex-direction: column; gap: 6px; padding-top: 8px; }
+  .form-actions p { min-height: 12px; font-size: 8px; }
+  .start { width: 100%; min-height: 42px; font-size: 11px; }
+  .progress-stack { grid-template-columns: 1fr; gap: 7px; margin-top: 8px; }
+  .progress-row { font-size: 9px; }
+  .result { min-height: 330px; margin-top: 0; border-radius: 12px; }
+  .result > header { padding: 10px 12px; }
+  .result h2 { max-width: 190px; font-size: 11px; }
+  .result header button, .result footer button { min-height: 36px; font-size: 9px; }
+  .result textarea { min-height: 215px; padding: 12px; font-size: 16px; line-height: 1.45; }
+  .result footer { padding: 8px 10px; font-size: 8px; }
+  .keltia-footer { display: none; }
+}
+
+@media (min-width: 601px) {
+  .brand strong { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 22px !important; font-weight: 850; line-height: 1; letter-spacing: -.045em; }
+}

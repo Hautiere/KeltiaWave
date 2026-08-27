@@ -1,6 +1,6 @@
 <div class="app-shell">
   <header class="topbar">
-    <a class="brand" [href]="portalBase"><img src="assets/fanch-avatar-logo.png" alt="Fañch, le surfeur KeltiaWave"><span><strong><b>KeltiaWave</b> Transcribe</strong><small>{{ t('Audio et vidéo vers texte') }}</small></span></a>
+    <a class="brand" [href]="portalBase"><img src="assets/keltiawave-mascot.webp" alt="Mascotte KeltiaWave"><span><strong><b>KeltiaWave</b> Transcribe</strong><small>{{ t('Audio et vidéo vers texte') }}</small></span></a>
     <div class="top-actions"><a class="tools" [href]="portalBase"><span>▦</span> {{ t('Autres outils') }}</a><select aria-label="Langue de l’interface" [ngModel]="interfaceLanguage" (ngModelChange)="changeInterfaceLanguage($event)"><option value="fr">FR</option><option value="en">EN</option><option value="br">BR</option><option value="cy">CY</option></select></div>
   </header>
 

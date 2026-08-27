@@ -42,7 +42,7 @@ export class SubtitlesAppComponent implements AfterViewInit,OnDestroy {
   @ViewChild('player') player?: ElementRef<HTMLVideoElement>;
   @ViewChild('cueTable') cueTable?: ElementRef<HTMLElement>;
   @ViewChildren('cueRow') cueRows?: QueryList<ElementRef<HTMLElement>>;
-  readonly portalUrl='https://keltiawave.bzh';
+  readonly portalUrl='http://127.0.0.1:4100/';
   ui:UiLanguage=this.initialUi(); language:'br'|'cy'='br'; engine:'vosk'|'whisper'='vosk';
   file:File|null=null; mediaUrl=''; cues:SubtitleSegment[]=[]; current=-1; busy=false; upload=0; work=0; error=''; message=''; dirty=false;
   maxChars=42; maxLines=2; maxDuration=6; private request?:Subscription; private progressTimer?:number; private nativeTrack?:TextTrack;
