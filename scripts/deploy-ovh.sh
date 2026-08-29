@@ -126,15 +126,11 @@ if $WITH_LOCAL_DATA; then
   ssh "$SSH_TARGET" "cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' cp '$REMOTE_MIGRATION/keltiawave.db' backend:/tmp/keltiawave.db; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' cp '$REMOTE_MIGRATION/data' backend:/tmp/migration-data; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T -e PYTHONPATH=/app backend python /app/scripts/migrate_full_sqlite.py /tmp/keltiawave.db /tmp/migration-data"
 else
   if [[ -n "$CLONE_FROM_SLOT" ]]; then
-    SOURCE_RELEASE="$REMOTE_ROOT/releases/$CLONE_FROM_SLOT"
-    SOURCE_ENV="$REMOTE_ROOT/shared/.env.$CLONE_FROM_SLOT"
     BACKUP_NAME="before-$CLONE_FROM_SLOT-clone-$(date -u +%Y%m%dT%H%M%SZ)"
     REMOTE_BACKUP="$REMOTE_ROOT/shared/backups/$SLOT/$BACKUP_NAME"
-    SOURCE_COMPOSE="deploy/ovh/docker-compose.candidate.yml"
-    DESTINATION_MINIO_VOLUME="keltiawave-${SLOT}_minio_data"
 
     echo "[7/8] Back up destination and clone validated $CLONE_FROM_SLOT data"
-    ssh "$SSH_TARGET" "set -eu; test -f '$SOURCE_ENV'; test -f '$SOURCE_RELEASE/$SOURCE_COMPOSE'; mkdir -p '$REMOTE_BACKUP'; cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T postgres sh -c 'pg_dump -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$REMOTE_BACKUP/destination-postgres.dump'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T minio tar -C /data -czf - . > '$REMOTE_BACKUP/destination-minio.tar.gz'; cd '$SOURCE_RELEASE'; docker compose --env-file '$SOURCE_ENV' -f '$SOURCE_COMPOSE' exec -T postgres sh -c 'pg_dump -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$REMOTE_BACKUP/source-postgres.dump'; docker compose --env-file '$SOURCE_ENV' -f '$SOURCE_COMPOSE' exec -T minio tar -C /data -czf - . > '$REMOTE_BACKUP/source-minio.tar.gz'; cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' stop backend minio; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' start postgres; cat '$REMOTE_BACKUP/source-postgres.dump' | docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T postgres sh -c 'pg_restore -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" --clean --if-exists --no-owner'; docker run --rm --entrypoint /bin/sh -v '$DESTINATION_MINIO_VOLUME:/data' -v '$REMOTE_BACKUP:/backup:ro' quay.io/minio/minio:latest -c 'find /data -mindepth 1 -delete; tar -C /data -xzf /backup/source-minio.tar.gz'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' up -d; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' up -d --wait backend"
+    ssh "$SSH_TARGET" "bash '$REMOTE_RELEASE/deploy/ovh/clone-slot-data.sh' '$CLONE_FROM_SLOT' '$SLOT' '$REMOTE_ROOT' '$REMOTE_BACKUP'"
   else
     echo "[7/8] Skip dataset migration"
   fi
