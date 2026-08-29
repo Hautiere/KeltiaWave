@@ -19,6 +19,15 @@ Le stockage est local par défaut. En production, `AUDIO_STORAGE=s3` active le
 stockage MinIO/S3 pour les audios Corpus et les médias Learning. Consultez
 `.env.example` à la racine pour la configuration complète.
 
+Les fichiers audio utilisateur reçoivent une clé unique contenant l'identifiant
+de phrase et un UUID. Les médias Learning sont servis avec prise en charge des
+requêtes HTTP Range, indispensable à la navigation dans les vidéos.
+
+`BOOTSTRAP_CLASS_USERS=true` crée les profils de démonstration du staging. En
+production, `DISABLE_TEST_ACCOUNTS=true` désactive les comptes `@keltia.test`
+après le clonage, sans supprimer leurs contributions. `BOOTSTRAP_ADMIN_*` crée
+ou réactive le véritable administrateur de l'installation.
+
 Le traitement vocal nécessite FFmpeg et les modèles décrits dans
 `models/README.md`. La santé du service est disponible sur `/healthz` et Swagger
 sur `/docs`.

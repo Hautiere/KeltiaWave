@@ -35,6 +35,19 @@ L'élève ne valide pas les enregistrements et ne voit pas le menu Admin. La
 création de phrases est réservée aux professeurs et administrateurs ; thème et
 niveau sont obligatoires.
 
+Komz et Library utilisent le même frontend et le même backend, mais sont
+exposées par deux domaines distincts. L'enregistrement associe explicitement
+chaque fichier à son `phrase_id` ; le stockage ajoute un UUID pour éviter les
+collisions. Sur l'écran d'évaluation, les réponses asynchrones devenues
+obsolètes sont ignorées afin que le texte reste toujours celui de l'audio
+sélectionné.
+
+Déploiements publics :
+
+- production : `https://komz.keltiawave.com` et `https://voices.keltiawave.com` ;
+- staging : `https://komz.staging.keltiawave.com` et
+  `https://library.staging.keltiawave.com`.
+
 ## Vérification
 
 ```bash

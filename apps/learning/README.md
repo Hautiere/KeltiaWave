@@ -4,25 +4,25 @@ Application Angular autonome d’apprentissage du breton par vidéo ou MP3. Elle
 réutilise le backend, les comptes et les rôles du Corpus sans modifier son
 frontend.
 
+Déploiements publics :
+
+- production : `https://learning.keltiawave.com` ;
+- staging : `https://play.staging.keltiawave.com`.
+
 ## Lancement local
 
 Depuis la racine du dépôt :
 
 ```bash
-./start_learning.sh
+./scripts/start-learning.sh
 ```
 
-Cette commande applique les migrations Alembic, démarre FastAPI sur
-`http://127.0.0.1:8000` et Angular sur `http://localhost:4300`. Le proxy Angular
-redirige `/api` vers FastAPI.
+Le backend partagé doit être lancé séparément avec
+`./scripts/start-backend.sh`. Le proxy Angular redirige `/api` vers FastAPI sur
+`http://127.0.0.1:8100`.
 
-Pour ne lancer que le frontend :
-
-```bash
-FRONTEND_MODE=learning ./start_frontend.sh
-```
-
-Dans ce cas, le backend doit déjà être actif.
+Le script `start-learning.sh` lance uniquement le frontend ; le backend doit
+donc déjà être actif.
 
 ## Parcours disponibles
 

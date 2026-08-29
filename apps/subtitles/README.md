@@ -3,14 +3,20 @@
 Frontend Angular autonome pour générer, synchroniser, éditer et exporter des sous-titres.
 
 ```bash
-./start_backend.sh
-./start_subtitles_frontend.sh
+./scripts/start-backend.sh
+./scripts/start-subtitles.sh
 ```
 
 - Interface : `http://127.0.0.1:4600`
 - API dédiée : `POST http://127.0.0.1:8100/api/subtitles/transcribe`
 
-L’ancienne page `public-frontend/studio.html` reste disponible pendant la validation.
+Déploiements publics :
+
+- production : `https://subtitles.keltiawave.com` ;
+- staging : `https://subtitles.staging.keltiawave.com`.
+
+L'ancien lien `transcription.keltiawave.com/studio.html` redirige vers la
+nouvelle application.
 
 ## Atelier
 

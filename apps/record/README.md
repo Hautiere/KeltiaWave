@@ -1,15 +1,16 @@
 # KeltiaWave Record
 
-Frontend Angular autonome consacré à l'enregistrement vocal. Il fonctionne en
-parallèle des interfaces historiques et ne les remplace pas encore.
+Frontend Angular autonome consacré à l'enregistrement vocal. Il est déployé en
+production sur `https://record.keltiawave.com` et en staging sur
+`https://record.staging.keltiawave.com`.
 
 ## Lancement
 
 Depuis la racine du dépôt :
 
 ```bash
-./start_backend.sh
-./start_record_frontend.sh
+./scripts/start-backend.sh
+./scripts/start-record.sh
 ```
 
 - frontend Record : `http://127.0.0.1:4400`
@@ -52,10 +53,9 @@ Il ne dépend pas des routes de sous-titrage. Les médias restent dans le
 navigateur après le traitement et ne sont pas ajoutés automatiquement au
 corpus.
 
-## Validation avant remplacement
+## Validation et déclinaison mobile
 
-Ne supprimer `public-frontend/record.*` et l'ancien composant Angular Record
-qu'après validation des points suivants :
+Les contrôles fonctionnels prioritaires sont :
 
 - capture Chrome, Firefox et Safari sous HTTPS ;
 - sélection du microphone ;
@@ -65,3 +65,8 @@ qu'après validation des points suivants :
 - réécoute et téléchargements ;
 - affichage mobile ;
 - configuration de production et supervision des erreurs.
+
+Record est la première application retenue pour une PWA mobile. L'objectif est
+de conserver cette interface responsive et ce backend, puis d'ajouter une
+installation plein écran avec icône, manifest et service worker. Cette étape est
+planifiée mais pas encore implémentée.

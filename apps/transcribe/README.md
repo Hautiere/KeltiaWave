@@ -3,13 +3,19 @@
 Frontend Angular autonome pour la transcription de fichiers audio et vidéo.
 
 ```bash
-./start_transcribe_frontend.sh
+./scripts/start-backend.sh
+./scripts/start-transcribe.sh
 ```
 
 Interface : `http://127.0.0.1:4500`
 API commune : `http://127.0.0.1:8100/api/transcribe`
 
-L’ancienne page `public-frontend/transcribe.html` reste présente pendant la phase de validation.
+Déploiements publics :
+
+- production : `https://transcribe.keltiawave.com` ;
+- staging : `https://transcribe.staging.keltiawave.com`.
+
+Le domaine historique `transcription.keltiawave.com` reste compatible.
 
 ## Fonctionnement
 

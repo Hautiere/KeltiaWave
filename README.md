@@ -117,12 +117,25 @@ cd backend && .venv/bin/python -m pytest
 
 ## Déploiement OVH sans régression
 
-Le script `./scripts/deploy-ovh.sh` prépare une pile candidate isolée sur le
-VPS. Sans argument, il reste en simulation. Avec `--apply`, il transfère le
-code, construit les conteneurs sur des ports liés uniquement à `127.0.0.1` et
-exécute les tests de santé. Il ne modifie ni Caddy, ni le site actuellement en
-production.
+Le staging et la production sont deux piles Docker indépendantes sur OVH. Les
+déploiements partent d'une révision Git commise et poussée, construisent les
+conteneurs sur des ports liés à `127.0.0.1`, puis vérifient les interfaces, les
+données Komz et les médias Play avant toute exposition publique.
+
+```bash
+# Mettre à jour le staging persistant
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
+  ./scripts/deploy-staging-ovh.sh --apply
+
+# Construire une candidate production en clonant les données du staging
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
+  ./scripts/deploy-production-candidate-ovh.sh --apply
+
+# Vérifier la candidate et les DNS avant la promotion
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net PUBLIC_IPV4=51.178.38.152 \
+  ./scripts/promote-production-ovh.sh
+```
 
 La procédure, les prérequis et le retour arrière sont détaillés dans
-`deploy/ovh/README.md`. La bascule publique ne doit intervenir qu'après la
-migration et la vérification de PostgreSQL et MinIO.
+`deploy/ovh/README.md`. Le récapitulatif de la livraison du 29 août 2026 est
+disponible dans `docs/CHANGES-2026-08-29.md`.
