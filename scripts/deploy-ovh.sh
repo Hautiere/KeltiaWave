@@ -11,6 +11,7 @@ REMOTE_ENV="$REMOTE_ROOT/shared/.env.$SLOT"
 COMPOSE_FILE="deploy/ovh/docker-compose.candidate.yml"
 APPLY=false
 WITH_LOCAL_DATA=false
+DEPLOY_REF="${DEPLOY_REF:-origin/main}"
 
 usage() {
   cat <<'EOF'
@@ -29,6 +30,7 @@ Environment:
   SSH_TARGET   Required SSH destination (for example: ubuntu@staging.example.com)
   REMOTE_ROOT  Remote KeltiaWave directory
   DEPLOY_SLOT  Candidate slot name (default: candidate)
+  DEPLOY_REF   Git revision to deploy (default: origin/main)
 EOF
 }
 
@@ -46,6 +48,8 @@ command -v ssh >/dev/null || { echo "ssh is required" >&2; exit 1; }
 command -v rsync >/dev/null || { echo "rsync is required" >&2; exit 1; }
 [[ -n "$SSH_TARGET" ]] || { echo "SSH_TARGET is required" >&2; usage >&2; exit 2; }
 [[ -f "$PROJECT_DIR/$COMPOSE_FILE" ]] || { echo "Missing $COMPOSE_FILE" >&2; exit 1; }
+git -C "$PROJECT_DIR" rev-parse --verify "$DEPLOY_REF^{commit}" >/dev/null || { echo "Unknown DEPLOY_REF: $DEPLOY_REF" >&2; exit 1; }
+DEPLOY_SHA="$(git -C "$PROJECT_DIR" rev-parse "$DEPLOY_REF^{commit}")"
 if $WITH_LOCAL_DATA; then
   [[ -f "$PROJECT_DIR/backend/keltiawave.db" ]] || { echo "Missing backend/keltiawave.db" >&2; exit 1; }
   [[ -d "$PROJECT_DIR/backend/data" ]] || { echo "Missing backend/data" >&2; exit 1; }
@@ -57,6 +61,7 @@ echo "Candidate release : $REMOTE_RELEASE"
 echo "Candidate env     : $REMOTE_ENV"
 echo "Public site       : untouched"
 echo "Local data import : $WITH_LOCAL_DATA"
+echo "Git revision      : $DEPLOY_REF ($DEPLOY_SHA)"
 
 if ! $APPLY; then
   echo
@@ -72,17 +77,13 @@ ssh "$SSH_TARGET" "set -eu; command -v docker >/dev/null; docker compose version
 echo "[2/8] Create isolated release directory"
 ssh "$SSH_TARGET" "mkdir -p '$REMOTE_RELEASE' '$REMOTE_ROOT/shared'"
 
-echo "[3/8] Upload versioned source (secrets and user data excluded)"
-rsync -az --delete \
-  --exclude '.git/' \
-  --exclude '.env' \
-  --exclude '.venv/' \
-  --exclude 'node_modules/' \
-  --exclude 'dist/' \
-  --exclude '*.db' \
-  --exclude 'backend/data/' \
-  --exclude 'backend/models/*' \
-  "$PROJECT_DIR/" "$SSH_TARGET:$REMOTE_RELEASE/"
+echo "[3/8] Upload committed source from $DEPLOY_REF"
+SOURCE_ARCHIVE="$(mktemp -t keltiawave-source.XXXXXX.tar.gz)"
+trap 'rm -f "$SOURCE_ARCHIVE"' EXIT
+git -C "$PROJECT_DIR" archive --format=tar.gz --output="$SOURCE_ARCHIVE" "$DEPLOY_REF"
+ssh "$SSH_TARGET" "find '$REMOTE_RELEASE' -mindepth 1 -maxdepth 1 ! -name .migration -exec rm -rf -- {} +"
+scp "$SOURCE_ARCHIVE" "$SSH_TARGET:$REMOTE_RELEASE/source.tar.gz"
+ssh "$SSH_TARGET" "cd '$REMOTE_RELEASE'; tar -xzf source.tar.gz; rm -f source.tar.gz; printf '%s\n' '$DEPLOY_SHA' > DEPLOYED_GIT_SHA"
 
 echo "[4/8] Validate Compose configuration"
 ssh "$SSH_TARGET" "cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' config --quiet"

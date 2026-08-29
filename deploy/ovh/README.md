@@ -36,7 +36,11 @@ DEPLOY_SLOT=staging
 ```
 
 Le transfert principal exclut `.env`, les bases locales, les fichiers utilisateurs
-et les modèles. L'option `--with-local-data` sauvegarde d'abord PostgreSQL et
+et les modèles. Il est produit avec `git archive origin/main` : seuls les fichiers
+commités et poussés sont déployés, même si le répertoire local contient d'autres
+modifications. `DEPLOY_REF` permet de cibler explicitement un tag ou un commit.
+
+L'option `--with-local-data` sauvegarde d'abord PostgreSQL et
 MinIO dans `shared/backups/staging/`, transfère explicitement le SQLite et les
 médias validés, puis exécute la migration contrôlée. Le script refuse l'import si
 les comptes diffèrent ou si les tables métier du staging ne sont pas vides.
