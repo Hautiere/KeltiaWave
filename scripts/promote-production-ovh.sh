@@ -62,7 +62,7 @@ scp "$PROJECT_DIR/deploy/ovh/Caddyfile.production" "$SSH_TARGET:$remote_candidat
 ssh "$SSH_TARGET" "set -eu; docker cp '$remote_candidate' ovh-caddy-1:/tmp/Caddyfile.production; docker exec ovh-caddy-1 caddy validate --config /tmp/Caddyfile.production --adapter caddyfile; cp -p '$remote_candidate' '$ACTIVE_CADDY'; if ! docker exec ovh-caddy-1 caddy reload --config /tmp/Caddyfile.production --adapter caddyfile; then docker cp '$backup_dir/Caddyfile' ovh-caddy-1:/tmp/Caddyfile.rollback; docker exec ovh-caddy-1 caddy reload --config /tmp/Caddyfile.rollback --adapter caddyfile; cp -p '$backup_dir/Caddyfile' '$ACTIVE_CADDY'; exit 1; fi"
 
 echo "[5/5] Verify public endpoints; roll back Caddy on failure"
-if ! ssh "$SSH_TARGET" "set -eu; for domain in ${DOMAINS[*]}; do curl --fail --silent --show-error --max-time 30 \"https://\$domain/\" >/dev/null; echo \"OK   https://\$domain/\"; done"; then
+if ! ssh "$SSH_TARGET" "set -eu; domains='${DOMAINS[*]}'; for attempt in \$(seq 1 60); do failed=0; for domain in \$domains; do curl --fail --silent --max-time 15 \"https://\$domain/\" >/dev/null 2>&1 || failed=1; done; if [ \$failed -eq 0 ]; then for domain in \$domains; do echo \"OK   https://\$domain/\"; done; exit 0; fi; echo \"Waiting for HTTPS certificates (attempt \$attempt/60)\"; sleep 5; done; exit 1"; then
   echo "Public verification failed; restoring the previous Caddy configuration" >&2
   ssh "$SSH_TARGET" "set -eu; docker cp '$backup_dir/Caddyfile' ovh-caddy-1:/tmp/Caddyfile.rollback; docker exec ovh-caddy-1 caddy reload --config /tmp/Caddyfile.rollback --adapter caddyfile; cp -p '$backup_dir/Caddyfile' '$ACTIVE_CADDY'"
   exit 1
