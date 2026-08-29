@@ -415,6 +415,26 @@ def bootstrap_class_users() -> None:
 
 bootstrap_class_users()
 
+
+def disable_test_accounts() -> None:
+    if os.getenv("DISABLE_TEST_ACCOUNTS", "false").strip().lower() not in {"1", "true", "yes", "on"}:
+        return
+
+    from .db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        db.query(User).filter(User.email.like("%@keltia.test")).update(
+            {User.active: False},
+            synchronize_session=False,
+        )
+        db.commit()
+    finally:
+        db.close()
+
+
+disable_test_accounts()
+
 # Compat dev: expose les anciens fichiers locaux.
 app.mount("/static/audios", StaticFiles(directory=str(LOCAL_AUDIO_DIR)), name="audios")
 
