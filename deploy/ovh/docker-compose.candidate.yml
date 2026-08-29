@@ -1,6 +1,26 @@
 name: keltiawave-${DEPLOY_SLOT:-candidate}
 
 services:
+  staging-auth:
+    container_name: keltiawave-${DEPLOY_SLOT:-candidate}-auth
+    build:
+      context: staging-auth
+    restart: unless-stopped
+    environment:
+      STAGING_AUTH_USERNAME: ${STAGING_AUTH_USERNAME:-keltiawave}
+      STAGING_AUTH_PASSWORD: ${STAGING_AUTH_PASSWORD:?Set STAGING_AUTH_PASSWORD}
+      STAGING_AUTH_COOKIE_SECRET: ${STAGING_AUTH_COOKIE_SECRET:?Set STAGING_AUTH_COOKIE_SECRET}
+      STAGING_AUTH_COOKIE_DOMAIN: ${STAGING_AUTH_COOKIE_DOMAIN:-.staging.keltiawave.com}
+      STAGING_AUTH_SESSION_TTL: ${STAGING_AUTH_SESSION_TTL:-43200}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+      - caddy_proxy
+
   backend:
     container_name: keltiawave-${DEPLOY_SLOT:-candidate}-backend
     build:
