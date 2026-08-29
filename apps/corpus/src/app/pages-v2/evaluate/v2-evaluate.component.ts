@@ -22,6 +22,7 @@ import { V2SessionActionComponent } from '../shared/v2-session-action.component'
 })
 export class V2EvaluateComponent implements OnInit {
   private allAudios: AudioRead[] = [];
+  private phraseLoadSequence = 0;
   audios: AudioRead[] = [];
   selectedClass = '';
   selectedIndex = 0;
@@ -237,6 +238,7 @@ export class V2EvaluateComponent implements OnInit {
 
   private loadPhrase(): void {
     const current = this.current;
+    const sequence = ++this.phraseLoadSequence;
     this.currentPhrase = null;
     if (!current) {
       this.cdr.markForCheck();
@@ -244,10 +246,12 @@ export class V2EvaluateComponent implements OnInit {
     }
     this.api.getPhrase(current.phrase_id).subscribe({
       next: (phrase) => {
+        if (sequence !== this.phraseLoadSequence || this.current?.id !== current.id) return;
         this.currentPhrase = phrase;
         this.cdr.markForCheck();
       },
       error: () => {
+        if (sequence !== this.phraseLoadSequence || this.current?.id !== current.id) return;
         this.currentPhrase = {
           id: current.phrase_id,
           texte: 'Phrase indisponible',
