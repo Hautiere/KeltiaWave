@@ -76,3 +76,56 @@ Les fronts utilisent `/api`, résolu par Nginx vers le backend Docker. Aucun fro
 déployé ne dépend donc d'un backend installé sur la machine de développement.
 Les scripts `start-*`, les proxies Angular et les branches locales du portail
 conservent volontairement leurs URLs localhost pour le développement uniquement.
+
+## Préparer la production depuis le staging validé
+
+La production est une pile distincte : elle ne réutilise ni les conteneurs ni
+les volumes du staging. Préparer d'abord le fichier secret sur le VPS :
+
+```bash
+cp deploy/ovh/.env.production.example \
+  /home/ubuntu/apps/keltiawave/shared/.env.production
+chmod 600 /home/ubuntu/apps/keltiawave/shared/.env.production
+```
+
+Générer de nouveaux secrets PostgreSQL, MinIO et applicatifs, puis construire
+la candidate production en clonant les données du staging :
+
+```bash
+SSH_TARGET=ubuntu@your-ovh-host.example \
+  ./scripts/deploy-production-candidate-ovh.sh
+
+SSH_TARGET=ubuntu@your-ovh-host.example \
+  ./scripts/deploy-production-candidate-ovh.sh --apply
+```
+
+Le clonage sauvegarde d'abord les volumes de destination, exporte PostgreSQL et
+MinIO depuis le staging, restaure ces exports dans les volumes `production`, puis
+relance les tests fonctionnels. Le staging et l'ancienne production restent actifs.
+
+Avant la promotion, créer les enregistrements DNS A suivants vers l'IPv4 du VPS :
+
+```text
+learning.keltiawave.com
+komz.keltiawave.com
+voices.keltiawave.com
+transcribe.keltiawave.com
+record.keltiawave.com
+subtitles.keltiawave.com
+```
+
+La promotion est également un dry-run par défaut. Elle vérifie la révision Git,
+les contenus et tous les DNS avant d'autoriser la bascule :
+
+```bash
+SSH_TARGET=ubuntu@your-ovh-host.example PUBLIC_IPV4=51.178.38.152 \
+  ./scripts/promote-production-ovh.sh
+
+SSH_TARGET=ubuntu@your-ovh-host.example PUBLIC_IPV4=51.178.38.152 \
+  ./scripts/promote-production-ovh.sh --apply
+```
+
+Avec `--apply`, le script sauvegarde le Caddyfile et les données de l'ancienne
+production, valide la nouvelle configuration, recharge Caddy sans arrêter les
+anciens conteneurs, teste tous les domaines publics et restaure automatiquement
+l'ancien routage si un contrôle échoue.

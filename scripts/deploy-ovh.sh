@@ -11,11 +11,12 @@ REMOTE_ENV="$REMOTE_ROOT/shared/.env.$SLOT"
 COMPOSE_FILE="deploy/ovh/docker-compose.candidate.yml"
 APPLY=false
 WITH_LOCAL_DATA=false
+CLONE_FROM_SLOT=""
 DEPLOY_REF="${DEPLOY_REF:-origin/main}"
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/deploy-ovh.sh [--apply] [--with-local-data]
+Usage: ./scripts/deploy-ovh.sh [--apply] [--with-local-data] [--clone-from-slot SLOT]
 
 Without --apply, only prints and validates the deployment plan.
 With --apply, uploads the code, builds an isolated candidate stack and runs
@@ -25,6 +26,8 @@ Options:
   --apply             Execute the staging deployment (default: dry run)
   --with-local-data   Migrate backend/keltiawave.db and backend/data after
                       backing up the staging PostgreSQL and MinIO volumes
+  --clone-from-slot   Clone PostgreSQL and MinIO from an existing validated
+                      slot (for example: staging) into this isolated slot
 
 Environment:
   SSH_TARGET   Required SSH destination (for example: ubuntu@staging.example.com)
@@ -38,11 +41,25 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --apply) APPLY=true ;;
     --with-local-data) WITH_LOCAL_DATA=true ;;
+    --clone-from-slot)
+      shift
+      [[ $# -gt 0 ]] || { echo "--clone-from-slot requires a slot" >&2; exit 2; }
+      CLONE_FROM_SLOT="$1"
+      ;;
     -h|--help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
   shift
 done
+
+if $WITH_LOCAL_DATA && [[ -n "$CLONE_FROM_SLOT" ]]; then
+  echo "Choose either --with-local-data or --clone-from-slot" >&2
+  exit 2
+fi
+if [[ -n "$CLONE_FROM_SLOT" && ! "$CLONE_FROM_SLOT" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  echo "Invalid clone source slot: $CLONE_FROM_SLOT" >&2
+  exit 2
+fi
 
 command -v ssh >/dev/null || { echo "ssh is required" >&2; exit 1; }
 command -v rsync >/dev/null || { echo "rsync is required" >&2; exit 1; }
@@ -61,12 +78,13 @@ echo "Candidate release : $REMOTE_RELEASE"
 echo "Candidate env     : $REMOTE_ENV"
 echo "Public site       : untouched"
 echo "Local data import : $WITH_LOCAL_DATA"
+echo "Clone source      : ${CLONE_FROM_SLOT:-none}"
 echo "Git revision      : $DEPLOY_REF ($DEPLOY_SHA)"
 
 if ! $APPLY; then
   echo
-  echo "DRY RUN only. Prepare $REMOTE_ENV from deploy/ovh/.env.staging.example,"
-  echo "then rerun with --apply and optionally --with-local-data."
+  echo "DRY RUN only. Prepare $REMOTE_ENV from deploy/ovh/.env.$SLOT.example,"
+  echo "then rerun with --apply."
   echo "No SSH command was executed."
   exit 0
 fi
@@ -107,7 +125,19 @@ if $WITH_LOCAL_DATA; then
   rsync -az --delete "$PROJECT_DIR/backend/data/" "$SSH_TARGET:$REMOTE_MIGRATION/data/"
   ssh "$SSH_TARGET" "cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' cp '$REMOTE_MIGRATION/keltiawave.db' backend:/tmp/keltiawave.db; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' cp '$REMOTE_MIGRATION/data' backend:/tmp/migration-data; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T -e PYTHONPATH=/app backend python /app/scripts/migrate_full_sqlite.py /tmp/keltiawave.db /tmp/migration-data"
 else
-  echo "[7/8] Skip local dataset migration"
+  if [[ -n "$CLONE_FROM_SLOT" ]]; then
+    SOURCE_RELEASE="$REMOTE_ROOT/releases/$CLONE_FROM_SLOT"
+    SOURCE_ENV="$REMOTE_ROOT/shared/.env.$CLONE_FROM_SLOT"
+    BACKUP_NAME="before-$CLONE_FROM_SLOT-clone-$(date -u +%Y%m%dT%H%M%SZ)"
+    REMOTE_BACKUP="$REMOTE_ROOT/shared/backups/$SLOT/$BACKUP_NAME"
+    SOURCE_COMPOSE="deploy/ovh/docker-compose.candidate.yml"
+    DESTINATION_MINIO_VOLUME="keltiawave-${SLOT}_minio_data"
+
+    echo "[7/8] Back up destination and clone validated $CLONE_FROM_SLOT data"
+    ssh "$SSH_TARGET" "set -eu; test -f '$SOURCE_ENV'; test -f '$SOURCE_RELEASE/$SOURCE_COMPOSE'; mkdir -p '$REMOTE_BACKUP'; cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T postgres sh -c 'pg_dump -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$REMOTE_BACKUP/destination-postgres.dump'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T minio tar -C /data -czf - . > '$REMOTE_BACKUP/destination-minio.tar.gz'; cd '$SOURCE_RELEASE'; docker compose --env-file '$SOURCE_ENV' -f '$SOURCE_COMPOSE' exec -T postgres sh -c 'pg_dump -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$REMOTE_BACKUP/source-postgres.dump'; docker compose --env-file '$SOURCE_ENV' -f '$SOURCE_COMPOSE' exec -T minio tar -C /data -czf - . > '$REMOTE_BACKUP/source-minio.tar.gz'; cd '$REMOTE_RELEASE'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' stop backend minio; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' start postgres; cat '$REMOTE_BACKUP/source-postgres.dump' | docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' exec -T postgres sh -c 'pg_restore -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" --clean --if-exists --no-owner'; docker run --rm --entrypoint /bin/sh -v '$DESTINATION_MINIO_VOLUME:/data' -v '$REMOTE_BACKUP:/backup:ro' quay.io/minio/minio:latest -c 'find /data -mindepth 1 -delete; tar -C /data -xzf /backup/source-minio.tar.gz'; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' up -d; docker compose --env-file '$REMOTE_ENV' -f '$COMPOSE_FILE' up -d --wait backend"
+  else
+    echo "[7/8] Skip dataset migration"
+  fi
 fi
 
 echo "[8/8] Run functional smoke tests"

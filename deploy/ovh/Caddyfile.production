@@ -1,0 +1,133 @@
+(keltiawave_security) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+	@blocked_scans path /.env /.env.* /.git /.git/* /wp-admin /wp-admin/* /wp-login.php
+	respond @blocked_scans 404
+}
+
+(keltiawave_production_log) {
+	log {
+		output file /var/log/caddy/keltiawave-unified-access.json {
+			roll_size 10MiB
+			roll_keep 10
+			roll_keep_for 720h
+		}
+		format filter {
+			request>remote_ip ip_mask 16 32
+			request>client_ip ip_mask 16 32
+		}
+	}
+}
+
+keltiawave.com, keltiawave.bzh {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-portal:80
+}
+
+komz.keltiawave.com, voices.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-corpus:80
+}
+
+learning.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-learning:80
+}
+
+transcribe.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-transcribe:80
+}
+
+record.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-record:80
+}
+
+subtitles.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-subtitles:80
+}
+
+# Keep historical portal links and bookmarks working during the transition.
+transcription.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	@record path /record.html /record.html/*
+	@subtitles path /studio.html /studio.html/*
+	redir @record https://record.keltiawave.com/ 308
+	redir @subtitles https://subtitles.keltiawave.com/ 308
+	reverse_proxy keltiawave-production-transcribe:80
+}
+
+(keltiawave_staging_security) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Robots-Tag "noindex, nofollow, noarchive"
+	}
+	@blocked_scans path /.env /.env.* /.git /.git/* /wp-admin /wp-admin/* /wp-login.php
+	respond @blocked_scans 404
+}
+
+(keltiawave_staging_auth) {
+	forward_auth keltiawave-staging-auth:8080 {
+		uri /verify
+	}
+}
+
+staging.keltiawave.com {
+	import keltiawave_staging_security
+	handle /staging-login* {
+		reverse_proxy keltiawave-staging-auth:8080
+	}
+	handle /staging-logout* {
+		reverse_proxy keltiawave-staging-auth:8080
+	}
+	handle {
+		import keltiawave_staging_auth
+		reverse_proxy keltiawave-staging-portal:80
+	}
+}
+
+komz.staging.keltiawave.com, library.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-corpus:80
+}
+
+play.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-learning:80
+}
+
+record.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-record:80
+}
+
+transcribe.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-transcribe:80
+}
+
+subtitles.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-subtitles:80
+}
