@@ -99,6 +99,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 20
+    networks:
+      - default
+      - caddy_proxy
 
   corpus:
     container_name: keltiawave-${DEPLOY_SLOT:-candidate}-corpus
@@ -112,6 +115,9 @@ services:
     ports:
       - 127.0.0.1:${CORPUS_CANDIDATE_PORT:-14200}:80
     healthcheck: *frontend-health
+    networks:
+      - default
+      - caddy_proxy
 
   learning:
     container_name: keltiawave-${DEPLOY_SLOT:-candidate}-learning
@@ -125,6 +131,9 @@ services:
     ports:
       - 127.0.0.1:${LEARNING_CANDIDATE_PORT:-14300}:80
     healthcheck: *frontend-health
+    networks:
+      - default
+      - caddy_proxy
 
   record:
     container_name: keltiawave-${DEPLOY_SLOT:-candidate}-record
@@ -138,6 +147,9 @@ services:
     ports:
       - 127.0.0.1:${RECORD_CANDIDATE_PORT:-14400}:80
     healthcheck: *frontend-health
+    networks:
+      - default
+      - caddy_proxy
 
   transcribe:
     container_name: keltiawave-${DEPLOY_SLOT:-candidate}-transcribe
@@ -151,6 +163,9 @@ services:
     ports:
       - 127.0.0.1:${TRANSCRIBE_CANDIDATE_PORT:-14500}:80
     healthcheck: *frontend-health
+    networks:
+      - default
+      - caddy_proxy
 
   subtitles:
     container_name: keltiawave-${DEPLOY_SLOT:-candidate}-subtitles
@@ -164,6 +179,14 @@ services:
     ports:
       - 127.0.0.1:${SUBTITLES_CANDIDATE_PORT:-14600}:80
     healthcheck: *frontend-health
+    networks:
+      - default
+      - caddy_proxy
+
+networks:
+  caddy_proxy:
+    external: true
+    name: ${CADDY_NETWORK:-ovh_default}
 
 volumes:
   postgres_data:
