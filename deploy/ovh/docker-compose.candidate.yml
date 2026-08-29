@@ -43,7 +43,7 @@ services:
     ports:
       - 127.0.0.1:${BACKEND_CANDIDATE_PORT:-18100}:8100
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8100/"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/', timeout=4).read()"]
       interval: 10s
       timeout: 5s
       retries: 30
