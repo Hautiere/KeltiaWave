@@ -12,7 +12,7 @@ SOURCE_ENV="$REMOTE_ROOT/shared/.env.$SOURCE_SLOT"
 DESTINATION_ENV="$REMOTE_ROOT/shared/.env.$DESTINATION_SLOT"
 SOURCE_MINIO_VOLUME="keltiawave-${SOURCE_SLOT}_minio_data"
 DESTINATION_MINIO_VOLUME="keltiawave-${DESTINATION_SLOT}_minio_data"
-MINIO_IMAGE="quay.io/minio/minio:latest"
+ARCHIVE_IMAGE="alpine:3.20"
 source_minio_stopped=false
 
 source_compose() {
@@ -28,7 +28,7 @@ archive_volume() {
   docker run --rm --entrypoint /bin/sh \
     -v "$volume:/data:ro" \
     -v "$BACKUP_DIR:/backup" \
-    "$MINIO_IMAGE" -c "tar -C /data -czf '/backup/$output_name' ."
+    "$ARCHIVE_IMAGE" -c "tar -C /data -czf '/backup/$output_name' ."
 }
 
 restart_source_minio() {
@@ -68,7 +68,7 @@ cat "$BACKUP_DIR/source-postgres.dump" | destination_compose exec -T postgres sh
 docker run --rm --entrypoint /bin/sh \
   -v "$DESTINATION_MINIO_VOLUME:/data" \
   -v "$BACKUP_DIR:/backup:ro" \
-  "$MINIO_IMAGE" -c \
+  "$ARCHIVE_IMAGE" -c \
   'find /data -mindepth 1 -delete; tar -C /data -xzf /backup/source-minio.tar.gz'
 
 destination_compose up -d
