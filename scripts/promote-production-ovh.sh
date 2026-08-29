@@ -55,7 +55,7 @@ backup_dir="$REMOTE_ROOT/shared/backups/pre-promotion-$timestamp"
 remote_candidate="/tmp/keltiawave-Caddyfile.production-$timestamp"
 
 echo "[3/5] Create immutable backups of the legacy production"
-ssh "$SSH_TARGET" "set -eu; mkdir -p '$backup_dir'; cp -p '$ACTIVE_CADDY' '$backup_dir/Caddyfile'; docker exec ovh-postgres-1 sh -c 'pg_dump -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$backup_dir/legacy-postgres.dump'; docker exec ovh-minio-1 tar -C /data -czf - . > '$backup_dir/legacy-minio.tar.gz'; docker exec ovh-app-1 tar -C /var/lib/keltiawave -czf - . > '$backup_dir/legacy-app-data.tar.gz'; sha256sum '$backup_dir/'* > '$backup_dir/SHA256SUMS'"
+ssh "$SSH_TARGET" "set -eu; mkdir -p '$backup_dir'; cp -p '$ACTIVE_CADDY' '$backup_dir/Caddyfile'; docker exec ovh-postgres-1 sh -c 'pg_dump -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$backup_dir/legacy-postgres.dump'; docker run --rm -v 'ovh_minio_data:/data:ro' -v '$backup_dir:/backup' alpine:3.20 tar -C /data -czf /backup/legacy-minio.tar.gz .; docker run --rm -v 'ovh_questions_data:/data:ro' -v '$backup_dir:/backup' alpine:3.20 tar -C /data -czf /backup/legacy-app-data.tar.gz .; sha256sum '$backup_dir/'* > '$backup_dir/SHA256SUMS'"
 
 echo "[4/5] Validate and atomically reload Caddy"
 scp "$PROJECT_DIR/deploy/ovh/Caddyfile.production" "$SSH_TARGET:$remote_candidate"
