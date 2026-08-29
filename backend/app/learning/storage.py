@@ -6,7 +6,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 
 from .. import storage as corpus_storage
 
@@ -168,12 +168,38 @@ def learning_video_response(storage_key: str, content_type: str, request: Reques
     if storage_key.startswith("s3://"):
         _, rest = storage_key.split("s3://", 1)
         bucket, key = rest.split("/", 1)
-        url = corpus_storage._s3_client().generate_presigned_url(
-            "get_object",
-            Params={"Bucket": bucket, "Key": key},
-            ExpiresIn=3600,
+        client = corpus_storage._s3_client()
+        size = int(client.head_object(Bucket=bucket, Key=key)["ContentLength"])
+        range_header = request.headers.get("range") if request else None
+        params = {"Bucket": bucket, "Key": key}
+        status_code = 200
+        headers = {"Accept-Ranges": "bytes", "Content-Length": str(size)}
+        if range_header:
+            try:
+                unit, value = range_header.split("=", 1)
+                if unit.strip().lower() != "bytes" or "," in value:
+                    raise ValueError
+                start_raw, end_raw = value.split("-", 1)
+                start = int(start_raw) if start_raw else max(0, size - int(end_raw))
+                end = int(end_raw) if end_raw else size - 1
+                if start < 0 or start >= size or end < start:
+                    raise ValueError
+                end = min(end, size - 1)
+            except (ValueError, TypeError):
+                return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
+            params["Range"] = f"bytes={start}-{end}"
+            status_code = 206
+            headers.update({
+                "Content-Range": f"bytes {start}-{end}/{size}",
+                "Content-Length": str(end - start + 1),
+            })
+        obj = client.get_object(**params)
+        return StreamingResponse(
+            obj["Body"].iter_chunks(chunk_size=1024 * 1024),
+            status_code=status_code,
+            media_type=content_type,
+            headers=headers,
         )
-        return RedirectResponse(url=url, status_code=307)
 
     path = (LOCAL_LEARNING_DIR / storage_key).resolve()
     if LOCAL_LEARNING_DIR.resolve() not in path.parents or not path.is_file():

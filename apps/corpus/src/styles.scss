@@ -497,6 +497,52 @@ a:visited {
 
 .footer-dot { opacity:.45; }
 
+.keltia-global-footer {
+  min-height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:30px;
+  border-top:1px solid #e5eaf1;
+  color:#536987;
+  background:#fff;
+  font-size:10px;
+  font-weight:750;
+}
+.keltia-global-footer i { font-style:normal; }
+.keltia-global-footer strong { font-size:13px; white-space:nowrap; }
+.keltia-global-footer b { color:#1264e8; }
+.keltia-global-footer em { color:#e8b516; font-style:normal; }
+.keltia-global-footer mark { padding:0; color:#f26a24; background:transparent; }
+.keltia-global-footer a { color:#536987; text-decoration:none; }
+
+@media (min-width: 901px) {
+  .corpus-v2-app {
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .corpus-v2-app > :not(router-outlet):not(.keltia-global-footer) {
+    min-height:0;
+    flex:1 1 auto;
+    overflow:auto;
+  }
+  .corpus-v2-app .kw-shell { min-height:100%; }
+  .corpus-v2-app .kw-footer,
+  .corpus-v2-app .account-footer { display:none !important; }
+}
+
+@media (max-width: 900px) {
+  .keltia-global-footer {
+    min-height:54px;
+    flex-wrap:wrap;
+    gap:5px 14px;
+    padding:10px 16px;
+    text-align:center;
+  }
+}
+
 .brand-rainbow {
   display:inline-flex;
   flex-wrap:nowrap;

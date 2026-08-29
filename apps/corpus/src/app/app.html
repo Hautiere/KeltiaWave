@@ -1,4 +1,13 @@
-<router-outlet *ngIf="isV2Route"></router-outlet>
+<div class="corpus-v2-app" *ngIf="isV2Route">
+  <router-outlet></router-outlet>
+  <footer class="keltia-global-footer">
+    <span>Hautiere prod, 14 Hent Prat Carbon, Beg-Meil</span>
+    <i>•</i>
+    <strong><b>Brezhoneg</b> <em>gant</em> <mark>Fañch</mark></strong>
+    <i>•</i>
+    <a href="mailto:contact@keltiawave.com">contact@keltiawave.com</a>
+  </footer>
+</div>
 
 <div class="app-shell" *ngIf="!isV2Route">
   <header class="app-header">
@@ -59,14 +68,14 @@
     <router-outlet></router-outlet>
   </main>
   <footer class="app-footer">
-    <span class="footer-product">Hautiere prod</span>
-    <span class="footer-dot">-</span>
+    <span class="footer-product">Hautiere prod, 14 Hent Prat Carbon, Beg-Meil</span>
+    <span class="footer-dot">•</span>
     <a class="brand-rainbow" href="https://keltiawave.com" aria-label="KeltiaWave">
       <span>Brezhoneg</span>
       <span>gant</span>
       <span>Fañch</span>
     </a>
-    <span class="footer-dot">-</span>
+    <span class="footer-dot">•</span>
     <a class="footer-contact" href="mailto:contact@keltiawave.com">contact@keltiawave.com</a>
   </footer>
 </div>

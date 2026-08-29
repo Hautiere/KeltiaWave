@@ -51,4 +51,16 @@ check_page subtitles "${SUBTITLES_CANDIDATE_PORT:-14600}"
 check_json_count "Komz phrases" "http://127.0.0.1:${CORPUS_CANDIDATE_PORT:-14200}/api/phrases/?langue=br" "${EXPECTED_MIN_PHRASES:-105}"
 check_json_count "Learning lessons" "http://127.0.0.1:${LEARNING_CANDIDATE_PORT:-14300}/api/learning/lessons" "${EXPECTED_MIN_LESSONS:-4}"
 
+lessons_url="http://127.0.0.1:${LEARNING_CANDIDATE_PORT:-14300}/api/learning/lessons"
+lessons_json="$(curl --fail --silent --show-error "$lessons_url")"
+video_count="$(python3 -c 'import json,sys; print(sum(len(item.get("videos", [])) for item in json.load(sys.stdin)))' <<<"$lessons_json")"
+(( video_count >= ${EXPECTED_MIN_VIDEOS:-4} )) || {
+  echo "FAIL Learning videos: $video_count < ${EXPECTED_MIN_VIDEOS:-4}" >&2
+  exit 1
+}
+video_id="$(python3 -c 'import json,sys; print(next(video["id"] for lesson in json.load(sys.stdin) for video in lesson.get("videos", [])))' <<<"$lessons_json")"
+range_size="$(curl --fail --silent --show-error --range 0-1023 "http://127.0.0.1:${LEARNING_CANDIDATE_PORT:-14300}/api/learning/videos/${video_id}/file" | wc -c | tr -d ' ')"
+(( range_size == 1024 )) || { echo "FAIL Learning video range: $range_size bytes" >&2; exit 1; }
+echo "OK   Learning videos: $video_count; range request: $range_size bytes"
+
 echo "Candidate smoke tests passed. Production has not been modified."

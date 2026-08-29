@@ -11,9 +11,9 @@ Le déploiement est volontairement séparé en deux opérations :
 
 ```bash
 mkdir -p /home/ubuntu/apps/keltiawave/shared
-cp deploy/ovh/.env.candidate.example \
-  /home/ubuntu/apps/keltiawave/shared/.env.candidate
-chmod 600 /home/ubuntu/apps/keltiawave/shared/.env.candidate
+cp deploy/ovh/.env.staging.example \
+  /home/ubuntu/apps/keltiawave/shared/.env.staging
+chmod 600 /home/ubuntu/apps/keltiawave/shared/.env.staging
 ```
 
 Remplacer tous les secrets et renseigner `MODELS_DIR`. Ce répertoire doit déjà
@@ -23,20 +23,25 @@ déploiement.
 ## Simulation puis déploiement candidat
 
 ```bash
-./scripts/deploy-ovh.sh
-./scripts/deploy-ovh.sh --apply
+SSH_TARGET=ubuntu@your-ovh-host.example ./scripts/deploy-staging-ovh.sh
+SSH_TARGET=ubuntu@your-ovh-host.example ./scripts/deploy-staging-ovh.sh --apply --with-local-data
 ```
 
 Variables facultatives :
 
 ```bash
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net
+SSH_TARGET=ubuntu@your-ovh-host.example
 REMOTE_ROOT=/home/ubuntu/apps/keltiawave
-DEPLOY_SLOT=candidate
+DEPLOY_SLOT=staging
 ```
 
-Le transfert exclut `.env`, les bases locales, les fichiers utilisateurs et les
-modèles. Le script refuse de déclarer le candidat valide si les contrôles ne
+Le transfert principal exclut `.env`, les bases locales, les fichiers utilisateurs
+et les modèles. L'option `--with-local-data` sauvegarde d'abord PostgreSQL et
+MinIO dans `shared/backups/staging/`, transfère explicitement le SQLite et les
+médias validés, puis exécute la migration contrôlée. Le script refuse l'import si
+les comptes diffèrent ou si les tables métier du staging ne sont pas vides.
+
+Le script refuse de déclarer le candidat valide si les contrôles ne
 retrouvent pas au minimum 105 phrases Komz et 4 leçons Learning. Il est donc
 normal que le premier passage s'arrête avant validation tant que les données
 PostgreSQL et MinIO n'ont pas été migrées vers la pile candidate.
@@ -55,3 +60,15 @@ docker compose --env-file /home/ubuntu/apps/keltiawave/shared/.env.candidate \
 ```
 
 Ne pas ajouter `--volumes` : les volumes candidats doivent rester récupérables.
+
+## Références locales et portabilité
+
+Les références `127.0.0.1` conservées dans les fichiers OVH servent uniquement
+à lier les ports de la pile de staging à l'interface loopback et à exécuter les
+healthchecks depuis le VPS. Les noms `backend`, `postgres` et `minio` sont des
+noms DNS internes au réseau Compose. Ils ne sont jamais envoyés au navigateur.
+
+Les fronts utilisent `/api`, résolu par Nginx vers le backend Docker. Aucun front
+déployé ne dépend donc d'un backend installé sur la machine de développement.
+Les scripts `start-*`, les proxies Angular et les branches locales du portail
+conservent volontairement leurs URLs localhost pour le développement uniquement.

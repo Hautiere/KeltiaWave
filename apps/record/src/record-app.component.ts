@@ -12,7 +12,7 @@ const RECORD_COPY: Record<Exclude<InterfaceLanguage, 'en'>, Record<string, strin
 
 @Component({ selector: 'record-root', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './record-app.component.html', styleUrls: ['./record-app.component.scss', './keltia-footer.scss'] })
 export class RecordAppComponent implements OnInit, OnDestroy {
-  readonly portalUrl = 'http://127.0.0.1:4100/';
+  readonly portalUrl = 'https://keltiawave.com/';
   interfaceLanguage: InterfaceLanguage = this.initialInterfaceLanguage();
   language: RecordLanguage = 'br';
   microphones: MediaDeviceInfo[] = [];
