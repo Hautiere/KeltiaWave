@@ -1186,6 +1186,7 @@
       const appLanguageCards = Array.from(document.querySelectorAll("[data-app-language]"));
       const toolCards = Array.from(document.querySelectorAll("[data-tool]"));
       const localPortal = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
+      const stagingPortal = window.location.hostname === "staging.keltiawave.com";
       links.forEach((link) => { link.dataset.productionHref = link.href; });
       const availability = {
         br: new Set(["play", "komz", "library", "transcribe", "record", "subtitles"]),
@@ -1326,6 +1327,14 @@
 
       function appHref(link) {
         const productionUrl = new URL(link.dataset.productionHref, window.location.href);
+        if (stagingPortal) {
+          if (productionUrl.hostname === "learning.keltiawave.com") return "https://play.staging.keltiawave.com/";
+          if (productionUrl.hostname === "komz.keltiawave.com") return "https://komz.staging.keltiawave.com/lire";
+          if (productionUrl.hostname === "voices.keltiawave.com") return "https://library.staging.keltiawave.com/";
+          if (productionUrl.pathname.includes("record")) return "https://record.staging.keltiawave.com/";
+          if (productionUrl.pathname.includes("studio")) return "https://subtitles.staging.keltiawave.com/";
+          if (productionUrl.hostname === "transcription.keltiawave.com") return "https://transcribe.staging.keltiawave.com/";
+        }
         if (!localPortal) return productionUrl.toString();
 
         if (productionUrl.hostname === "learning.keltiawave.com") return "http://127.0.0.1:4300/";
