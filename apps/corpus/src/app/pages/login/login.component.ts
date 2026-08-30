@@ -45,13 +45,6 @@ export class LoginComponent {
       email: 'prof.tiar1@keltia.test',
       password: 'classe123',
     },
-    {
-      group: 'Administration',
-      name: 'Admin Learning',
-      detail: 'Administrateur',
-      email: 'learning.admin@keltia.test',
-      password: 'classe123',
-    },
   ];
   successKey: string | null = null;
   mode: 'login' | 'register' = 'login';
