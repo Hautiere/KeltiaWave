@@ -168,6 +168,13 @@ def bootstrap_admin_user() -> None:
         existing = db.query(User).filter(User.email == BOOTSTRAP_ADMIN_EMAIL).first()
         if existing:
             changed = False
+            if not verify_password(BOOTSTRAP_ADMIN_PASSWORD, existing.password_hash):
+                existing.password_hash = hash_password(BOOTSTRAP_ADMIN_PASSWORD)
+                changed = True
+            expected_display_name = BOOTSTRAP_ADMIN_DISPLAY_NAME or BOOTSTRAP_ADMIN_EMAIL
+            if existing.display_name != expected_display_name:
+                existing.display_name = expected_display_name
+                changed = True
             if existing.role != "admin":
                 existing.role = "admin"
                 changed = True
@@ -180,6 +187,9 @@ def bootstrap_admin_user() -> None:
             if not existing.active:
                 existing.active = True
                 changed = True
+            if existing.must_change_password:
+                existing.must_change_password = False
+                changed = True
             if changed:
                 db.commit()
             return
@@ -191,7 +201,7 @@ def bootstrap_admin_user() -> None:
             profile_type="admin",
             role="admin",
             auth_status="verified",
-            must_change_password=True,
+            must_change_password=False,
             active=True,
         )
         db.add(user)

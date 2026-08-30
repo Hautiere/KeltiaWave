@@ -26,6 +26,7 @@ requêtes HTTP Range, indispensable à la navigation dans les vidéos.
 `BOOTSTRAP_CLASS_USERS=true` crée et maintient actifs les profils publics de
 démonstration élève et professeur. L'ancien compte
 `learning.admin@keltia.test` reste désactivé : `BOOTSTRAP_ADMIN_*` crée ou
+resynchronise le compte administrateur privé (mot de passe et nom affiché), puis
 réactive le véritable administrateur de l'installation. Une installation qui
 ne doit exposer aucun compte de test peut utiliser `DISABLE_TEST_ACCOUNTS=true`.
 
