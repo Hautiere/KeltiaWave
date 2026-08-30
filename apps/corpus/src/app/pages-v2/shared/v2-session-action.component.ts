@@ -44,7 +44,7 @@ interface QuickDemoProfile {
           <span class="demo-label"><strong>{{ demo.label }}</strong><small>{{ demo.name }}</small></span>
           <span aria-hidden="true">›</span>
         </button>
-        <a class="admin-login" routerLink="/compte" [queryParams]="{ auth: 'login' }" (click)="closeMenu()">
+        <a class="admin-login" routerLink="/compte" [queryParams]="{ auth: 'login', account: 'admin' }" (click)="closeMenu()">
           <span class="demo-avatar admin" aria-hidden="true">A</span>
           <span class="demo-label"><strong>Admin</strong><small>Authentification sécurisée</small></span>
           <span aria-hidden="true">›</span>

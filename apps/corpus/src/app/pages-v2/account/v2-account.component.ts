@@ -59,7 +59,12 @@ export class V2AccountComponent implements OnInit {
   ngOnInit(): void {
     this.resetProfileDraft();
     this.loadMetrics();
-    if (this.route.snapshot.queryParamMap.get('auth') === 'login' && !this.auth.user()) this.showLogin();
+    if (this.route.snapshot.queryParamMap.get('auth') === 'login' && !this.auth.user()) {
+      if (this.route.snapshot.queryParamMap.get('account') === 'admin') {
+        this.email = 'contact@keltiawave.com';
+      }
+      this.showLogin();
+    }
   }
 
   get profile(): SessionProfile {
