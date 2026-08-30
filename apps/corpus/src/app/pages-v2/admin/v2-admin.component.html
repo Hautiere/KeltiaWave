@@ -312,12 +312,29 @@
         </label>
         <label>
           <span>{{ 'adminData.source' | t }}</span>
-          <input [(ngModel)]="selectedSegment.source">
+          <select [ngModel]="selectedSegmentSourceChoice" (ngModelChange)="changeSegmentSource($event)">
+            <option value="">Sans source</option>
+            <option *ngFor="let source of phraseSources" [value]="source.value">{{ source.label }}</option>
+          </select>
         </label>
         <label>
           <span>{{ 'adminData.domain' | t }}</span>
-          <input [(ngModel)]="selectedSegment.domain">
+          <select [ngModel]="selectedSegmentDomainChoice" (ngModelChange)="changeSegmentDomain($event)">
+            <option value="">Sans domaine</option>
+            <option *ngFor="let theme of phraseThemes" [value]="theme">{{ theme }}</option>
+            <option value="autre">Autre</option>
+          </select>
         </label>
+        <label *ngIf="selectedSegmentSourceChoice === 'autre'"><span>Autre source</span><input [(ngModel)]="selectedSegment.source" placeholder="Précisez la source"></label>
+        <label *ngIf="selectedSegmentSourceChoice === 'internet'"><span>URL de la source *</span><input [(ngModel)]="selectedSegment.source_url" type="url" placeholder="https://…"></label>
+        <label *ngIf="selectedSegmentDomainChoice === 'autre'"><span>Autre domaine</span><input [(ngModel)]="selectedSegment.domain" placeholder="Précisez le domaine"></label>
+        <label><span>Niveau de la phrase</span><select [(ngModel)]="selectedSegment.level"><option value="">Non renseigné</option><option *ngFor="let level of phraseLevels" [value]="level">{{ level }}</option></select></label>
+        <label><span>Région du locuteur</span><select [ngModel]="selectedSegmentRegionChoice" (ngModelChange)="changeSegmentRegion($event)"><option value="">Non renseignée</option><option *ngFor="let region of speakerRegions" [value]="region">{{ region }}</option></select></label>
+        <label *ngIf="selectedSegmentRegionChoice === 'Autre'"><span>Autre région / pays</span><input [(ngModel)]="selectedSegment.speaker_region" placeholder="Précisez la région ou le pays"></label>
+        <label><span>Ville</span><input [(ngModel)]="selectedSegment.speaker_city" placeholder="Optionnel"></label>
+        <label><span>Accent</span><input [(ngModel)]="selectedSegment.speaker_accent" placeholder="Optionnel"></label>
+        <label><span>Niveau du locuteur</span><select [(ngModel)]="selectedSegment.speaker_level"><option value="">Non renseigné</option><option *ngFor="let level of bretonLevels" [value]="level">{{ level === 'native' ? 'Natif' : level }}</option></select></label>
+        <label><span>Nom du locuteur</span><input [(ngModel)]="selectedSegment.contributor_name" placeholder="Optionnel"></label>
         <label>
           <span>{{ 'adminData.status' | t }}</span>
           <select [(ngModel)]="selectedSegment.status">
@@ -330,7 +347,7 @@
 
       <div class="edit-actions">
         <button class="btn danger" type="button" (click)="deleteSelected()" [disabled]="saving || deletingSegmentId !== null">{{ 'adminData.delete' | t }}</button>
-        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
+        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving || (selectedSegmentSourceChoice === 'internet' && !selectedSegment.source_url?.trim())">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
       </div>
     </aside>
   </div>

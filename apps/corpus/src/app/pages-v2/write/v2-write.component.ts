@@ -22,6 +22,7 @@ export class V2WriteComponent implements OnInit {
   selectedDomains: string[] = [];
   selectedSource = '';
   customSource = '';
+  sourceUrl = '';
   selectedLevel = '';
   recentPhrases: Phrase[] = [];
   loading = true;
@@ -53,6 +54,7 @@ export class V2WriteComponent implements OnInit {
     { value: 'manuel-scolaire', label: '📖 Manuel scolaire' },
     { value: 'cours-breton', label: '🎓 Cours de breton' },
     { value: 'presse-article', label: '📰 Presse / Article' },
+    { value: 'internet', label: '🌐 Internet' },
     { value: 'conversation', label: '🎤 Conversation' },
     { value: 'locuteur-natif', label: '👵 Locuteur natif' },
     { value: 'enregistrement-personnel', label: '🎙 Enregistrement personnel' },
@@ -77,7 +79,8 @@ export class V2WriteComponent implements OnInit {
 
   get canSubmit(): boolean {
     const text = this.texte.trim();
-    return this.canWriteRole && text.length >= 6 && text.length <= 180 && this.selectedDomains.length === 1 && !!this.selectedLevel && !this.submitting;
+    const hasRequiredSourceUrl = this.selectedSource !== 'internet' || /^https?:\/\//i.test(this.sourceUrl.trim());
+    return this.canWriteRole && text.length >= 6 && text.length <= 180 && this.selectedDomains.length === 1 && !!this.selectedLevel && hasRequiredSourceUrl && !this.submitting;
   }
 
   get canWriteRole(): boolean {
@@ -118,6 +121,7 @@ export class V2WriteComponent implements OnInit {
 
   onSourceChange(value: string): void {
     if (value !== 'autre') this.customSource = '';
+    if (value !== 'internet') this.sourceUrl = '';
   }
 
   domainLabel(value?: string | null): string {
@@ -155,6 +159,7 @@ export class V2WriteComponent implements OnInit {
         theme: this.selectedDomains.length ? this.selectedDomains.join(',') : null,
         niveau: this.selectedLevel,
         source: this.selectedSource === 'autre' ? this.customSource.trim() || null : this.selectedSource || null,
+        source_url: this.selectedSource === 'internet' ? this.sourceUrl.trim() : null,
         langue: 'br',
         auteur: this.auth.user()?.display_name || 'contributor',
       }));
@@ -165,6 +170,7 @@ export class V2WriteComponent implements OnInit {
       this.selectedLevel = '';
       this.selectedSource = '';
       this.customSource = '';
+      this.sourceUrl = '';
       this.success = this.i18n.translate('write.success');
     } catch (err: any) {
       this.error = err?.error?.detail || err?.message || 'Ajout de phrase impossible.';

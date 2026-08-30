@@ -11,6 +11,7 @@ export interface Phrase {
   theme: string | null;
   niveau: string | null;
   source: string | null;
+  source_url?: string | null;
   langue: string | null;
   auteur: string | null;
   url_audio?: string | null;

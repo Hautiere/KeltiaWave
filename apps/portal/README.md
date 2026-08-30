@@ -12,4 +12,9 @@ Subtitles sur leurs domaines de production respectifs.
 Le footer commun reste visible en bas de la vue PC sans nécessiter de défilement
 vertical lorsque le contenu tient dans la hauteur disponible.
 
+Le surfeur de la bannière est fourni par
+`assets/avatar_Keltiawave_surfer_transparent.png`. Ce fichier est un PNG RGBA à
+fond réellement transparent ; il ne faut pas le remplacer par une image dont le
+damier de transparence est intégré aux pixels.
+
 Le projet source `portal-standalone` reste indépendant et inchangé.

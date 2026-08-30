@@ -12,6 +12,7 @@ class Phrase(Base):
     theme = Column(String, nullable=True)     # ex: "général"
     niveau = Column(String, nullable=True)    # ex: "A1"
     source = Column(String, nullable=True)    # ex: "livre", "dictionnaire", "archive-dastum"
+    source_url = Column(String, nullable=True)
     langue = Column(String, nullable=True)    # ex: "br"
     auteur = Column(String, nullable=True)    # (optionnel)
     url_audio = Column(String, nullable=True) # sera rempli quand S3 sera branché

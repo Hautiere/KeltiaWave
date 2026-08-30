@@ -152,9 +152,10 @@
             <button type="button" (click)="sortLibraryBy('phrase')">Phrase <b>{{ librarySortIndicator('phrase') }}</b></button>
             <button type="button" (click)="sortLibraryBy('theme')">{{ 'v2.theme' | t }} <b>{{ librarySortIndicator('theme') }}</b></button>
             <span>Signal</span>
-            <button type="button" (click)="sortLibraryBy('level')">Niveau d’accent <b>{{ librarySortIndicator('level') }}</b></button>
+            <button type="button" (click)="sortLibraryBy('level')">Niveau <b>{{ librarySortIndicator('level') }}</b></button>
             <button type="button" (click)="sortLibraryBy('region')">Région / pays <b>{{ librarySortIndicator('region') }}</b></button>
             <span>Locuteur</span>
+            <span>Source</span>
             <button type="button" (click)="sortLibraryBy('date')">Date <b>{{ librarySortIndicator('date') }}</b></button>
           </div>
           <article class="audio-row" *ngFor="let row of corpusRows">
@@ -169,6 +170,10 @@
             <span class="validation-summary approved">{{ pronunciationLevel(row.audio) }}</span>
             <span class="region-cell" [title]="pronunciationRegion(row.audio)">{{ pronunciationRegion(row.audio) }}</span>
             <span class="speaker">{{ row.audio.contributor_name || row.audio.contributor_email || ('v2.speaker' | t) }} · {{ row.audio.contributor_school || ('v2.classFallback' | t) }}</span>
+            <span class="source-cell">
+              <a *ngIf="sourceUrl(row) as url; else noSource" [href]="url" target="_blank" rel="noopener noreferrer" [title]="url">{{ sourceLabel(row) }} ↗</a>
+              <ng-template #noSource>—</ng-template>
+            </span>
             <time>{{ displayDate(row.audio.created_at) }}</time>
           </article>
         </div>

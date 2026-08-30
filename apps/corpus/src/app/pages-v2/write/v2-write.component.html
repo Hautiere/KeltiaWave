@@ -93,6 +93,10 @@
                 <span>Précisez la source</span>
                 <input [(ngModel)]="customSource" type="text" maxlength="120" placeholder="Ex. site internet, entretien…" [disabled]="submitting">
               </label>
+              <label class="custom-source" *ngIf="selectedSource === 'internet'">
+                <span>URL de la source *</span>
+                <input [(ngModel)]="sourceUrl" type="url" maxlength="2048" placeholder="https://…" [disabled]="submitting" required>
+              </label>
             </section>
           </div>
 

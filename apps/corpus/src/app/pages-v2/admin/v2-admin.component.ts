@@ -35,6 +35,9 @@ export class V2AdminComponent implements OnInit {
   users: AuthUser[] = [];
   phrases: Phrase[] = [];
   selectedSegment: AdminSegment | null = null;
+  selectedSegmentSourceChoice = '';
+  selectedSegmentDomainChoice = '';
+  selectedSegmentRegionChoice = '';
   deletionCandidate: AdminSegment | null = null;
   selectedUser: AuthUser | null = null;
   selectedPhrase: Phrase | null = null;
@@ -45,10 +48,12 @@ export class V2AdminComponent implements OnInit {
   readonly roles: AuthUser['role'][] = ['admin', 'teacher', 'contributor', 'learner'];
   readonly bretonLevels = ['undefined', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
   readonly phraseLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  readonly phraseThemes = ['vie-quotidienne', 'education', 'famille', 'travail', 'nature', 'transports', 'sante', 'culture-patrimoine', 'histoire', 'traditions-fetes', 'cuisine', 'sports-loisirs', 'technologies', 'administration'];
+  readonly phraseThemes = ['vie-quotidienne', 'education', 'famille', 'travail', 'nature', 'transports', 'sante', 'culture-patrimoine', 'histoire', 'traditions-fetes', 'cuisine', 'sports-loisirs', 'technologies', 'administration', 'non-classe'];
+  readonly speakerRegions = ['Kerne (Cornouaille)', 'Leon (Léon)', 'Treger (Trégor)', 'Gwened (Vannetais)', 'Autre'];
   readonly phraseSources = [
     { value: 'livre', label: 'Livre' }, { value: 'manuel-scolaire', label: 'Manuel scolaire' },
     { value: 'cours-breton', label: 'Cours de breton' }, { value: 'presse-article', label: 'Presse / Article' },
+    { value: 'internet', label: 'Internet' },
     { value: 'conversation', label: 'Conversation' }, { value: 'locuteur-natif', label: 'Locuteur natif' },
     { value: 'enregistrement-personnel', label: 'Enregistrement personnel' }, { value: 'archive', label: 'Archive' },
     { value: 'creation-originale', label: 'Création originale' }, { value: 'autre', label: 'Autre' },
@@ -246,9 +251,34 @@ export class V2AdminComponent implements OnInit {
 
   edit(segment: AdminSegment): void {
     this.selectedSegment = { ...segment };
+    this.selectedSegmentSourceChoice = this.metadataChoice(this.phraseSources.map((item) => item.value), segment.source);
+    this.selectedSegmentDomainChoice = this.metadataChoice(this.phraseThemes, segment.domain);
+    this.selectedSegmentRegionChoice = this.metadataChoice(this.speakerRegions, segment.speaker_region);
     this.selectedUser = null;
     this.success = null;
     this.error = null;
+  }
+
+  changeSegmentSource(value: string): void {
+    this.selectedSegmentSourceChoice = value;
+    if (!this.selectedSegment) return;
+    if (value !== 'autre') this.selectedSegment.source = value || null;
+    else if (this.phraseSources.some((source) => source.value === this.selectedSegment?.source)) this.selectedSegment.source = '';
+    if (value !== 'internet') this.selectedSegment.source_url = null;
+  }
+
+  changeSegmentDomain(value: string): void {
+    this.selectedSegmentDomainChoice = value;
+    if (!this.selectedSegment) return;
+    if (value !== 'autre') this.selectedSegment.domain = value || null;
+    else if (this.phraseThemes.includes(this.selectedSegment.domain || '')) this.selectedSegment.domain = '';
+  }
+
+  changeSegmentRegion(value: string): void {
+    this.selectedSegmentRegionChoice = value;
+    if (!this.selectedSegment) return;
+    if (value !== 'Autre') this.selectedSegment.speaker_region = value || null;
+    else if (this.speakerRegions.includes(this.selectedSegment.speaker_region || '')) this.selectedSegment.speaker_region = '';
   }
 
   toggleSegmentAudio(segment: AdminSegment): void {
@@ -410,7 +440,14 @@ export class V2AdminComponent implements OnInit {
       texte: segment.texte,
       traduction_fr: segment.traduction_fr,
       source: segment.source,
+      source_url: segment.source_url,
       domain: segment.domain,
+      level: segment.level,
+      speaker_region: segment.speaker_region,
+      speaker_city: segment.speaker_city,
+      speaker_accent: segment.speaker_accent,
+      speaker_level: segment.speaker_level,
+      contributor_name: segment.contributor_name,
       status: segment.status,
     }).subscribe({
       next: (updated) => {
@@ -425,6 +462,11 @@ export class V2AdminComponent implements OnInit {
         this.saving = false;
       },
     });
+  }
+
+  private metadataChoice(values: string[], current?: string | null): string {
+    if (!current) return '';
+    return values.includes(current) ? current : values.includes('Autre') ? 'Autre' : 'autre';
   }
 
   deleteSelected(): void {

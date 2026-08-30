@@ -210,10 +210,10 @@ button, input, select { font: inherit; }
 .audio-list { overflow: hidden; border: 1px solid #e5eaf3; border-radius: 8px; background: #fff; }
 .matrix-list { overflow-x: auto; }
 .audio-row {
-  min-width: 1080px;
+  min-width: 1210px;
   min-height: 56px;
   display: grid;
-  grid-template-columns: 36px minmax(220px, 1.25fr) 145px 112px 130px 160px minmax(165px, .75fr) 104px;
+  grid-template-columns: 36px minmax(220px, 1.25fr) 140px 78px 90px 145px minmax(150px, .7fr) 130px 96px;
   align-items: center;
   gap: 12px;
   padding: 8px 16px;
@@ -224,6 +224,9 @@ button, input, select { font: inherit; }
 .matrix-header button:hover, .matrix-header button:focus-visible { color: #2563eb; outline: none; }
 .matrix-header b { color: #2563eb; font-size: 9px; }
 .region-cell { min-width: 0; overflow: hidden; color: #465773; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.source-cell { min-width: 0; overflow: hidden; color: #94a3b8; font-size: 11px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.source-cell a { color: #2563eb; text-decoration: none; }
+.source-cell a:hover, .source-cell a:focus-visible { text-decoration: underline; }
 .audio-row:last-child { border-bottom: 0; }
 .library-player { display: none; }
 .theme-glyph {
@@ -261,9 +264,9 @@ button, input, select { font: inherit; }
 .audio-row strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .tag { min-width: 0; width: fit-content; max-width: 180px; overflow: hidden; border-radius: 7px; padding: 6px 10px; color: #465773; background: #f2f5fa; font-size: 11px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .waveform {
-  width: 112px;
-  min-width: 112px;
-  max-width: 112px;
+  width: 76px;
+  min-width: 76px;
+  max-width: 76px;
   height: 32px;
   display: flex;
   align-items: center;
@@ -325,8 +328,8 @@ button, input, select { font: inherit; }
   .filters, .about-card { display: none; }
   .library-hero { grid-template-columns: 1fr; }
   .library-hero-visual { min-height: 150px; }
-  .audio-row { grid-template-columns: 36px minmax(220px, 1.2fr) 135px 102px 120px 145px minmax(145px, .7fr) 92px; }
-  .waveform { width: 102px; min-width: 102px; max-width: 102px; }
+  .audio-row { grid-template-columns: 36px minmax(220px, 1.2fr) 130px 72px 84px 135px minmax(140px, .7fr) 120px 88px; }
+  .waveform { width: 70px; min-width: 70px; max-width: 70px; }
 }
 
 @media (max-width: 760px) {
@@ -349,8 +352,8 @@ button, input, select { font: inherit; }
   .audio-list { display: grid; gap: 10px; overflow: visible; border: 0; background: transparent; }
   .matrix-list { display: block; overflow-x: auto; border: 1px solid #e5eaf3; background: #fff; }
   .audio-row {
-    grid-template-columns: 36px minmax(220px, 1.2fr) 135px 102px 120px 145px minmax(145px, .7fr) 92px;
-    min-width: 1000px;
+    grid-template-columns: 36px minmax(220px, 1.2fr) 130px 72px 84px 135px minmax(140px, .7fr) 120px 88px;
+    min-width: 1130px;
     gap: 10px;
     border: 0;
     border-bottom: 1px solid #e5eaf3;

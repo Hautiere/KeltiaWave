@@ -283,13 +283,27 @@ export class V2AudioHomeComponent implements OnInit {
     const level = (audio.validations ?? [])
       .find((item) => (item.validator_role === 'teacher' || item.validator_role === 'admin') && item.decision === 'approved')
       ?.pronunciation_level;
-    return level === 'native' ? 'Natif' : level || 'Niveau non renseigné';
+    return level === 'native' ? 'Natif' : level || 'NA';
   }
 
   pronunciationRegion(audio: AudioRead): string {
     return (audio.validations ?? [])
       .find((item) => (item.validator_role === 'teacher' || item.validator_role === 'admin') && item.decision === 'approved')
       ?.pronunciation_region || 'Région non renseignée';
+  }
+
+  sourceUrl(row: AudioRow): string | null {
+    return row.phrase?.source_url || null;
+  }
+
+  sourceLabel(row: AudioRow): string {
+    const sourceUrl = this.sourceUrl(row);
+    if (!sourceUrl) return '—';
+    try {
+      return new URL(sourceUrl).hostname.replace(/^www\./, '');
+    } catch {
+      return 'Source';
+    }
   }
 
   themeTone(value?: string | null): string {

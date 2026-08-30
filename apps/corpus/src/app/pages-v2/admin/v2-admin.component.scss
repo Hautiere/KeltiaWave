@@ -275,11 +275,13 @@ button, input, select, textarea { font: inherit; }
 .message.success { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: rgba(15, 23, 42, .38); }
-.edit-panel { width: min(720px, 100%); padding: 24px; box-shadow: 0 24px 80px rgba(15, 23, 42, .26); }
+.edit-panel { width: min(720px, 100%); max-height: calc(100dvh - 48px); display: flex; flex-direction: column; overflow: hidden; padding: 24px; box-shadow: 0 24px 80px rgba(15, 23, 42, .26); }
 .edit-head, .edit-actions { display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+.edit-head, .edit-actions { flex: 0 0 auto; }
 .edit-head h2 { margin: 10px 0 0; color: #0b1533; }
 .icon-btn { width: 36px; height: 36px; border: 1px solid #d9e2ee; border-radius: 8px; background: #fff; cursor: pointer; color: #0b1533; font: inherit; font-weight: 900; }
-.edit-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+.edit-form { min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; overflow-y: auto; margin: 22px -8px 0 0; padding: 0 8px 22px 0; }
+.edit-actions { border-top: 1px solid #e5eaf3; padding-top: 18px; background: #fff; }
 .edit-form label { display: grid; gap: 8px; color: #65738b; font-size: 12px; font-weight: 850; }
 .edit-form label.full { grid-column: 1 / -1; }
 .edit-form textarea { min-height: 110px; resize: vertical; }

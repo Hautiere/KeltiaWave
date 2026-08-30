@@ -13,9 +13,9 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
-from ...auth import require_admin
+from ...auth import require_admin, validation_weight_for
 from ...db import get_db
-from ...models.audio import Audio, AudioStatus
+from ...models.audio import Audio, AudioStatus, AudioValidation
 from ...models.phrase import Phrase
 from ...models.user import User
 from ...storage import delete_audio_file, storage_backend_info, storage_ref_exists
@@ -29,7 +29,14 @@ class SegmentUpdate(BaseModel):
     texte: str | None = None
     traduction_fr: str | None = None
     source: str | None = None
+    source_url: str | None = None
     domain: str | None = None
+    level: str | None = None
+    speaker_region: str | None = None
+    speaker_city: str | None = None
+    speaker_accent: str | None = None
+    speaker_level: str | None = None
+    contributor_name: str | None = None
     status: AudioStatus | None = None
 
 
@@ -88,7 +95,13 @@ def segment_payload(audio: Audio, phrase: Phrase | None) -> dict:
         "traduction_fr": phrase.traduction_fr if phrase else None,
         "dataset": dataset_name(phrase, audio) if phrase else (audio.phrase_source or "sans-source"),
         "source": phrase.source if phrase else audio.phrase_source,
+        "source_url": phrase.source_url if phrase else None,
         "domain": audio.domain or (phrase.theme if phrase else None),
+        "level": phrase.niveau if phrase else None,
+        "speaker_region": audio.speaker_region,
+        "speaker_city": audio.speaker_city,
+        "speaker_accent": audio.speaker_accent,
+        "speaker_level": audio.speaker_level,
         "status": audio.status.value,
         "origin": audio.origin,
         "filename": audio.filename,
@@ -102,7 +115,7 @@ def segment_payload(audio: Audio, phrase: Phrase | None) -> dict:
 
 @router.get("/overview")
 def overview(
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     phrases = db.query(Phrase).all()
@@ -442,7 +455,7 @@ def list_segments(
 def update_segment(
     audio_id: int,
     payload: SegmentUpdate,
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     audio = db.query(Audio).options(joinedload(Audio.validations)).filter(Audio.id == audio_id).first()
@@ -460,10 +473,48 @@ def update_segment(
         phrase.traduction_fr = (patch["traduction_fr"] or "").strip() or None
     if "source" in patch:
         phrase.source = (patch["source"] or "").strip() or None
+    if "source_url" in patch:
+        phrase.source_url = (patch["source_url"] or "").strip() or None
     if "domain" in patch:
-        audio.domain = (patch["domain"] or "").strip() or None
+        domain = (patch["domain"] or "").strip() or None
+        audio.domain = domain
+        phrase.theme = domain
+    if "level" in patch:
+        phrase.niveau = (patch["level"] or "").strip() or None
+    for field in ("speaker_region", "speaker_city", "speaker_accent", "speaker_level", "contributor_name"):
+        if field in patch:
+            setattr(audio, field, (patch[field] or "").strip() or None)
     if "status" in patch:
         audio.status = patch["status"]
+        decision = patch["status"].value
+        if decision in {"approved", "rejected"}:
+            validator_name = current_user.display_name or current_user.email
+            audio.validated_at = datetime.utcnow()
+            audio.validated_by = validator_name
+            audio.validator_role = current_user.role
+            audio.validation_weight = str(validation_weight_for(current_user))
+            validation = (
+                db.query(AudioValidation)
+                .filter(AudioValidation.audio_id == audio.id, AudioValidation.validator == validator_name)
+                .order_by(AudioValidation.id.desc())
+                .first()
+            )
+            if validation:
+                validation.decision = decision
+                validation.pronunciation_level = audio.speaker_level if decision == "approved" else None
+                validation.pronunciation_region = audio.speaker_region if decision == "approved" else None
+                validation.created_at = audio.validated_at
+            else:
+                db.add(AudioValidation(
+                    audio_id=audio.id,
+                    decision=decision,
+                    validator=validator_name,
+                    validator_role=current_user.role,
+                    validation_weight=audio.validation_weight,
+                    pronunciation_level=audio.speaker_level if decision == "approved" else None,
+                    pronunciation_region=audio.speaker_region if decision == "approved" else None,
+                    created_at=audio.validated_at,
+                ))
 
     db.commit()
     db.refresh(audio)

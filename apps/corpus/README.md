@@ -24,7 +24,17 @@
 La bibliothèque publique ne présente que les audios dont la dernière décision
 professeur ou administrateur est positive. Sa matrice est triable par phrase,
 thème, niveau de prononciation, région/pays et date. Les filtres couvrent aussi
-le niveau de phrase et la source.
+le niveau de phrase et la source. Une source Internet est affichée sous forme de
+lien externe ; un niveau de prononciation absent est affiché `NA`.
+
+Lors de la création d'une phrase, le professeur peut choisir `Internet` et doit
+alors renseigner l'URL HTTP(S) d'origine. L'administration permet de modifier la
+source et son URL, le domaine, le niveau de phrase et les métadonnées du locuteur
+(région/pays, ville, accent, niveau et nom). Les valeurs historiques qui ne font
+pas partie des listes prédéfinies sont conservées via les choix `Autre`.
+
+L'onglet Données de l'administration peut importer un jeu de données validées à
+partir d'un fichier de métadonnées et d'une archive contenant les MP3 associés.
 
 `My progress` présente les enregistrements de l'élève avec leur dernier statut
 et le commentaire du professeur. `My class` regroupe les enregistrements par
@@ -41,6 +51,9 @@ chaque fichier à son `phrase_id` ; le stockage ajoute un UUID pour éviter les
 collisions. Sur l'écran d'évaluation, les réponses asynchrones devenues
 obsolètes sont ignorées afin que le texte reste toujours celui de l'audio
 sélectionné.
+
+Les liens du logo ciblent automatiquement le portail local sur `127.0.0.1:4100`,
+le portail staging sur `staging.keltiawave.com`, ou le portail de production.
 
 Déploiements publics :
 
