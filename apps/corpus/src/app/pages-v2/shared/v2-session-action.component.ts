@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ProfileService } from '../../core/profile.service';
@@ -17,7 +18,7 @@ interface QuickDemoProfile {
 @Component({
   selector: 'app-v2-session-action',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   template: `
     <details *ngIf="!auth.user()" #signinMenu class="session-menu signin-menu">
       <summary class="session-action">
@@ -44,11 +45,24 @@ interface QuickDemoProfile {
           <span class="demo-label"><strong>{{ demo.label }}</strong><small>{{ demo.name }}</small></span>
           <span aria-hidden="true">›</span>
         </button>
-        <a class="admin-login" routerLink="/compte" [queryParams]="{ auth: 'login', account: 'admin' }" (click)="closeMenu()">
+        <button class="admin-login" type="button" (click)="openAdminLogin()" [disabled]="busyDemoEmail !== null">
           <span class="demo-avatar admin" aria-hidden="true">A</span>
           <span class="demo-label"><strong>Admin</strong><small>Authentification sécurisée</small></span>
-          <span aria-hidden="true">›</span>
-        </a>
+          <span aria-hidden="true">{{ adminLoginOpen ? '⌃' : '⌄' }}</span>
+        </button>
+        <form class="admin-credentials" *ngIf="adminLoginOpen" (ngSubmit)="loginAdmin()">
+          <label>
+            <span>Email</span>
+            <input type="email" name="adminEmail" [(ngModel)]="adminEmail" autocomplete="username" required>
+          </label>
+          <label>
+            <span>Mot de passe</span>
+            <input type="password" name="adminPassword" [(ngModel)]="adminPassword" autocomplete="current-password" required>
+          </label>
+          <button class="admin-submit" type="submit" [disabled]="busyDemoEmail !== null || !adminEmail || !adminPassword">
+            {{ busyDemoEmail === adminEmail ? 'Connexion…' : 'Se connecter' }}
+          </button>
+        </form>
         <p class="signin-error" *ngIf="loginError">{{ loginError }}</p>
       </div>
     </details>
@@ -216,6 +230,49 @@ interface QuickDemoProfile {
       color: #102345;
     }
 
+    .admin-credentials {
+      display: grid;
+      gap: 10px;
+      padding: 12px 16px 16px;
+      border-top: 1px solid #e6ecf6;
+      background: #f8faff;
+    }
+
+    .admin-credentials label {
+      display: grid;
+      gap: 5px;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .admin-credentials input {
+      width: 100%;
+      min-height: 38px;
+      box-sizing: border-box;
+      border: 1px solid #cbd9f2;
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #fff;
+      color: #102345;
+      font: inherit;
+    }
+
+    .admin-credentials .admin-submit {
+      min-height: 38px;
+      justify-content: center;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      text-align: center;
+    }
+
+    .admin-credentials .admin-submit:hover,
+    .admin-credentials .admin-submit:focus-visible {
+      background: #145be7;
+      color: #fff;
+    }
+
     .demo-menu-head {
       display: grid;
       gap: 3px;
@@ -282,6 +339,9 @@ export class V2SessionActionComponent {
 
   busyDemoEmail: string | null = null;
   loginError: string | null = null;
+  adminLoginOpen = false;
+  adminEmail = 'contact@keltiawave.com';
+  adminPassword = '';
 
   constructor(
     readonly auth: AuthService,
@@ -327,6 +387,39 @@ export class V2SessionActionComponent {
       error: (err) => {
         this.loginError = err?.error?.detail === 'Invalid email or password'
           ? 'Compte de démonstration indisponible.'
+          : err?.error?.detail || 'Connexion impossible.';
+        this.busyDemoEmail = null;
+      },
+    });
+  }
+
+  openAdminLogin(): void {
+    this.adminEmail = 'contact@keltiawave.com';
+    this.adminPassword = '';
+    this.loginError = null;
+    this.adminLoginOpen = !this.adminLoginOpen;
+  }
+
+  loginAdmin(): void {
+    if (this.busyDemoEmail || !this.adminEmail || !this.adminPassword) return;
+    this.busyDemoEmail = this.adminEmail;
+    this.loginError = null;
+    this.auth.login({ email: this.adminEmail.trim(), password: this.adminPassword }).subscribe({
+      next: (response) => {
+        this.adminPassword = '';
+        this.busyDemoEmail = null;
+        if (response.user.role !== 'admin') {
+          this.auth.logout();
+          this.loginError = 'Ce compte ne possède pas le rôle administrateur.';
+          return;
+        }
+        this.closeMenu();
+        void this.router.navigate(['/admin']);
+      },
+      error: (err) => {
+        this.adminPassword = '';
+        this.loginError = err?.error?.detail === 'Invalid email or password'
+          ? 'Identifiants administrateur incorrects.'
           : err?.error?.detail || 'Connexion impossible.';
         this.busyDemoEmail = null;
       },
