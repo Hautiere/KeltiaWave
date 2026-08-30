@@ -46,7 +46,9 @@ export class TranscribeAppComponent {
   private request?: Subscription;
   private transcriptionTimer?: ReturnType<typeof setInterval>;
 
-  readonly portalBase = 'https://keltiawave.com/';
+  readonly portalBase = window.location.hostname.endsWith('.staging.keltiawave.com')
+    ? 'https://staging.keltiawave.com/'
+    : 'https://keltiawave.com/';
 
   constructor(private readonly api: TranscribeApiService) { this.message = this.status('Choisissez un fichier audio ou vidéo.'); }
 

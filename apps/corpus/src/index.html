@@ -17,5 +17,20 @@
 </head>
 <body>
   <app-root></app-root>
+  <script>
+    (() => {
+      if (!window.location.hostname.endsWith('.staging.keltiawave.com')) return;
+      const stagingPortal = 'https://staging.keltiawave.com/';
+      const alignPortalLinks = () => {
+        document.querySelectorAll('a[href^="https://keltiawave.com"]')
+          .forEach((link) => {
+            const label = link.getAttribute('aria-label') || '';
+            if (/keltiawave|portail/i.test(label)) link.setAttribute('href', stagingPortal);
+          });
+      };
+      new MutationObserver(alignPortalLinks).observe(document.body, { childList: true, subtree: true });
+      alignPortalLinks();
+    })();
+  </script>
 </body>
 </html>

@@ -30,6 +30,9 @@ interface StoredProgress { lessonId: number; status: 'started' | 'completed'; be
 })
 export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
   readonly api = inject(LearningApiService);
+  readonly portalUrl = window.location.hostname.endsWith('.staging.keltiawave.com')
+    ? 'https://staging.keltiawave.com/'
+    : 'https://keltiawave.com/';
   @ViewChild('lessonVideo') private lessonVideo?: ElementRef<HTMLMediaElement>;
   @ViewChild('videoShell') private videoShell?: ElementRef<HTMLElement>;
   @ViewChild('mediaCard') private mediaCard?: ElementRef<HTMLElement>;
