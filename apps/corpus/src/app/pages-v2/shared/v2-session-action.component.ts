@@ -11,7 +11,7 @@ interface QuickDemoProfile {
   email: string;
   password: string;
   avatar: string;
-  tone: 'student' | 'teacher' | 'admin';
+  tone: 'student' | 'teacher';
 }
 
 @Component({
@@ -44,6 +44,11 @@ interface QuickDemoProfile {
           <span class="demo-label"><strong>{{ demo.label }}</strong><small>{{ demo.name }}</small></span>
           <span aria-hidden="true">›</span>
         </button>
+        <a class="admin-login" routerLink="/compte" [queryParams]="{ auth: 'login' }" (click)="closeMenu()">
+          <span class="demo-avatar admin" aria-hidden="true">A</span>
+          <span class="demo-label"><strong>Admin</strong><small>Authentification sécurisée</small></span>
+          <span aria-hidden="true">›</span>
+        </a>
         <p class="signin-error" *ngIf="loginError">{{ loginError }}</p>
       </div>
     </details>
@@ -205,6 +210,12 @@ interface QuickDemoProfile {
       color: #102345;
     }
 
+    .signin-dropdown .admin-login {
+      min-height: 52px;
+      border-top: 1px solid #e6ecf6;
+      color: #102345;
+    }
+
     .demo-menu-head {
       display: grid;
       gap: 3px;
@@ -267,7 +278,6 @@ export class V2SessionActionComponent {
   readonly demoProfiles: QuickDemoProfile[] = [
     { label: 'Élève', name: 'Mael Le Gall', email: 'tiar1@keltia.test', password: 'classe123', avatar: '/assets/profile-avatar-17.png', tone: 'student' },
     { label: 'Professeur', name: 'Nolwenn Morvan', email: 'prof.tiar1@keltia.test', password: 'classe123', avatar: '/assets/profile-avatar-26.png', tone: 'teacher' },
-    { label: 'Admin', name: 'Admin Learning', email: 'learning.admin@keltia.test', password: 'classe123', avatar: '/assets/profile-avatar-04.png', tone: 'admin' },
   ];
 
   busyDemoEmail: string | null = null;

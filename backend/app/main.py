@@ -327,33 +327,8 @@ def bootstrap_class_users() -> None:
     try:
         test_admin_email = "learning.admin@keltia.test"
         test_admin = db.query(User).filter(User.email == test_admin_email).first()
-        if not test_admin:
-            test_admin = User(
-                email=test_admin_email,
-                password_hash=hash_password(BOOTSTRAP_CLASS_PASSWORD),
-                display_name="Admin Learning",
-                profile_type="admin",
-                role="admin",
-                auth_status="verified",
-                breton_level="C1",
-                organization="KeltiaWave",
-                notes=class_test_notes(),
-                must_change_password=False,
-                active=True,
-            )
-            db.add(test_admin)
-        else:
-            test_admin.display_name = "Admin Learning"
-            test_admin.profile_type = "admin"
-            test_admin.role = "admin"
-            test_admin.auth_status = "verified"
-            test_admin.breton_level = "C1"
-            test_admin.organization = "KeltiaWave"
-            test_admin.notes = class_test_notes()
-            test_admin.must_change_password = False
-            test_admin.active = True
-            if not verify_password(BOOTSTRAP_CLASS_PASSWORD, test_admin.password_hash):
-                test_admin.password_hash = hash_password(BOOTSTRAP_CLASS_PASSWORD)
+        if test_admin and test_admin.active:
+            test_admin.active = False
         for item in CLASS_TEST_USERS:
             existing = db.query(User).filter(User.email == item["email"]).first()
             if existing:
