@@ -43,7 +43,6 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
   readonly levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   readonly testProfiles = [
     { label: 'Élève', name: 'Mael Le Gall', role: 'Utilisateur', email: 'tiar1@keltia.test', password: 'classe123', description: 'Teste une progression apprenant synchronisée.', tone: 'student' },
-    { label: 'Admin', name: 'Admin Learning', role: 'Administrateur', email: 'learning.admin@keltia.test', password: 'classe123', description: 'Teste la création et la modification des leçons.', tone: 'admin' },
   ];
   uiLanguage: UiLanguage = (localStorage.getItem('keltiaLearn.language') as UiLanguage) || 'fr';
   private readonly uiText: Record<UiLanguage, Record<string, string>> = {
@@ -286,6 +285,13 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
   async loginTestProfile(profile: { email: string; password: string }): Promise<void> {
     this.learnerEmail = profile.email; this.learnerPassword = profile.password;
     await this.loginFromHeader();
+  }
+
+  openAdminLogin(): void {
+    this.learnerEmail = 'contact@keltiawave.com';
+    this.learnerPassword = '';
+    this.learnerMessage = '';
+    this.manualLoginOpen = true;
   }
 
   openProgression(): void {

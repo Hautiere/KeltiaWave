@@ -29,6 +29,11 @@
           <span class="demo-label"><strong>{{ profile.label }}</strong><small>{{ profile.name }}</small></span>
           <span aria-hidden="true">›</span>
         </button>
+        <button class="admin-login" type="button" (click)="openAdminLogin()" [disabled]="learnerBusy">
+          <span class="demo-avatar admin" aria-hidden="true">A</span>
+          <span class="demo-label"><strong>Admin</strong><small>Authentification sécurisée</small></span>
+          <span aria-hidden="true">›</span>
+        </button>
         <p class="account-error" *ngIf="learnerMessage">{{ learnerMessage }}</p>
       </form>
       <ng-template #connectedMenu><div class="connected-menu"><header><span class="account-avatar large">{{ (api.user()?.display_name || api.user()?.email)?.charAt(0)?.toUpperCase() }}</span><div><b>{{ api.user()?.display_name }}</b><small>{{ api.user()?.email }}</small><em>{{ api.user()?.role === 'admin' ? t('administrator') : t('connectedUser') }}</em></div></header><button type="button" *ngIf="api.user()?.role === 'admin'" (click)="accountOpen = false; navigate('admin')">⚙ {{ t('admin') }}</button><button type="button" (click)="accountOpen = false; openProgression()">▦ {{ t('myProgress') }}</button><button type="button" (click)="openTestProfiles()">⚗ {{ t('profiles') }}</button><button class="sign-out" type="button" (click)="signOut()">{{ t('signout') }}</button></div></ng-template>
