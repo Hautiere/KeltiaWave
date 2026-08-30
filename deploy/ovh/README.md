@@ -108,6 +108,22 @@ Le clonage sauvegarde d'abord les volumes de destination, exporte PostgreSQL et
 MinIO depuis le staging, restaure ces exports dans les volumes `production`, puis
 relance les tests fonctionnels. Le staging et l'ancienne production restent actifs.
 
+## Rafraîchir les données staging depuis la production
+
+Cette opération ne redéploie pas le code. Elle sauvegarde les données staging,
+copie PostgreSQL et MinIO depuis la production, puis contrôle les deux piles :
+
+```bash
+SSH_TARGET=ubuntu@your-ovh-host.example \
+  ./scripts/refresh-staging-data-from-production.sh
+
+SSH_TARGET=ubuntu@your-ovh-host.example \
+  ./scripts/refresh-staging-data-from-production.sh --apply
+```
+
+Sans `--apply`, la commande reste en simulation. La restauration remplace les
+données staging mais conserve son code, ses domaines et ses secrets propres.
+
 La zone DNS OVH peut utiliser un wildcard A vers l'IPv4 du VPS :
 
 ```text
