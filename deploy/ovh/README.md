@@ -106,6 +106,7 @@ SSH_TARGET=ubuntu@your-ovh-host.example \
 
 Le clonage sauvegarde d'abord les volumes de destination, exporte PostgreSQL et
 MinIO depuis le staging, restaure ces exports dans les volumes `production`, puis
+redémarre les proxys frontend pour renouveler la résolution Docker du backend et
 relance les tests fonctionnels. Le staging et l'ancienne production restent actifs.
 
 ## Rafraîchir les données staging depuis la production
