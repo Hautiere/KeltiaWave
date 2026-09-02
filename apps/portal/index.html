@@ -843,12 +843,12 @@
       padding: 17px 18px;
     }
     .tool-icon { box-shadow: inset 0 0 0 1px rgba(255,255,255,.75); }
-    .tool-card:nth-child(1) { border-top: 3px solid #2563eb; }
-    .tool-card:nth-child(2) { border-top: 3px solid #10a66a; }
-    .tool-card:nth-child(3) { border-top: 3px solid #f59e0b; }
-    .tool-card:nth-child(4) { border-top: 3px solid #7c3aed; }
-    .tool-card:nth-child(5) { border-top: 3px solid #0ea5a8; }
-    .tool-card:nth-child(6) { border-top: 3px solid #f97316; }
+    .tool-card[data-tool="play"] { border-top: 3px solid #2563eb; }
+    .tool-card[data-tool="komz"] { border-top: 3px solid #10a66a; }
+    .tool-card[data-tool="library"] { border-top: 3px solid #f59e0b; }
+    .tool-card[data-tool="transcribe"] { border-top: 3px solid #7c3aed; }
+    .tool-card[data-tool="record"] { border-top: 3px solid #0ea5a8; }
+    .tool-card[data-tool="subtitles"] { border-top: 3px solid #f97316; }
 
     .language-avatar { display: none; }
     .language-card { grid-template-columns: 52px minmax(0,1fr) auto; gap: 10px; cursor: pointer; }
@@ -1015,6 +1015,207 @@
       .language-card h2, .language-card p { text-align: left; }
       .badge { justify-self: end; }
     }
+
+    /* Mobile experience: immersive hero and app-like launcher. */
+    @media (max-width: 760px) {
+      body { padding-bottom: 82px; background: linear-gradient(180deg, #fff 0, #f1f7ff 42%, #f8fbff 100%); }
+      .page { overflow: clip; }
+      .hero-stage { min-height: auto; background: none; }
+      .topbar {
+        width: calc(100% - 24px);
+        min-height: 66px;
+        padding: 8px 0;
+      }
+      .brand img { width: min(178px, 45vw); }
+      .language-actions { gap: 5px; }
+      .lang-button {
+        min-width: 38px;
+        min-height: 38px;
+        border-radius: 12px;
+        padding: 5px;
+        box-shadow: 0 5px 14px rgba(12,34,76,.08);
+      }
+      .lang-button span { display: none; }
+      .lang-button img { width: 25px; height: 17px; }
+
+      .hero {
+        position: relative;
+        width: calc(100% - 20px);
+        min-height: 365px;
+        margin: 4px auto 0;
+        border: 1px solid rgba(255,255,255,.72);
+        border-radius: 24px;
+        padding: 22px 20px 18px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.86) 42%, rgba(7,25,67,.08) 100%),
+          url("assets/la torche bro kerne.png") 58% center / cover no-repeat;
+        box-shadow: 0 18px 44px rgba(12,34,76,.15);
+      }
+      .hero::after {
+        position: absolute;
+        right: -45px;
+        bottom: -70px;
+        width: 210px;
+        height: 210px;
+        border-radius: 50%;
+        background: rgba(34,197,245,.17);
+        filter: blur(2px);
+        content: "";
+      }
+      .hero-copy { position: relative; z-index: 2; width: 100%; }
+      .pill { min-height: 27px; border: 1px solid #cfe1ff; background: rgba(239,246,255,.92); }
+      .hero h1 {
+        max-width: 330px;
+        margin-top: 7px;
+        font-size: clamp(34px, 10.5vw, 46px);
+        line-height: .94;
+        letter-spacing: -.045em;
+      }
+      .hero .script { display: inline-block; max-width: 250px; margin-top: 8px; font-size: .72em; line-height: 1.02; }
+      .hero p { max-width: 295px; margin-top: 10px; font-size: 12px; line-height: 1.5; }
+      .hero-surfer {
+        position: absolute;
+        right: 8px;
+        bottom: 3px;
+        z-index: 1;
+        display: block;
+        width: 104px;
+        max-height: 155px;
+        object-fit: contain;
+        object-position: bottom;
+        filter: drop-shadow(0 13px 14px rgba(7,25,67,.25));
+        pointer-events: none;
+      }
+      .location-card {
+        right: auto;
+        bottom: 11px;
+        left: 12px;
+        z-index: 3;
+        display: flex;
+        width: max-content;
+        max-width: 150px;
+        border: 1px solid rgba(255,255,255,.8);
+        gap: 5px;
+        border-radius: 8px;
+        padding: 4px 6px;
+        background: rgba(255,255,255,.82);
+        box-shadow: 0 7px 20px rgba(12,34,76,.1);
+        backdrop-filter: blur(10px);
+      }
+      .location-card > span:first-child { font-size: 9px; }
+      .location-card strong { font-size: 8px; line-height: 1.1; }
+      .location-card small { margin-top: 1px; font-size: 7px; line-height: 1.1; }
+
+      .mobile-app-shortcuts {
+        position: fixed;
+        right: 10px;
+        bottom: 10px;
+        left: 10px;
+        z-index: 20;
+        width: auto;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 3px;
+        margin: 0;
+        border: 1px solid rgba(207,223,245,.9);
+        border-radius: 19px;
+        padding: 7px 6px calc(7px + env(safe-area-inset-bottom));
+        background: rgba(255,255,255,.9);
+        box-shadow: 0 16px 40px rgba(12,34,76,.2);
+        backdrop-filter: blur(18px);
+      }
+      .mobile-app-shortcuts a {
+        min-height: 49px;
+        gap: 3px;
+        border: 0;
+        border-radius: 12px;
+        padding: 4px 1px;
+        background: transparent;
+        box-shadow: none;
+        font-size: 8px;
+      }
+      .mobile-app-shortcuts a span { width: 28px; height: 28px; border-radius: 9px; font-size: 14px; }
+      .mobile-app-shortcuts a[data-tool="record"] span,
+      .mobile-app-shortcuts a[data-tool="komz"] span { color: #087b52; background: #dcf8eb; }
+      .mobile-app-shortcuts a[data-tool="subtitles"] span,
+      .mobile-app-shortcuts a[data-tool="library"] span { color: #d85b0b; background: #fff0df; }
+      .mobile-app-shortcuts a[data-tool="transcribe"] span { color: #6d28d9; background: #efe7ff; }
+
+      .content { width: calc(100% - 20px); margin-top: 15px; }
+      .tool-grid {
+        position: relative;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding-top: 36px;
+      }
+      .tool-grid::before {
+        position: absolute;
+        top: 4px;
+        left: 3px;
+        color: #071943;
+        content: "〰  Try your apps";
+        font-size: 16px;
+        font-weight: 900;
+      }
+      .tool-card {
+        position: relative;
+        min-height: 142px;
+        border: 1px solid rgba(215,224,237,.82) !important;
+        border-top: 0 !important;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 11px 25px rgba(12,34,76,.08);
+      }
+      .tool-card::after {
+        position: absolute;
+        right: -22px;
+        bottom: -27px;
+        width: 82px;
+        height: 82px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.45);
+        content: "";
+      }
+      .tool-card[data-tool="play"] { background: linear-gradient(145deg, #eff6ff, #dbeafe); }
+      .tool-card[data-tool="komz"] { background: linear-gradient(145deg, #edfff7, #d6f8e7); }
+      .tool-card[data-tool="library"] { background: linear-gradient(145deg, #fff9ed, #ffedd5); }
+      .tool-card[data-tool="transcribe"] { background: linear-gradient(145deg, #f8f3ff, #ede2ff); }
+      .tool-card[data-tool="record"] { background: linear-gradient(145deg, #ecfeff, #d5f7f4); }
+      .tool-card[data-tool="subtitles"] { background: linear-gradient(145deg, #fff5ed, #ffe3cf); }
+      .tool-copy {
+        position: relative;
+        z-index: 2;
+        grid-template-columns: 42px minmax(0, 1fr);
+        align-items: start;
+        gap: 9px;
+        padding: 14px 12px;
+      }
+      .tool-icon { width: 42px; height: 42px; border-radius: 13px; box-shadow: 0 7px 15px rgba(12,34,76,.09); }
+      .tool-card h2 { margin-top: 3px; font-size: 16px; }
+      .tool-card p { min-height: 30px; margin-top: 7px; font-size: 10px; line-height: 1.35; }
+      .tool-card a { display: inline-block; margin-top: 7px; font-size: 10px; }
+      .game-pills { margin-top: 7px; }
+
+      .language-panel {
+        gap: 8px;
+        margin-top: 14px;
+        border: 0;
+        padding: 2px 0 7px;
+        background: transparent;
+        box-shadow: none;
+      }
+      .language-card {
+        min-width: 215px;
+        border: 1px solid #dbe8fa !important;
+        border-radius: 15px;
+        padding: 9px 11px;
+        background: rgba(255,255,255,.92);
+        box-shadow: 0 8px 20px rgba(12,34,76,.065);
+      }
+      .community-grid { margin-top: 10px; }
+      .community-card { border-radius: 16px; box-shadow: 0 8px 20px rgba(12,34,76,.06); }
+      .footer { padding-bottom: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -1066,45 +1267,16 @@
     </section>
 
     <nav class="mobile-app-shortcuts" aria-label="App shortcuts">
-      <a data-language-link href="https://learning.keltiawave.com/"><span>▶</span>Play</a>
-      <a data-language-link href="https://komz.keltiawave.com/"><span>◉</span>Komz</a>
-      <a data-language-link href="https://voices.keltiawave.com/"><span>≋</span>Library</a>
-      <a data-language-link href="https://transcription.keltiawave.com/transcribe.html"><span>≡</span>Transcribe</a>
-      <a data-language-link href="https://transcription.keltiawave.com/record.html"><span>♩</span>Record</a>
-      <a data-language-link href="https://transcription.keltiawave.com/studio.html"><span>▣</span>Subtitles</a>
+      <a data-tool="transcribe" data-language-link href="https://transcription.keltiawave.com/transcribe.html"><span>≡</span>Transcribe</a>
+      <a data-tool="record" data-language-link href="https://transcription.keltiawave.com/record.html"><span>♩</span>Record</a>
+      <a data-tool="subtitles" data-language-link href="https://transcription.keltiawave.com/studio.html"><span>▣</span>Subtitles</a>
+      <a data-tool="play" data-language-link href="https://learning.keltiawave.com/"><span>▶</span>Play</a>
+      <a data-tool="komz" data-language-link href="https://komz.keltiawave.com/"><span>◉</span>Komz</a>
+      <a data-tool="library" data-language-link href="https://voices.keltiawave.com/"><span>≋</span>Library</a>
     </nav>
 
     <main class="content">
       <section class="tool-grid" aria-label="KeltiaWave tools">
-        <article class="tool-card" data-tool="play">
-          <div class="tool-copy">
-            <span class="tool-icon blue">▶</span>
-            <div>
-              <h2>Play</h2>
-              <p data-i18n="toolPlayText">Test your listening skills</p>
-              <div class="game-pills"><span>Fill</span><span>Order</span><span>Quiz</span></div>
-              <a class="blue-link" data-language-link href="https://learning.keltiawave.com/" data-i18n="openPlay">Open Play →</a>
-            </div>
-          </div>
-          <img class="tool-photo" src="assets/services-quad.png" alt="KeltiaWave learning games">
-        </article>
-
-        <article class="tool-card" data-tool="komz">
-          <div class="tool-copy">
-            <span class="tool-icon green">◉</span>
-            <div><h2>Komz</h2><p data-i18n="toolKomzText">Practise your pronunciation</p><a class="green-link" data-language-link href="https://komz.keltiawave.com/" data-i18n="openKomz">Open Komz →</a></div>
-          </div>
-          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Speaking practice">
-        </article>
-
-        <article class="tool-card" data-tool="library">
-          <div class="tool-copy">
-            <span class="tool-icon orange">≋</span>
-            <div><h2>Library</h2><p data-i18n="toolLibraryText">Explore Breton audio recordings</p><a class="orange-link" data-language-link href="https://voices.keltiawave.com/" data-i18n="openLibrary">Open Library →</a></div>
-          </div>
-          <img class="tool-photo corpus" src="assets/service-photo-corpus.png" alt="Validated voices library">
-        </article>
-
         <article class="tool-card" data-tool="transcribe">
           <div class="tool-copy">
             <span class="tool-icon purple">≋</span>
@@ -1139,6 +1311,35 @@
             </div>
           </div>
           <img class="tool-photo studio" src="assets/service-photo-studio.png" alt="Subtitle editing interface">
+        </article>
+
+        <article class="tool-card" data-tool="play">
+          <div class="tool-copy">
+            <span class="tool-icon blue">▶</span>
+            <div>
+              <h2>Play</h2>
+              <p data-i18n="toolPlayText">Test your listening skills</p>
+              <div class="game-pills"><span>Fill</span><span>Order</span><span>Quiz</span></div>
+              <a class="blue-link" data-language-link href="https://learning.keltiawave.com/" data-i18n="openPlay">Open Play →</a>
+            </div>
+          </div>
+          <img class="tool-photo" src="assets/services-quad.png" alt="KeltiaWave learning games">
+        </article>
+
+        <article class="tool-card" data-tool="komz">
+          <div class="tool-copy">
+            <span class="tool-icon green">◉</span>
+            <div><h2>Komz</h2><p data-i18n="toolKomzText">Practise your pronunciation</p><a class="green-link" data-language-link href="https://komz.keltiawave.com/" data-i18n="openKomz">Open Komz →</a></div>
+          </div>
+          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Speaking practice">
+        </article>
+
+        <article class="tool-card" data-tool="library">
+          <div class="tool-copy">
+            <span class="tool-icon orange">≋</span>
+            <div><h2>Library</h2><p data-i18n="toolLibraryText">Explore Breton audio recordings</p><a class="orange-link" data-language-link href="https://voices.keltiawave.com/" data-i18n="openLibrary">Open Library →</a></div>
+          </div>
+          <img class="tool-photo corpus" src="assets/service-photo-corpus.png" alt="Validated voices library">
         </article>
 
       </section>

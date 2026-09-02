@@ -35,3 +35,8 @@ La vue ordinateur reste contenue dans la hauteur de la fenêtre. Le panneau de
 réglages et la matrice possèdent leurs propres ascenseurs, tandis que le footer
 commun KeltiaWave reste visible. Le header propose uniquement la langue de
 l'interface et **Autres outils** vers `https://keltiawave.bzh`.
+
+Sur mobile, le parcours est réorganisé autour de l'action principale : choix du
+média, aperçu 16:9, sélecteurs compacts de langue et de moteur, génération puis
+édition. Les sous-titres superposés utilisent une taille adaptative et les
+colonnes Début/Fin sont resserrées afin de privilégier le texte.

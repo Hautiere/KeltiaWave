@@ -104,6 +104,12 @@ six interfaces, puis ouvre Portal sur <http://127.0.0.1:4100>. Utilisez
 `--no-build` pour réutiliser les images existantes ou `--no-browser` pour ne pas
 ouvrir le navigateur.
 
+Sur mobile, le portail propose un lanceur compact dans l'ordre Transcribe,
+Record, Subtitles, Play, Komz et Library. L'atelier Subtitles place le choix du
+média, de la langue et du moteur immédiatement autour de l'aperçu vidéo ; la
+matrice conserve davantage de largeur pour le texte grâce à des timecodes
+compacts.
+
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
 et `backend_data` conservent les données entre les redémarrages.
@@ -137,5 +143,6 @@ SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net PUBLIC_IPV4=51.178.38.152 \
 ```
 
 La procédure, les prérequis et le retour arrière sont détaillés dans
-`deploy/ovh/README.md`. Le récapitulatif de la livraison du 29 août 2026 est
-disponible dans `docs/CHANGES-2026-08-29.md`.
+`deploy/ovh/README.md`. Les récapitulatifs de livraison sont disponibles dans
+le dossier `docs/`, notamment `docs/CHANGES-2026-09-03.md` pour les interfaces
+mobiles Portal et Subtitles.

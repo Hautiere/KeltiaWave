@@ -12,6 +12,11 @@ Subtitles sur leurs domaines de production respectifs.
 Le footer commun reste visible en bas de la vue PC sans nécessiter de défilement
 vertical lorsque le contenu tient dans la hauteur disponible.
 
+La vue mobile utilise une bannière immersive plus compacte, un surfeur discret,
+une légende de lieu secondaire et un lanceur d'applications fixe. Les cartes et
+le lanceur suivent l'ordre de parcours : Transcribe, Record, Subtitles, Play,
+Komz puis Library.
+
 Le surfeur de la bannière est fourni par
 `assets/avatar_Keltiawave_surfer_transparent.png`. Ce fichier est un PNG RGBA à
 fond réellement transparent ; il ne faut pas le remplacer par une image dont le
