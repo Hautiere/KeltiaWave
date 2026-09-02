@@ -34,6 +34,7 @@ services:
         condition: service_completed_successfully
     environment:
       MODELS_ROOT: /models
+      VOSK_MODEL_PATH: ${VOSK_MODEL_PATH:-/models/vosk-model-br-25.02}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-keltiawave}
       AUDIO_STORAGE: s3
       MINIO_ENDPOINT_URL: http://minio:9000

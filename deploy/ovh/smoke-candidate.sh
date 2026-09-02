@@ -40,6 +40,11 @@ wait_for_url "http://127.0.0.1:${BACKEND_CANDIDATE_PORT:-18100}/"
 curl --fail --silent --show-error --max-time 15 "http://127.0.0.1:${BACKEND_CANDIDATE_PORT:-18100}/" >/dev/null
 echo "OK   backend"
 
+models_status="$(curl --fail --silent --show-error --max-time 15 "http://127.0.0.1:${BACKEND_CANDIDATE_PORT:-18100}/api/transcription/models/status")"
+vosk_br_available="$(python3 -c 'import json,sys; print(str(json.load(sys.stdin)["engines"]["vosk"]["languages"]["br"]["available"]).lower())' <<<"$models_status")"
+[[ "$vosk_br_available" == "true" ]] || { echo "FAIL Vosk Breton model unavailable" >&2; exit 1; }
+echo "OK   Vosk Breton model available"
+
 check_page portal "${PORTAL_CANDIDATE_PORT:-14100}"
 check_page corpus "${CORPUS_CANDIDATE_PORT:-14200}"
 check_page learning "${LEARNING_CANDIDATE_PORT:-14300}"
