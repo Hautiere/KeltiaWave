@@ -484,6 +484,7 @@ main {
   }
 
   .mobile-generation {
+    position: relative;
     display: grid;
     gap: 3px;
     margin: 4px 8px;
@@ -497,7 +498,7 @@ main {
   .mobile-generation > header div { display: grid; gap: 1px; }
   .mobile-generation > header strong { font-size: 10px; }
   .mobile-generation > header small { color: #718096; font-size: 6px; }
-  .mobile-generation > header > span { border-radius: 999px; padding: 2px 5px; color: #2563eb; background: #eef5ff; font-size: 7px; font-weight: 850; }
+  .mobile-generation > header > span { display: none; }
   .mobile-option { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: center; gap: 4px; }
   .mobile-option > span { color: #52627a; font-size: 8px; font-weight: 800; }
   .mobile-segment { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: 8px; padding: 2px; background: #f1f5f9; }
@@ -505,6 +506,14 @@ main {
   .mobile-segment button.active { color: #1956ad; background: #fff; box-shadow: 0 2px 7px rgba(34, 65, 104, .12); }
   .mobile-segment button:disabled { opacity: .35; }
   .mobile-segment img { width: 17px; height: 11px; object-fit: cover; }
+  .mobile-format { position: absolute; z-index: 3; top: 5px; right: 7px; border: 1px solid #d5e2f3; border-radius: 7px; background: #fff; box-shadow: 0 4px 12px rgba(34, 65, 104, .1); }
+  .mobile-format summary { min-width: 72px; min-height: 20px; display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 2px 6px; color: #52627a; font-size: 7px; font-weight: 800; cursor: pointer; list-style: none; }
+  .mobile-format summary::-webkit-details-marker { display: none; }
+  .mobile-format summary b { overflow: hidden; color: #1956ad; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-format > div { width: 230px; display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 5px; border-top: 1px solid #e1e8f0; padding: 5px; }
+  .mobile-format label { display: grid; gap: 2px; color: #64748b; font-size: 6px; font-weight: 750; }
+  .mobile-format input { width: 100%; min-width: 0; height: 24px; border: 1px solid #dbe4ed; border-radius: 6px; padding: 0 4px; font-size: 8px; }
+  .mobile-format .secondary { width: auto; min-height: 24px; margin: 0; padding: 0 7px; font-size: 7px; }
   .mobile-generate { min-height: 29px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 0; border-radius: 7px; font-size: 8px; }
   .mobile-generation .job { margin-top: 1px; }
   .mobile-generation .status { margin: 0; font-size: 7px; line-height: 1.1; }

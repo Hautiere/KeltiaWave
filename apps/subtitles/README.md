@@ -41,4 +41,7 @@ l'interface et **Autres outils** vers `https://keltiawave.bzh`.
 Sur mobile, le parcours est réorganisé autour de l'action principale : choix du
 média, aperçu 16:9, sélecteurs compacts de langue et de moteur, génération puis
 édition. Les sous-titres superposés utilisent une taille adaptative et les
-colonnes Début/Fin sont resserrées afin de privilégier le texte.
+colonnes Début/Fin sont resserrées afin de privilégier le texte. Un bouton
+**Format** repliable règle le nombre maximal de caractères et de lignes sans
+repousser la matrice vers le bas. Les blocs n'enregistrent plus de retours à la
+ligne fixes : leur affichage s'adapte naturellement à la largeur disponible.
