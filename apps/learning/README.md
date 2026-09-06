@@ -65,6 +65,8 @@ format SRT lorsqu’une leçon est rouverte dans l’administration.
 Pendant l’exercice :
 
 - le texte est réparti en pages adaptées à la largeur de l’écran ;
+- la page change automatiquement avec la position de lecture et affiche le
+  segment actif après son rendu ;
 - le segment correspondant au son est surligné ;
 - le segment actif est automatiquement centré avec du contexte autour ;
 - les retours internes des blocs SRT/VTT sont conservés ;
@@ -76,6 +78,8 @@ Pendant l’exercice :
 Après la correction, le média peut être relu avec les sous-titres bretons ou,
 lorsqu’elles existent, les traductions françaises. Dans l’onglet Traduction,
 le segment courant est également surligné et recentré pendant la lecture.
+Sur mobile, la vidéo reste centrée dans un cadre 16:9 et les indicateurs de
+pages défilent horizontalement sans élargir la vue.
 
 ```text
 Demat deoc'h holl.[br]Hiziv e vo kaoz eus an amzer.

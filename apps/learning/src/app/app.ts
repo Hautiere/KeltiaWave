@@ -638,25 +638,17 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
     const currentTime = (event.currentTarget as HTMLVideoElement).currentTime;
     this.currentVideoTime = currentTime;
     const activeSegment = this.activeLesson.segments.find((segment) => currentTime >= segment.start && currentTime <= segment.end);
-    if (activeSegment && activeSegment.id !== this.lastCenteredSegmentId) {
-      this.lastCenteredSegmentId = activeSegment.id;
-      queueMicrotask(() => {
-        this.centerActiveTranscriptSegment(activeSegment.id);
-        if (this.screen === 'result' && this.resultTab === 'translation') this.centerActiveTranslationSegment(activeSegment.id);
-      });
+    if (!activeSegment) return;
+    if (this.screen === 'exercise') {
+      const matchingPage = this.exercisePages.findIndex((page) => page.some((segment) => segment.id === activeSegment.id));
+      if (matchingPage >= 0 && matchingPage !== this.exercisePage) this.exercisePage = matchingPage;
     }
-    if (this.screen !== 'exercise') return;
-    let matchingPage = 0;
-    let previousStart = this.exercisePages[0]?.[0]?.start ?? -1;
-    for (let index = 1; index < this.exercisePages.length; index++) {
-      const firstSegment = this.exercisePages[index][0];
-      if (!firstSegment) continue;
-      if (firstSegment.start <= previousStart) continue;
-      previousStart = firstSegment.start;
-      if (currentTime >= firstSegment.start) matchingPage = index;
-      else break;
-    }
-    if (matchingPage !== this.exercisePage) this.exercisePage = matchingPage;
+    if (activeSegment.id === this.lastCenteredSegmentId) return;
+    this.lastCenteredSegmentId = activeSegment.id;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      this.centerActiveTranscriptSegment(activeSegment.id);
+      if (this.screen === 'result' && this.resultTab === 'translation') this.centerActiveTranslationSegment(activeSegment.id);
+    }));
   }
 
   private centerActiveTranscriptSegment(segmentId: number, smooth = true): void {
