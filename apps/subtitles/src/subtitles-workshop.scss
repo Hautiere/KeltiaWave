@@ -485,29 +485,29 @@ main {
 
   .mobile-generation {
     display: grid;
-    gap: 5px;
-    margin: 6px 8px;
+    gap: 3px;
+    margin: 4px 8px;
     border: 1px solid #dce6f3;
     border-radius: 11px;
-    padding: 7px 9px;
+    padding: 5px 8px;
     background: #fff;
   }
 
   .mobile-generation > header { display: flex; align-items: center; justify-content: space-between; }
   .mobile-generation > header div { display: grid; gap: 1px; }
   .mobile-generation > header strong { font-size: 10px; }
-  .mobile-generation > header small { color: #718096; font-size: 7px; }
-  .mobile-generation > header > span { border-radius: 999px; padding: 3px 6px; color: #2563eb; background: #eef5ff; font-size: 7px; font-weight: 850; }
-  .mobile-option { display: grid; grid-template-columns: 50px minmax(0, 1fr); align-items: center; gap: 5px; }
+  .mobile-generation > header small { color: #718096; font-size: 6px; }
+  .mobile-generation > header > span { border-radius: 999px; padding: 2px 5px; color: #2563eb; background: #eef5ff; font-size: 7px; font-weight: 850; }
+  .mobile-option { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: center; gap: 4px; }
   .mobile-option > span { color: #52627a; font-size: 8px; font-weight: 800; }
   .mobile-segment { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: 8px; padding: 2px; background: #f1f5f9; }
-  .mobile-segment button { min-height: 28px; display: flex; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 6px; color: #52627a; background: transparent; font-size: 8px; font-weight: 850; }
+  .mobile-segment button { min-height: 24px; display: flex; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 6px; color: #52627a; background: transparent; font-size: 8px; font-weight: 850; }
   .mobile-segment button.active { color: #1956ad; background: #fff; box-shadow: 0 2px 7px rgba(34, 65, 104, .12); }
   .mobile-segment button:disabled { opacity: .35; }
-  .mobile-segment img { width: 19px; height: 12px; object-fit: cover; }
-  .mobile-generate { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 0; border-radius: 8px; font-size: 9px; }
+  .mobile-segment img { width: 17px; height: 11px; object-fit: cover; }
+  .mobile-generate { min-height: 29px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 0; border-radius: 7px; font-size: 8px; }
   .mobile-generation .job { margin-top: 1px; }
-  .mobile-generation .status { margin: 0; }
+  .mobile-generation .status { margin: 0; font-size: 7px; line-height: 1.1; }
 
   .overlay {
     right: 5%;
