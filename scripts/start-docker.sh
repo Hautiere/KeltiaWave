@@ -4,7 +4,8 @@ set -Eeuo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/.env}"
 COMPOSE_FILE="$PROJECT_DIR/deploy/docker-compose.yml"
-BACKEND_URL="http://127.0.0.1:8100/"
+BACKEND_HEALTH_URL="http://127.0.0.1:8100/"
+BACKEND_URL="http://127.0.0.1:8100/docs"
 PORTAL_URL="http://127.0.0.1:4100/"
 
 usage() {
@@ -110,6 +111,27 @@ append_if_missing BOOTSTRAP_CLASS_USERS "true" backend
 append_if_missing BOOTSTRAP_CLASS_PASSWORD "classe123" backend
 chmod 600 "$ENV_FILE"
 
+resolve_model_dir() {
+  local variable_name="$1" relative_path="$2" required_file="$3"
+  local model_path="$PROJECT_DIR/$relative_path" resolved_path
+
+  if [[ ! -f "$model_path/$required_file" ]]; then
+    echo "Modèle local absent : $model_path/$required_file" >&2
+    echo "Exécutez ./scripts/link-legacy-models.sh avant de relancer Docker." >&2
+    exit 1
+  fi
+  resolved_path="$(cd "$model_path" && pwd -P)"
+  printf -v "$variable_name" '%s' "$resolved_path"
+  export "$variable_name"
+}
+
+# Les modèles locaux peuvent être des liens symboliques vers l'ancien projet.
+# Docker reçoit ici leurs chemins physiques afin qu'ils soient lisibles dans le
+# conteneur, sans recopier plusieurs gigaoctets de données.
+resolve_model_dir VOSK_MODEL_HOST_DIR "backend/models/vosk-model-br-25.02" "final.mdl"
+resolve_model_dir WHISPER_BRETON_MODEL_HOST_DIR "backend/models/whisper-breton-ct2" "model.bin"
+resolve_model_dir WHISPER_WELSH_MODEL_HOST_DIR "backend/models/whisper-welsh-ct2" "model.bin"
+
 compose=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
 echo "[1/5] Validation de la configuration Docker Compose"
@@ -144,7 +166,7 @@ echo "[2/5] Construction et démarrage de l'infrastructure et du backend"
 "${compose[@]}" "${backend_up_args[@]}"
 
 echo "[3/5] Attente du backend"
-if ! wait_for_url "Backend" "$BACKEND_URL"; then
+if ! wait_for_url "Backend" "$BACKEND_HEALTH_URL"; then
   "${compose[@]}" ps -a >&2
   "${compose[@]}" logs --tail=120 backend postgres minio >&2
   exit 1
@@ -177,7 +199,7 @@ if ((containers_failed)); then
 fi
 
 failed=0
-wait_for_url "Backend" "$BACKEND_URL" || failed=1
+wait_for_url "Backend" "$BACKEND_HEALTH_URL" || failed=1
 wait_for_url "Portal" "$PORTAL_URL" || failed=1
 wait_for_url "À propos" "http://127.0.0.1:4100/about.html" || failed=1
 wait_for_url "Feedback" "http://127.0.0.1:4100/feedback.html" || failed=1
@@ -206,6 +228,7 @@ echo "Tous les services et les pages du portail répondent."
 
 if $OPEN_BROWSER; then
   open_url "$BACKEND_URL"
+  sleep 2
   open_url "$PORTAL_URL"
 fi
 

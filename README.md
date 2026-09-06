@@ -100,10 +100,10 @@ contrôles de santé :
 ```
 
 Le script construit d'abord l'infrastructure et le backend, puis démarre les six
-interfaces après validation de l'API. Il ouvre ensuite le backend sur
-<http://127.0.0.1:8100> et Portal sur <http://127.0.0.1:4100>, qui donne accès à
-toutes les applications. Utilisez `--no-build` pour réutiliser les images
-existantes ou `--no-browser` pour ne pas ouvrir le navigateur.
+interfaces après validation de l'API. Il ouvre ensuite la documentation backend
+sur <http://127.0.0.1:8100/docs> puis Portal sur <http://127.0.0.1:4100>, qui
+donne accès à toutes les applications. Utilisez `--no-build` pour réutiliser les
+images existantes ou `--no-browser` pour ne pas ouvrir le navigateur.
 
 Sur mobile, le portail propose un lanceur compact dans l'ordre Transcribe,
 Record, Subtitles, Play, Komz et Library. L'atelier Subtitles place le choix du

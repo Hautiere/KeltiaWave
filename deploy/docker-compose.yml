@@ -10,8 +10,8 @@ services:
     ports:
       - "8100:8100"
     environment:
-      MODELS_ROOT: /models
-      VOSK_MODEL_PATH: ${VOSK_MODEL_PATH:-/models/vosk-model-br-25.02}
+      MODELS_ROOT: /opt/models
+      VOSK_MODEL_PATH: ${VOSK_MODEL_PATH:-/opt/models/vosk-model-br-25.02}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-keltiawave}
       AUDIO_STORAGE: s3
       MINIO_ENDPOINT_URL: http://minio:9000
@@ -34,9 +34,11 @@ services:
       TRANSCRIPTION_DEFAULT_RTF_VOSK_BR: ${TRANSCRIPTION_DEFAULT_RTF_VOSK_BR:-0.45}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR:-1.25}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY:-1.25}
-      CORS_ALLOW_ORIGINS: http://localhost:4200,http://localhost:4300,http://localhost:4400,http://localhost:4500,http://localhost:4600
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://127.0.0.1:4100,http://127.0.0.1:4200,http://127.0.0.1:4300,http://127.0.0.1:4400,http://127.0.0.1:4500,http://127.0.0.1:4600,http://localhost:4100,http://localhost:4200,http://localhost:4300,http://localhost:4400,http://localhost:4500,http://localhost:4600}
     volumes:
-      - ../backend/models:/models:ro
+      - ${VOSK_MODEL_HOST_DIR:-../backend/models/vosk-model-br-25.02}:/opt/models/vosk-model-br-25.02:ro
+      - ${WHISPER_BRETON_MODEL_HOST_DIR:-../backend/models/whisper-breton-ct2}:/opt/models/whisper-breton-ct2:ro
+      - ${WHISPER_WELSH_MODEL_HOST_DIR:-../backend/models/whisper-welsh-ct2}:/opt/models/whisper-welsh-ct2:ro
       - backend_data:/app/data
 
   postgres:
