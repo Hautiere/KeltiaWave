@@ -214,7 +214,7 @@ main {
   .actions select {
     min-height: 34px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 15px;
   }
 
   main {
@@ -258,7 +258,7 @@ main {
     padding: 11px;
   }
 
-  .workspace h2 { font-size: 12px; }
+  .workspace h2 { font-size: 15px; }
 
   .workspace aside section {
     margin-bottom: 8px;
@@ -269,20 +269,20 @@ main {
     min-height: 48px;
   }
 
-  .picker strong { font-size: 11px; }
-  .picker small { font-size: 9px; }
+  .picker strong { font-size: 14px; }
+  .picker small { font-size: 11px; }
 
   .choices button,
   .engine-choices strong,
   .primary,
-  .secondary { font-size: 11px; }
+  .secondary { font-size: 14px; }
 
   .engine-choices small,
-  .settings label { font-size: 9px; }
+  .settings label { font-size: 11px; }
 
   .settings input,
   .status,
-  .job { font-size: 10px; }
+  .job { font-size: 12.5px; }
 
   .engine-choices button {
     min-height: 48px;
@@ -311,9 +311,9 @@ main {
     padding: 7px 12px 6px;
   }
 
-  .cue-header h2 { font-size: 13px; }
+  .cue-header h2 { font-size: 16px; }
   .cue-header small,
-  .cue-header button { font-size: 10px; }
+  .cue-header button { font-size: 12.5px; }
 
   .cue-table {
     margin: 0 10px 10px;
@@ -327,14 +327,14 @@ main {
 
   .row textarea {
     height: 36px;
-    font-size: 12px;
+    font-size: 15px;
     line-height: 1.35;
   }
 
-  .row input { font-size: 11px; }
-  .row.head { font-size: 10px; }
+  .row input { font-size: 14px; }
+  .row.head { font-size: 12.5px; }
   .play,
-  .delete { font-size: 11px; }
+  .delete { font-size: 14px; }
 
   .keltia-footer {
     min-height: 28px;
