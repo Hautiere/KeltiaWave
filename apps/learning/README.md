@@ -39,7 +39,9 @@ donc déjà être actif.
 L’interface du lecteur utilise une mise en page à deux panneaux : le média reste
 visible à gauche tandis que l’exercice, la correction ou les contenus de
 révision s’affichent à droite. Les longs segments sont découpés en pages selon
-la largeur de l’écran afin de conserver une zone de réponse lisible.
+la largeur de l’écran afin de conserver une zone de réponse lisible. Sur mobile,
+la présentation de la leçon utilise une typographie compacte et les exercices
+sont répartis sur plusieurs pages courtes, visibles immédiatement sous le média.
 
 ## Médias et jaquettes
 
@@ -62,7 +64,7 @@ format SRT lorsqu’une leçon est rouverte dans l’administration.
 
 Pendant l’exercice :
 
-- tout le texte reste dans une zone continue ;
+- le texte est réparti en pages adaptées à la largeur de l’écran ;
 - le segment correspondant au son est surligné ;
 - le segment actif est automatiquement centré avec du contexte autour ;
 - les retours internes des blocs SRT/VTT sont conservés ;

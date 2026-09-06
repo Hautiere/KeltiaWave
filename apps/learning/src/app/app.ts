@@ -195,7 +195,25 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
     return 220;
   }
   get exercisePages(): LessonSegment[][] {
-    return [this.activeLesson.segments];
+    const pages: LessonSegment[][] = [];
+    let page: LessonSegment[] = [];
+    let weight = 0;
+    const flush = (): void => {
+      if (!page.length) return;
+      pages.push(page);
+      page = [];
+      weight = 0;
+    };
+
+    for (const segment of this.activeLesson.segments.flatMap((item) => this.splitLongSegment(item))) {
+      const segmentWeight = Math.max(1, this.segmentText(segment).length);
+      if (page.length && weight + segmentWeight > this.maxPageTextWeight) flush();
+      page.push(segment);
+      weight += segmentWeight;
+      if (this.endsSentence(segment) && weight >= this.maxPageTextWeight * .65) flush();
+    }
+    flush();
+    return pages.length ? pages : [[]];
   }
   get exercisePageCount(): number { return this.exercisePages.length; }
   get exercisePageIndexes(): number[] { return Array.from({ length: this.exercisePageCount }, (_, index) => index); }
