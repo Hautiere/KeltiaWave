@@ -3,10 +3,12 @@
 Frontend Angular autonome pour générer, synchroniser, éditer et exporter des sous-titres.
 
 ```bash
-./scripts/start-backend.sh
 ./scripts/start-subtitles.sh
 ```
 
+- Cette commande unique démarre le backend et l'interface, attend qu'ils soient
+  disponibles, puis ouvre leurs deux URL dans le navigateur. `Ctrl+C` arrête les
+  services lancés par le script.
 - Interface : `http://127.0.0.1:4600`
 - API dédiée : `POST http://127.0.0.1:8100/api/subtitles/transcribe`
 
