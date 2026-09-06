@@ -4,18 +4,20 @@ set -Eeuo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/.env}"
 COMPOSE_FILE="$PROJECT_DIR/deploy/docker-compose.yml"
+BACKEND_URL="http://127.0.0.1:8100/"
 PORTAL_URL="http://127.0.0.1:4100/"
 
 usage() {
   cat <<'EOF'
 Usage: ./scripts/start-docker.sh [--no-build] [--no-browser]
 
-Construit et lance toute la pile Docker locale, attend que les services soient
-disponibles, exécute des contrôles HTTP, puis ouvre le portail.
+Construit et lance toute la pile Docker locale : infrastructure et backend,
+puis les six applications frontend. Le script attend les services, exécute les
+contrôles HTTP, puis ouvre le backend et le portail donnant accès aux apps.
 
 Options:
   --no-build    Réutiliser les images Docker existantes.
-  --no-browser  Ne pas ouvrir automatiquement le portail.
+  --no-browser  Ne pas ouvrir automatiquement le backend et le portail.
 
 Variables:
   ENV_FILE      Fichier d'environnement (par défaut : .env à la racine).
@@ -110,15 +112,52 @@ chmod 600 "$ENV_FILE"
 
 compose=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
-echo "[1/4] Validation de la configuration Docker Compose"
+echo "[1/5] Validation de la configuration Docker Compose"
 "${compose[@]}" config --quiet
 
-echo "[2/4] Construction et démarrage de la pile"
-up_args=(up -d --remove-orphans)
-$BUILD && up_args+=(--build)
-"${compose[@]}" "${up_args[@]}"
+wait_for_url() {
+  local label="$1" url="$2" attempt
+  for attempt in $(seq 1 60); do
+    if curl --fail --silent --show-error --max-time 5 "$url" >/dev/null 2>&1; then
+      printf '  OK  %-12s %s\n' "$label" "$url"
+      return 0
+    fi
+    sleep 2
+  done
+  printf '  ÉCHEC  %-9s %s\n' "$label" "$url" >&2
+  return 1
+}
 
-echo "[3/4] Vérification de l'état des conteneurs"
+open_url() {
+  if command -v open >/dev/null 2>&1; then
+    open "$1" >/dev/null 2>&1 || true
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$1" >/dev/null 2>&1 || true
+  fi
+}
+
+backend_up_args=(up -d --remove-orphans)
+$BUILD && backend_up_args+=(--build)
+backend_up_args+=(postgres minio minio-init backend)
+
+echo "[2/5] Construction et démarrage de l'infrastructure et du backend"
+"${compose[@]}" "${backend_up_args[@]}"
+
+echo "[3/5] Attente du backend"
+if ! wait_for_url "Backend" "$BACKEND_URL"; then
+  "${compose[@]}" ps -a >&2
+  "${compose[@]}" logs --tail=120 backend postgres minio >&2
+  exit 1
+fi
+
+frontend_up_args=(up -d)
+$BUILD && frontend_up_args+=(--build)
+frontend_up_args+=(portal corpus learning record transcribe subtitles)
+
+echo "[4/5] Construction et démarrage des six applications frontend"
+"${compose[@]}" "${frontend_up_args[@]}"
+
+echo "[5/5] Vérification des conteneurs et contrôles HTTP"
 expected_services=(backend portal corpus learning record transcribe subtitles postgres minio)
 running_services="$("${compose[@]}" ps --services --status running)"
 containers_failed=0
@@ -137,22 +176,8 @@ if ((containers_failed)); then
   exit 1
 fi
 
-wait_for_url() {
-  local label="$1" url="$2" attempt
-  for attempt in $(seq 1 60); do
-    if curl --fail --silent --show-error --max-time 5 "$url" >/dev/null 2>&1; then
-      printf '  OK  %-12s %s\n' "$label" "$url"
-      return 0
-    fi
-    sleep 2
-  done
-  printf '  ÉCHEC  %-9s %s\n' "$label" "$url" >&2
-  return 1
-}
-
-echo "[4/4] Attente et contrôles HTTP"
 failed=0
-wait_for_url "Backend" "http://127.0.0.1:8100/" || failed=1
+wait_for_url "Backend" "$BACKEND_URL" || failed=1
 wait_for_url "Portal" "$PORTAL_URL" || failed=1
 wait_for_url "À propos" "http://127.0.0.1:4100/about.html" || failed=1
 wait_for_url "Feedback" "http://127.0.0.1:4100/feedback.html" || failed=1
@@ -180,16 +205,14 @@ echo "Tous les services et les pages du portail répondent."
 "${compose[@]}" ps
 
 if $OPEN_BROWSER; then
-  if command -v open >/dev/null 2>&1; then
-    open "$PORTAL_URL" >/dev/null 2>&1 || true
-  elif command -v xdg-open >/dev/null 2>&1; then
-    xdg-open "$PORTAL_URL" >/dev/null 2>&1 || true
-  fi
+  open_url "$BACKEND_URL"
+  open_url "$PORTAL_URL"
 fi
 
 cat <<EOF
 
-KeltiaWave est disponible sur $PORTAL_URL
+Backend : $BACKEND_URL
+Portail et accès aux six applications : $PORTAL_URL
 
 Pour arrêter la pile sans supprimer les données :
   docker compose --env-file '$ENV_FILE' -f '$COMPOSE_FILE' down
