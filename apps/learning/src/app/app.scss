@@ -738,9 +738,9 @@ main { width: min(1320px, calc(100% - 40px)); padding-top: 18px; }
   .lesson-card > .primary { min-height: 34px; font-size: 11px; }
   .lesson-running { padding-top: 8px; }
   .lesson-running .steps { margin-bottom: 6px; }
-  .lesson-running .workspace.player-layout .exercise-card { padding: 10px; overflow: visible; }
-  .lesson-running .transcript { min-height: 0; max-height: none; margin: 5px 0; overflow: visible; scroll-padding-block: 0; }
-  .lesson-running .transcript::before, .lesson-running .transcript::after { display: none; }
+  .lesson-running .workspace.player-layout .exercise-card { height: clamp(280px, 38dvh, 360px) !important; padding: 10px; overflow: hidden; }
+  .lesson-running .transcript { min-height: 120px; max-height: none; margin: 5px 0; overflow-x: hidden; overflow-y: auto; scroll-padding-block: 40%; scrollbar-gutter: stable; }
+  .lesson-running .transcript::before, .lesson-running .transcript::after { display: block; height: var(--transcript-center-space, 40%); }
   .transcript article { grid-template-columns: 34px minmax(0, 1fr); gap: 6px; margin: 5px 0; padding: 7px 8px; font-size: 11px; }
   .transcript article p { min-height: 22px; line-height: 1.55; }
   .transcript input { width: 68px; height: 25px; padding: 2px 5px; }

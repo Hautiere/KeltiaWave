@@ -137,7 +137,7 @@
     </article>
 
     <article class="exercise-card" *ngIf="screen === 'exercise' || screen === 'correction'" [style.height.px]="playerPanelHeight || null">
-      <div class="card-title"><div><span class="level">{{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2></div><span>Page {{ exercisePage + 1 }} / {{ exercisePageCount }}</span></div>
+      <div class="card-title"><div><span class="level">{{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2></div><span *ngIf="exercisePageCount > 1">Page {{ exercisePage + 1 }} / {{ exercisePageCount }}</span></div>
       <p class="instruction">{{ screen === 'exercise' ? t('instruction') : t('correction') }}</p>
       <div #transcriptScroll class="transcript" [class.corrected]="screen === 'correction'">
         <article #transcriptSegment *ngFor="let segment of visibleSegments" [attr.data-segment-id]="segment.id" [class.segment-active]="isSegmentActive(segment)"><time>{{ formatTime(segment.start) }}</time><p>
@@ -156,7 +156,7 @@
       <footer class="actions paged-actions">
         <button class="secondary" type="button" *ngIf="exercisePage > 0" (click)="previousExercisePage()">← Page précédente</button>
         <button class="secondary" type="button" *ngIf="screen === 'exercise' && exercisePage === 0" (click)="screen = 'intro'">Retour</button>
-        <span class="page-dots"><i *ngFor="let index of exercisePageIndexes" [class.active]="index === exercisePage"></i></span>
+        <span class="page-dots" *ngIf="exercisePageCount > 1"><i *ngFor="let index of exercisePageIndexes" [class.active]="index === exercisePage"></i></span>
         <button class="primary" type="button" *ngIf="exercisePage < exercisePageCount - 1" (click)="nextExercisePage()">Page suivante →</button>
         <button class="primary" type="button" *ngIf="screen === 'exercise' && exercisePage === exercisePageCount - 1" (click)="validate()">Valider</button>
         <button class="primary" type="button" *ngIf="screen === 'correction' && exercisePage === exercisePageCount - 1" (click)="showResult()">Voir mon résultat</button>

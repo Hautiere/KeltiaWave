@@ -195,25 +195,7 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
     return 220;
   }
   get exercisePages(): LessonSegment[][] {
-    const pages: LessonSegment[][] = [];
-    let page: LessonSegment[] = [];
-    let weight = 0;
-    const flush = (): void => {
-      if (!page.length) return;
-      pages.push(page);
-      page = [];
-      weight = 0;
-    };
-
-    for (const segment of this.activeLesson.segments.flatMap((item) => this.splitLongSegment(item))) {
-      const segmentWeight = Math.max(1, this.segmentText(segment).length);
-      if (page.length && weight + segmentWeight > this.maxPageTextWeight) flush();
-      page.push(segment);
-      weight += segmentWeight;
-      if (this.endsSentence(segment) && weight >= this.maxPageTextWeight * .65) flush();
-    }
-    flush();
-    return pages.length ? pages : [[]];
+    return [this.activeLesson.segments];
   }
   get exercisePageCount(): number { return this.exercisePages.length; }
   get exercisePageIndexes(): number[] { return Array.from({ length: this.exercisePageCount }, (_, index) => index); }
@@ -639,10 +621,6 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
     this.currentVideoTime = currentTime;
     const activeSegment = this.activeLesson.segments.find((segment) => currentTime >= segment.start && currentTime <= segment.end);
     if (!activeSegment) return;
-    if (this.screen === 'exercise') {
-      const matchingPage = this.exercisePages.findIndex((page) => page.some((segment) => segment.id === activeSegment.id));
-      if (matchingPage >= 0 && matchingPage !== this.exercisePage) this.exercisePage = matchingPage;
-    }
     if (activeSegment.id === this.lastCenteredSegmentId) return;
     this.lastCenteredSegmentId = activeSegment.id;
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
