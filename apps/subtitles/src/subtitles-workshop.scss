@@ -422,8 +422,8 @@ main {
 
   .file-actions label,
   .file-actions button {
-    min-width: 34px;
-    min-height: 34px;
+    min-width: 30px;
+    min-height: 30px;
     overflow: hidden;
     padding: 0 8px;
     font-size: 0;
@@ -453,15 +453,15 @@ main {
   }
 
   .mobile-media-picker {
-    min-height: 54px;
+    min-height: 46px;
     display: grid;
     grid-template-columns: 34px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 9px;
-    margin: 8px;
+    gap: 7px;
+    margin: 6px 8px;
     border: 1px solid #dce6f3;
     border-radius: 10px;
-    padding: 7px 9px;
+    padding: 5px 8px;
     background: #f8fbff;
     cursor: pointer;
   }
@@ -473,7 +473,7 @@ main {
   .mobile-media-picker strong { font-size: 10px; }
   .mobile-media-picker small { margin-top: 2px; color: #718096; font-size: 7px; }
   .mobile-media-picker > b { color: #2563eb; font-size: 9px; }
-  .mobile-media-icon { width: 32px; height: 32px; display: grid !important; place-items: center; border-radius: 9px; color: #fff; background: #2563eb; font-size: 18px; }
+  .mobile-media-icon { width: 28px; height: 28px; display: grid !important; place-items: center; border-radius: 8px; color: #fff; background: #2563eb; font-size: 16px; }
 
   .preview {
     width: calc(100% - 16px);
@@ -485,27 +485,27 @@ main {
 
   .mobile-generation {
     display: grid;
-    gap: 8px;
-    margin: 8px;
+    gap: 5px;
+    margin: 6px 8px;
     border: 1px solid #dce6f3;
     border-radius: 11px;
-    padding: 10px;
+    padding: 7px 9px;
     background: #fff;
   }
 
   .mobile-generation > header { display: flex; align-items: center; justify-content: space-between; }
-  .mobile-generation > header div { display: grid; gap: 2px; }
-  .mobile-generation > header strong { font-size: 12px; }
-  .mobile-generation > header small { color: #718096; font-size: 8px; }
-  .mobile-generation > header > span { border-radius: 999px; padding: 4px 7px; color: #2563eb; background: #eef5ff; font-size: 8px; font-weight: 850; }
-  .mobile-option { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 8px; }
-  .mobile-option > span { color: #52627a; font-size: 9px; font-weight: 800; }
-  .mobile-segment { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; border-radius: 9px; padding: 3px; background: #f1f5f9; }
-  .mobile-segment button { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 7px; color: #52627a; background: transparent; font-size: 9px; font-weight: 850; }
+  .mobile-generation > header div { display: grid; gap: 1px; }
+  .mobile-generation > header strong { font-size: 10px; }
+  .mobile-generation > header small { color: #718096; font-size: 7px; }
+  .mobile-generation > header > span { border-radius: 999px; padding: 3px 6px; color: #2563eb; background: #eef5ff; font-size: 7px; font-weight: 850; }
+  .mobile-option { display: grid; grid-template-columns: 50px minmax(0, 1fr); align-items: center; gap: 5px; }
+  .mobile-option > span { color: #52627a; font-size: 8px; font-weight: 800; }
+  .mobile-segment { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border-radius: 8px; padding: 2px; background: #f1f5f9; }
+  .mobile-segment button { min-height: 28px; display: flex; align-items: center; justify-content: center; gap: 4px; border: 0; border-radius: 6px; color: #52627a; background: transparent; font-size: 8px; font-weight: 850; }
   .mobile-segment button.active { color: #1956ad; background: #fff; box-shadow: 0 2px 7px rgba(34, 65, 104, .12); }
   .mobile-segment button:disabled { opacity: .35; }
-  .mobile-segment img { width: 22px; height: 14px; object-fit: cover; }
-  .mobile-generate { min-height: 43px; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 1px; border-radius: 9px; font-size: 11px; }
+  .mobile-segment img { width: 19px; height: 12px; object-fit: cover; }
+  .mobile-generate { min-height: 34px; display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 0; border-radius: 8px; font-size: 9px; }
   .mobile-generation .job { margin-top: 1px; }
   .mobile-generation .status { margin: 0; }
 
