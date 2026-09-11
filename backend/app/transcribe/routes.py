@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import shutil
 import tempfile
 import time
@@ -7,6 +8,7 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 
 from app.core import (
     save_and_validate_upload,
@@ -23,6 +25,9 @@ from app.api.routes.transcription_models import TRANSCRIPTION_MODELS_STATUS
 from app.transcribe.calibration import get_estimate, record_observation, wav_duration_seconds
 
 router = APIRouter(prefix="/api/transcribe", tags=["transcribe"])
+
+# Serialize this expensive route while keeping the event loop responsive.
+_whisper_slot = asyncio.Semaphore(1)
 
 
 @router.get("/estimate", summary="Server-calibrated processing time estimate")
@@ -122,12 +127,13 @@ async def _transcribe_whisper_metrics(audio_file: UploadFile, *, lang: str, tmp_
     tmp_dir = tempfile.mkdtemp(prefix=tmp_prefix)
     try:
         filename, in_path, ext = await save_and_validate_upload(audio_file, tmp_dir)
-        wav_path = to_wav_if_needed(in_path, ext)
-        audio_duration = wav_duration_seconds(wav_path)
+        async with _whisper_slot:
+            wav_path = await run_in_threadpool(to_wav_if_needed, in_path, ext)
+            audio_duration = await run_in_threadpool(wav_duration_seconds, wav_path)
 
-        t0 = time.perf_counter()
-        w = whisper_run(wav_path, lang=lang)
-        dt = time.perf_counter() - t0
+            t0 = time.perf_counter()
+            w = await run_in_threadpool(whisper_run, wav_path, lang=lang)
+            dt = time.perf_counter() - t0
 
         text = (w.get("text", "") or "").strip()
         segments = _normalize_whisper_segments(w.get("segments", []) or [])
