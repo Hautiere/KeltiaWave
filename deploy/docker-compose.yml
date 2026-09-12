@@ -34,7 +34,7 @@ services:
       TRANSCRIPTION_DEFAULT_RTF_VOSK_BR: ${TRANSCRIPTION_DEFAULT_RTF_VOSK_BR:-0.45}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR:-1.25}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY:-1.25}
-      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://127.0.0.1:4100,http://127.0.0.1:4200,http://127.0.0.1:4300,http://127.0.0.1:4400,http://127.0.0.1:4500,http://127.0.0.1:4600,http://localhost:4100,http://localhost:4200,http://localhost:4300,http://localhost:4400,http://localhost:4500,http://localhost:4600}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://127.0.0.1:4100,http://127.0.0.1:4200,http://127.0.0.1:4300,http://127.0.0.1:4400,http://127.0.0.1:4500,http://127.0.0.1:4600,http://localhost:4100,http://localhost:4200,http://localhost:4300,http://localhost:4400,http://localhost:4500,http://localhost:4600,http://localhost,https://localhost,capacitor://localhost}
     volumes:
       - ${VOSK_MODEL_HOST_DIR:-../backend/models/vosk-model-br-25.02}:/opt/models/vosk-model-br-25.02:ro
       - ${WHISPER_BRETON_MODEL_HOST_DIR:-../backend/models/whisper-breton-ct2}:/opt/models/whisper-breton-ct2:ro
