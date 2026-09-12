@@ -58,7 +58,7 @@ services:
       TRANSCRIPTION_DEFAULT_RTF_VOSK_BR: ${TRANSCRIPTION_DEFAULT_RTF_VOSK_BR:-0.45}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR:-1.25}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY:-1.25}
-      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://127.0.0.1:14100,http://127.0.0.1:14200,http://127.0.0.1:14300,http://127.0.0.1:14400,http://127.0.0.1:14500,http://127.0.0.1:14600}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-http://127.0.0.1:14100,http://127.0.0.1:14200,http://127.0.0.1:14300,http://127.0.0.1:14400,http://127.0.0.1:14500,http://127.0.0.1:14600,http://localhost,https://localhost,capacitor://localhost}
     volumes:
       - ${MODELS_DIR:?Set MODELS_DIR to an existing directory on the server}:/models:ro
       - backend_data:/app/data

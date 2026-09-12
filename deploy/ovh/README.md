@@ -155,3 +155,37 @@ Les sauvegardes de promotion se trouvent dans
 `/home/ubuntu/apps/keltiawave/shared/backups/pre-promotion-*`. Elles contiennent
 le Caddyfile, PostgreSQL, MinIO, les données de l'application historique et les
 empreintes SHA-256.
+
+## Capacitor mobile CORS
+
+The explicit allowlist includes `http://localhost`, `https://localhost` and
+`capacitor://localhost`. Capacitor 8 defaults to HTTPS on Android and the
+capacitor scheme on iOS; verify the actual WebView Origin when diagnosing errors.
+`CORS_ALLOW_ORIGINS`, when nonempty, replaces the defaults completely.
+
+For existing installations, append these three comma-separated origins to the
+existing CORS_ALLOW_ORIGINS value in the private environment file. Preserve all
+existing origins. Do not print or commit the environment file. Changing the
+versioned defaults does not override an existing environment value.
+
+Apply first to shared/.env.staging as part of the normal staging workflow.
+After validation, the equivalent change belongs in
+`/home/ubuntu/apps/keltiawave/shared/.env.production`. Recreate the backend with
+the updated environment through the deployment workflow; a process restart alone
+does not update the container environment. Never use a wildcard origin.
+
+Validation order: tests, commit/push, staging deployment, preflight, then a short
+Android Whisper transcription. The staging authentication proxy must also permit
+the authorized test request to reach FastAPI; do not disable staging protection.
+
+```sh
+curl -i -X OPTIONS https://record.staging.keltiawave.com/api/record/transcribe \
+  -H 'Origin: http://localhost' \
+  -H 'Access-Control-Request-Method: POST'
+```
+
+Expect HTTP 200 and `Access-Control-Allow-Origin: http://localhost` when the
+request reaches FastAPI. Repeat for HTTPS localhost and capacitor localhost.
+The web root domain is not the Record API endpoint. Only validate the production
+Record domain after the approved production deployment. A successful preflight
+alone does not prove Whisper or audio upload works.
