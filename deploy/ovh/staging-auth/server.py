@@ -18,6 +18,37 @@ SESSION_TTL = int(os.getenv("STAGING_AUTH_SESSION_TTL", "43200"))
 PORTAL_URL = "https://staging.keltiawave.com"
 
 
+
+RECORD_HOST = "record.staging.keltiawave.com"
+RECORD_PATHS = {"/api/record/transcribe", "/api/record/improve"}
+MOBILE_ORIGINS = {"http://localhost", "https://localhost", "capacitor://localhost"}
+
+
+def record_scope(headers) -> bool:
+    return (
+        os.getenv("DEPLOY_SLOT") == "staging"
+        and headers.get("X-Forwarded-Host") == RECORD_HOST
+        and headers.get("X-Forwarded-Method") == "POST"
+        and headers.get("X-Forwarded-Uri") in RECORD_PATHS
+    )
+
+
+def valid_record_access(headers) -> bool:
+    if not record_scope(headers):
+        return False
+    try:
+        expires = int(os.getenv("STAGING_RECORD_TOKEN_EXPIRES_AT", "0"))
+    except ValueError:
+        return False
+    digest = os.getenv("STAGING_RECORD_TOKEN_SHA256", "")
+    authorization = headers.get("Authorization", "")
+    if (expires <= time.time() or len(digest) != 64
+            or not authorization.startswith("Bearer ") or len(authorization) > 256):
+        return False
+    token = authorization[7:]
+    return bool(token) and hmac.compare_digest(hashlib.sha256(token.encode()).hexdigest(), digest)
+
+
 def encode_token(expires: int) -> str:
     payload = f"{USERNAME}:{expires}".encode()
     signature = hmac.new(SECRET, payload, hashlib.sha256).digest()
@@ -27,7 +58,10 @@ def encode_token(expires: int) -> str:
 def valid_token(token: str) -> bool:
     try:
         raw = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
-        payload, signature = raw.rsplit(b".", 1)
+        # SHA-256 is 32 binary bytes and may itself contain a dot.
+        if len(raw) < 34 or raw[-33:-32] != b".":
+            return False
+        payload, signature = raw[:-33], raw[-32:]
         expected = hmac.new(SECRET, payload, hashlib.sha256).digest()
         user, expires = payload.decode().rsplit(":", 1)
         return (
@@ -82,6 +116,27 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b"ok")
+            return
+        if parsed.path == "/verify-record":
+            try:
+                session = cookies.SimpleCookie(self.headers.get("Cookie", "")).get(COOKIE_NAME)
+            except cookies.CookieError:
+                session = None
+            authorized = record_scope(self.headers) and (
+                valid_record_access(self.headers) or (session and valid_token(session.value))
+            )
+            self.send_response(200 if authorized else 401)
+            self.send_header("Cache-Control", "no-store")
+            if not authorized:
+                self.send_header("Vary", "Origin")
+                origin = self.headers.get("Origin", "")
+                if origin in MOBILE_ORIGINS:
+                    self.send_header("Access-Control-Allow-Origin", origin)
+                    self.send_header("Access-Control-Allow-Credentials", "true")
+                self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            if not authorized:
+                self.wfile.write(b'{"detail":"Staging Record authentication required or expired."}')
             return
         if parsed.path == "/verify":
             jar = cookies.SimpleCookie(self.headers.get("Cookie", ""))
@@ -141,4 +196,5 @@ class Handler(BaseHTTPRequestHandler):
         print(f"{self.address_string()} - {fmt % args}", flush=True)
 
 
-ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+if __name__ == "__main__":
+    ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()

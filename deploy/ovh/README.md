@@ -189,3 +189,43 @@ request reaches FastAPI. Repeat for HTTPS localhost and capacitor localhost.
 The web root domain is not the Record API endpoint. Only validate the production
 Record domain after the approved production deployment. A successful preflight
 alone does not prove Whisper or audio upload works.
+
+## Temporary Android Record staging access
+
+Only `record.staging.keltiawave.com` has the temporary API routes. OPTIONS
+preflights requesting POST on exactly `/api/record/transcribe` or
+`/api/record/improve` reach FastAPI's explicit CORS policy without a session.
+POST goes through `/verify-record`; a valid browser session or temporary Bearer
+credential is required. Other hosts, paths and methods keep `/verify` and the
+normal staging login. Unauthorized API requests return 401, with CORS headers
+only for the three approved Capacitor origins. The Bearer header is removed
+before forwarding audio to Record/backend.
+
+The auth container must have `DEPLOY_SLOT=staging`. Temporary access is disabled
+unless both `STAGING_RECORD_TOKEN_SHA256` (SHA-256 hex digest of a random token)
+and `STAGING_RECORD_TOKEN_EXPIRES_AT` (Unix timestamp) are configured in the
+private staging environment. Use a 32-byte random token with a two-hour lifetime.
+Keep its plaintext out of environment files, Git, URLs, command arguments and
+logs. Deliver it privately to the tester. Only the digest belongs in the staging
+environment; recreate **staging-auth only** to apply it. Never configure it in
+production. An expired token fails closed and does not affect browser sessions.
+
+Build the mobile app with `ng build --configuration development`, then
+`npx cap sync android`. In the backend settings use
+`https://record.staging.keltiawave.com` and enter the token in the masked field.
+It stays in memory, is sent only to the two exact URLs, and disappears when the
+app process restarts or the tester clears it. Production builds never send it.
+
+Validate Caddy before reloading the shared proxy. Patch only the Record staging
+host block in the active file; preserve and compare every other byte. Keep a
+backup for immediate rollback. Do not run the production promotion script.
+Check public preflight, unauthorized 401, authorized short synthetic audio POST,
+and that other staging applications still redirect to login. Then test Android
+recording, playback, and Whisper with real speech.
+
+After the test, clear both token environment entries and recreate staging-auth.
+Restore the original Record staging block (normal staging security, staging auth,
+and Record reverse_proxy), validate and reload Caddy. This removes the preflight
+exception too. Delete the tester's private token file and clear the app field.
+Run `python3 -m unittest discover -s deploy/ovh/staging-auth -p 'test_*.py'`
+for the authentication regression suite.

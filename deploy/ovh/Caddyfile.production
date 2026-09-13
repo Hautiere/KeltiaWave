@@ -116,8 +116,31 @@ play.staging.keltiawave.com {
 
 record.staging.keltiawave.com {
 	import keltiawave_staging_security
-	import keltiawave_staging_auth
-	reverse_proxy keltiawave-staging-record:80
+	# Temporary mobile test access; POST always remains authenticated.
+	@record_preflight {
+		method OPTIONS
+		path /api/record/transcribe /api/record/improve
+		header Access-Control-Request-Method POST
+	}
+	@record_post {
+		method POST
+		path /api/record/transcribe /api/record/improve
+	}
+	handle @record_preflight {
+		reverse_proxy keltiawave-staging-record:80
+	}
+	handle @record_post {
+		forward_auth keltiawave-staging-auth:8080 {
+			uri /verify-record
+		}
+		reverse_proxy keltiawave-staging-record:80 {
+			header_up -Authorization
+		}
+	}
+	handle {
+		import keltiawave_staging_auth
+		reverse_proxy keltiawave-staging-record:80
+	}
 }
 
 transcribe.staging.keltiawave.com {
