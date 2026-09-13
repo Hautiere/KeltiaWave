@@ -229,3 +229,13 @@ and Record reverse_proxy), validate and reload Caddy. This removes the preflight
 exception too. Delete the tester's private token file and clear the app field.
 Run `python3 -m unittest discover -s deploy/ovh/staging-auth -p 'test_*.py'`
 for the authentication regression suite.
+
+Deployment note: a single-file Docker bind mount can still refer to an old inode
+if its host file was previously replaced. Compare the host and container file
+hashes before reloading. Copy the validated candidate into the container and
+reload that exact path; do not assume `/etc/caddy/Caddyfile` matches the host.
+Keep the host file updated for future container recreation. Until the stale mount
+is repaired in a separate maintenance operation, a reload/restart from that old
+mounted file can restore obsolete routing. Do not restart the shared proxy just
+for this staging test. For rollback, copy the saved original into the container,
+validate it and reload that explicit path as well.
