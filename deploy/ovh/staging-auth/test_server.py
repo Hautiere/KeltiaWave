@@ -88,6 +88,21 @@ class AuthTests(unittest.TestCase):
         self.assertFalse(auth.valid_token('malformed'))
         self.assertFalse(auth.valid_token(auth.encode_token(1)))
 
+    def test_device_access_is_scoped_and_revocable(self):
+        credential = 'device-test-' + 'x' * 40
+        headers = {**self.headers, 'Authorization': 'Bearer ' + credential}
+        with patch.dict(os.environ, {'STAGING_RECORD_DEVICE_SHA256': hashlib.sha256(credential.encode()).hexdigest()}):
+            self.assertEqual(self.request(headers=headers)['status'], 200)
+            for key, value in [('X-Forwarded-Host', 'record.keltiawave.com'),
+                               ('X-Forwarded-Uri', '/api/record/email'),
+                               ('X-Forwarded-Method', 'GET')]:
+                self.assertEqual(self.request(headers={**headers, key:value})['status'], 401)
+            with patch.dict(os.environ, {'DEPLOY_SLOT':'production'}):
+                self.assertEqual(self.request(headers=headers)['status'], 401)
+            self.assertEqual(self.request('/verify', headers=headers)['status'], 302)
+        with patch.dict(os.environ, {'STAGING_RECORD_DEVICE_SHA256':''}):
+            self.assertEqual(self.request(headers=headers)['status'], 401)
+
     def test_existing_browser_session(self):
         token = auth.encode_token(int(time.time()) + 3600)
         headers = {**self.headers, 'Authorization': '', 'Cookie': f'{auth.COOKIE_NAME}={token}'}

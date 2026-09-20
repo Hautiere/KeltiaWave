@@ -119,7 +119,7 @@ record.staging.keltiawave.com {
 	# Temporary mobile test access; POST always remains authenticated.
 	@record_preflight {
 		method OPTIONS
-		path /api/record/transcribe /api/record/improve
+		path /api/record/transcribe /api/record/improve /api/record/email
 		header Access-Control-Request-Method POST
 	}
 	@record_post {
@@ -127,6 +127,14 @@ record.staging.keltiawave.com {
 		path /api/record/transcribe /api/record/improve
 	}
 	handle @record_preflight {
+		reverse_proxy keltiawave-staging-record:80
+	}
+	@email_post {
+		method POST
+		path /api/record/email
+	}
+	handle @email_post {
+		# Backend validates the staging device credential; never anonymous delivery.
 		reverse_proxy keltiawave-staging-record:80
 	}
 	handle @record_post {

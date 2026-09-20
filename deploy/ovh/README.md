@@ -239,3 +239,22 @@ is repaired in a separate maintenance operation, a reload/restart from that old
 mounted file can restore obsolete routing. Do not restart the shared proxy just
 for this staging test. For rollback, copy the saved original into the container,
 validate it and reload that explicit path as well.
+
+
+## Remembered Android development access
+
+A debug emulator may be provisioned once with a random 256-bit device credential.
+`STAGING_RECORD_DEVICE_SHA256` stores only its SHA-256 digest in the private
+staging environment. This credential has no periodic expiry and remains valid
+until explicitly revoked; it is strictly limited to the existing two Record
+Whisper POST endpoints and the staging slot. It never authorizes email, another
+application, or production. Clear this environment variable and recreate only
+staging-auth to revoke it. Existing browser login remains unchanged.
+
+The Android debug plugin imports a private `files/staging-device.seed` once,
+encrypts it with an Android Keystore AES-GCM key in no-backup storage, and deletes
+the seed. The seed must be streamed through adb run-as, never passed on the
+command line or included in the APK. Release builds do not return a credential.
+App updates retain access; uninstalling or wiping emulator data requires new
+provisioning. This is development-only device enrollment, not production user
+authentication. A debug device remains accessible to its authorized adb operator.

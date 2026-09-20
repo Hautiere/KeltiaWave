@@ -36,6 +36,13 @@ def record_scope(headers) -> bool:
 def valid_record_access(headers) -> bool:
     if not record_scope(headers):
         return False
+    authorization = headers.get("Authorization", "")
+    device_digest = os.getenv("STAGING_RECORD_DEVICE_SHA256", "")
+    if authorization.startswith("Bearer ") and len(authorization) <= 256:
+        credential = authorization[7:]
+        if (len(credential) >= 32 and len(device_digest) == 64
+                and hmac.compare_digest(hashlib.sha256(credential.encode()).hexdigest(), device_digest)):
+            return True
     try:
         expires = int(os.getenv("STAGING_RECORD_TOKEN_EXPIRES_AT", "0"))
     except ValueError:
