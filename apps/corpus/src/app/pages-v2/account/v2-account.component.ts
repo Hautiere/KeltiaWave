@@ -66,7 +66,7 @@ export class V2AccountComponent implements OnInit {
       timeout(25000),
       finalize(() => { this.sendingRecovery = false; this.changeDetector.markForCheck(); }),
     ).subscribe({
-      next: () => { this.recoveryMessage = 'Si un compte actif correspond à cette adresse, un mot de passe temporaire vous sera envoyé. Vérifiez aussi les courriers indésirables.'; },
+      next: () => { this.recoveryMessage = 'Si un compte actif correspond à cette adresse, un lien pour choisir votre nouveau mot de passe vous sera envoyé. Vérifiez aussi les courriers indésirables.'; },
       error: (err) => {
         this.recoveryError = err?.status === 503
           ? 'L’envoi d’emails n’est pas encore configuré. Contactez l’administrateur.'

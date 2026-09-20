@@ -9,6 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    auth_version = Column(Integer, default=0, nullable=False)
     temporary_password_hash = Column(String, nullable=True)
     temporary_password_expires_at = Column(DateTime, nullable=True)
     display_name = Column(String, nullable=False)

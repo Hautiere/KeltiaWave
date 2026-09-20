@@ -2,6 +2,9 @@ from typing import List
 from datetime import datetime, timedelta
 from email.message import EmailMessage
 import secrets
+import hashlib
+import os
+from urllib.parse import urlsplit
 import smtplib
 from fastapi import Request
 from pydantic import BaseModel, Field
@@ -31,30 +34,54 @@ class ForgotPasswordRequest(BaseModel):
 @router.post("/forgot-password", status_code=202)
 def forgot_password(payload: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     settings = smtp_settings("PASSWORD_RESET_EMAIL_ENABLED")
+    base = os.getenv("PASSWORD_RESET_URL", "http://127.0.0.1:4200/reinitialiser-mot-de-passe")
+    parsed = urlsplit(base)
+    if not parsed.hostname or parsed.query or parsed.fragment or parsed.username or not (parsed.scheme == "https" or (parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost"})):
+        raise HTTPException(503, "reset_url_not_configured")
     email = payload.email.lower()
     reset_limiter.reserve("ip:" + (request.client.host if request.client else "unknown"))
     reset_limiter.reserve("email:" + email)
     user = db.query(User).filter(User.email == email, User.active == True).with_for_update().first()
     if user:
-        password = secrets.token_urlsafe(18)
+        token = secrets.token_urlsafe(32)
+        link = base + "#token=" + token
         message = EmailMessage()
         message['From'] = f'KeltiaWave <{SENDER}>'
         message['To'] = user.email
-        message['Subject'] = 'Votre mot de passe temporaire KeltiaWave'
-        message.set_content(f'Votre mot de passe temporaire : {password}\n\n'
-                            'Il est valable 30 minutes. Connectez-vous sur le site KeltiaWave où vous avez fait la demande, '
-                            'puis choisissez un nouveau mot de passe.\n\n'
-                            'Si vous n’avez pas demandé ce message, ignorez-le : votre mot de passe habituel reste valable.\n')
+        message['Subject'] = 'Choisissez un nouveau mot de passe KeltiaWave'
+        message.set_content(f'Pour choisir votre nouveau mot de passe, ouvrez ce lien :\n\n{link}\n\n'
+                            'Ce lien est valable 30 minutes et utilisable une seule fois.\n'
+                            'Si vous n’avez pas demandé ce message, ignorez-le : votre mot de passe reste inchangé.\n')
         try:
             deliver(message, settings)
         except (smtplib.SMTPException, OSError):
             db.rollback()
             # Same public response for unknown accounts and delivery failures.
             return {"status": "accepted"}
-        user.temporary_password_hash = hash_password(password)
+        user.temporary_password_hash = "reset$" + hashlib.sha256(token.encode()).hexdigest()
         user.temporary_password_expires_at = datetime.utcnow() + timedelta(minutes=30)
         db.commit()
     return {"status": "accepted"}
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=32, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    digest = "reset$" + hashlib.sha256(payload.token.encode()).hexdigest()
+    user = db.query(User).filter(User.temporary_password_hash == digest, User.active == True).with_for_update().first()
+    if not user or not user.temporary_password_expires_at or user.temporary_password_expires_at <= datetime.utcnow():
+        raise HTTPException(400, "reset_link_invalid_or_expired")
+    user.password_hash = hash_password(payload.new_password)
+    user.temporary_password_hash = None
+    user.temporary_password_expires_at = None
+    user.must_change_password = False
+    user.auth_version = (user.auth_version or 0) + 1
+    db.commit()
+    return {"status": "password_changed"}
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
@@ -85,17 +112,10 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email.lower()).first()
-    temporary = bool(user and user.temporary_password_hash
-                     and user.temporary_password_expires_at
-                     and user.temporary_password_expires_at > datetime.utcnow()
-                     and verify_password(payload.password, user.temporary_password_hash))
-    if not user or not (temporary or verify_password(payload.password, user.password_hash)):
+    if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     if not user.active:
         raise HTTPException(status_code=403, detail="Inactive account")
-    if temporary:
-        user.must_change_password = True
-        db.commit()
     return {"access_token": create_access_token(user), "user": user_to_payload(user)}
 
 

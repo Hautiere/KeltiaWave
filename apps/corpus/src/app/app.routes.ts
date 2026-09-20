@@ -17,6 +17,8 @@ import { V2MyClassComponent } from './pages-v2/my-class/v2-my-class.component';
 import { V2RecordComponent } from './pages-v2/record/v2-record.component';
 import { V2WriteComponent } from './pages-v2/write/v2-write.component';
 
+import { ResetPasswordComponent } from './pages-v2/account/reset-password.component';
+
 const redirectToPortal = () => {
   window.location.replace('/portal/index.html');
   return false;
@@ -32,6 +34,7 @@ export const routes: Routes = [
   { path: 'ecrire', component: V2WriteComponent },
   { path: 'ma-classe', component: V2MyClassComponent },
   { path: 'admin', component: V2AdminComponent },
+  { path: 'reinitialiser-mot-de-passe', component: ResetPasswordComponent },
   { path: 'compte', component: V2AccountComponent },
   { path: 'login', redirectTo: 'compte' },
   { path: 'profil', redirectTo: 'compte' },
