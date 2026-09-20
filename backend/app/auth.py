@@ -7,7 +7,7 @@ import secrets
 import time
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from .db import get_db
@@ -110,12 +110,15 @@ def decode_access_token(token: str) -> dict:
 
 
 def get_current_user(
+    request: Request = None,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ) -> User:
     user = get_optional_user(authorization=authorization, db=db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+    if user.must_change_password and (not request or request.url.path not in {"/api/auth/me", "/api/auth/change-password"} or request.method not in {"GET", "POST"}):
+        raise HTTPException(status_code=403, detail="password_change_required")
     return user
 
 

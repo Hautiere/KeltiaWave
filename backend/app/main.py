@@ -110,6 +110,8 @@ def ensure_user_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("users")}
     wanted = {
         "must_change_password": "BOOLEAN DEFAULT FALSE NOT NULL",
+        "temporary_password_hash": "TEXT",
+        "temporary_password_expires_at": "TIMESTAMP",
         "profile_type": "TEXT DEFAULT 'contributor' NOT NULL",
         "breton_level": "TEXT DEFAULT 'undefined' NOT NULL",
         "organization": "TEXT",

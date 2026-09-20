@@ -77,7 +77,10 @@
               <h1>{{ 'nav.adminAccounts' | t }}</h1>
               <p>Consultez les comptes, les roles et les rattachements de classe.</p>
             </div>
-            <button class="btn primary" type="button" (click)="load()" [disabled]="loading">{{ 'corpus.refresh' | t }}</button>
+            <div class="row-actions">
+              <button class="btn primary" type="button" (click)="openCreateUser()" [disabled]="creatingUser">Ajouter un compte</button>
+              <button class="btn ghost" type="button" (click)="load()" [disabled]="loading">{{ 'corpus.refresh' | t }}</button>
+            </div>
           </div>
 
           <div class="admin-head" *ngIf="isSection('phrases')">
@@ -206,6 +209,30 @@
               </article>
               <div class="empty-state" *ngIf="!filteredPhrases.length">Aucune phrase ne correspond aux filtres.</div>
             </div>
+          </section>
+
+          <section class="admin-panel" *ngIf="isSection('accounts') && newUser">
+            <form class="edit-form" #createForm="ngForm" (ngSubmit)="createUser()">
+              <h2 class="full">Ajouter un compte</h2>
+              <label><span>Nom affiché</span><input name="newName" [(ngModel)]="newUser.display_name" required maxlength="120" autocomplete="off"></label>
+              <label><span>Email</span><input type="email" name="newEmail" [(ngModel)]="newUser.email" required email autocomplete="off"></label>
+              <div class="password-field">
+                <label for="new-user-password">Mot de passe initial (8 caractères minimum)</label>
+                <div class="password-controls">
+                  <input id="new-user-password" [type]="showNewUserPassword ? 'text' : 'password'" name="newPassword" [(ngModel)]="newUser.password" required minlength="8" maxlength="128" autocomplete="new-password">
+                  <button class="btn ghost" type="button" (click)="showNewUserPassword = !showNewUserPassword" [attr.aria-label]="showNewUserPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" [attr.aria-pressed]="showNewUserPassword" aria-controls="new-user-password">{{ showNewUserPassword ? 'Masquer' : 'Afficher' }}</button>
+                </div>
+              </div>
+              <label><span>Rôle</span><select name="newRole" [(ngModel)]="newUser.role"><option *ngFor="let role of roles" [value]="role">{{ role }}</option></select></label>
+              <label><span>Niveau breton</span><select name="newLevel" [(ngModel)]="newUser.breton_level"><option *ngFor="let level of bretonLevels" [value]="level">{{ level }}</option></select></label>
+              <label><span>Organisation</span><input name="newOrganization" [(ngModel)]="newUser.organization"></label>
+              <label class="check-row full"><input type="checkbox" name="newMustChange" [(ngModel)]="newUser.must_change_password"><span>Demander un changement de mot de passe à la première connexion</span></label>
+              <p class="full" role="alert" *ngIf="createUserError">{{ createUserError }}</p>
+              <div class="edit-actions full">
+                <button class="btn ghost" type="button" (click)="newUser = null" [disabled]="creatingUser">Annuler</button>
+                <button class="btn primary" type="submit" [disabled]="creatingUser || createForm.invalid">{{ creatingUser ? 'Création…' : 'Créer le compte' }}</button>
+              </div>
+            </form>
           </section>
 
           <section class="admin-panel" *ngIf="isSection('accounts')">

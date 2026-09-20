@@ -67,3 +67,11 @@ Déploiements publics :
 node_modules/.bin/tsc -p tsconfig.app.json --noEmit
 node_modules/.bin/ngc -p tsconfig.app.json --outDir /tmp/keltia-komz-ngc
 ```
+
+## Comptes et récupération du mot de passe
+
+Admin → Comptes permet d’ajouter des utilisateurs et de choisir leur rôle. Le mot de passe initial peut être affiché pendant la saisie.
+
+« Mot de passe oublié ? » est disponible dans le menu de connexion et ouvre `/compte?auth=forgot`, une vue dédiée à la demande par email. Le mot de passe temporaire expire après 30 minutes et doit être remplacé après connexion. Un compte déjà connecté peut changer son mot de passe dans Mon compte, sans ressaisir l’ancien.
+
+Voir [la configuration email et le parcours complet](../../docs/password-recovery.md).

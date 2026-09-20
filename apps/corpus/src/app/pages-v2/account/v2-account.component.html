@@ -37,11 +37,11 @@
     <header class="page-top">
       <div class="page-title">
         <a class="back-library" [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'">← {{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
-        <h1>{{ auth.user() ? 'Mon profil' : 'Connexion' }}</h1>
+        <h1>{{ auth.user() ? 'Mon profil' : forgotPasswordOpen ? 'Mot de passe oublié' : 'Connexion' }}</h1>
       </div>
     </header>
 
-    <section class="account-hero" *ngIf="!auth.user()">
+    <section class="account-hero" *ngIf="!auth.user() && !forgotPasswordOpen">
       <div class="account-symbol avatar-symbol" aria-hidden="true">
         <img [src]="draftAvatar" alt="">
       </div>
@@ -59,7 +59,7 @@
       </div>
     </section>
 
-    <section class="auth-panel" *ngIf="showAuthForm && !auth.token()">
+    <section class="auth-panel" *ngIf="showAuthForm && !auth.token() && !forgotPasswordOpen">
       <div class="auth-head">
         <h2>{{ mode === 'login' ? 'Sign in' : 'Create account' }}</h2>
         <p>{{ mode === 'login' ? 'Use your KeltiaWave account.' : 'Create a personal contributor account.' }}</p>
@@ -99,11 +99,48 @@
           <input type="password" [(ngModel)]="password" name="password" autocomplete="current-password">
         </label>
         <button class="btn primary" type="submit" [disabled]="busy">{{ busy ? ('account.loading' | t) : (mode === 'login' ? 'Sign in' : 'Create account') }}</button>
+        <button class="btn ghost" type="button" *ngIf="mode === 'login'" (click)="openPasswordRecovery()">Mot de passe oublié ?</button>
       </form>
     </section>
 
-    <div class="message error" *ngIf="error">{{ error }}</div>
-    <div class="message success" *ngIf="success">{{ success }}</div>
+    <section class="profile-section recovery-section" *ngIf="forgotPasswordOpen && !auth.user()">
+      <p>Indiquez l’adresse email de votre compte. Vous recevrez un mot de passe temporaire valable 30 minutes, à remplacer après connexion.</p>
+      <form class="profile-form password-form" #recoveryForm="ngForm" (ngSubmit)="sendPasswordRecovery()">
+        <label><span>Adresse email du compte</span><input type="email" name="recoveryEmail" [(ngModel)]="recoveryEmail" autocomplete="email" required email [disabled]="sendingRecovery"></label>
+        <button class="btn primary" type="submit" [disabled]="sendingRecovery || recoveryForm.invalid">{{ sendingRecovery ? 'Envoi…' : 'Envoyer un mot de passe temporaire' }}</button>
+        <p class="message success" role="status" *ngIf="recoveryMessage">{{ recoveryMessage }}</p>
+        <p class="message error" role="alert" *ngIf="recoveryError">{{ recoveryError }}</p>
+      </form>
+      <a routerLink="/compte" [queryParams]="{ auth: 'login' }" (click)="returnToLogin()">← Revenir à la connexion</a>
+    </section>
+
+    <div class="message error" *ngIf="error && !forgotPasswordOpen">{{ error }}</div>
+    <div class="message success" *ngIf="success && !forgotPasswordOpen">{{ success }}</div>
+
+    <section class="profile-section" *ngIf="auth.user()" aria-labelledby="password-heading">
+      <header class="section-head compact">
+        <div>
+          <h2 id="password-heading">{{ (auth.user()?.must_change_password ? 'account.passwordRequiredTitle' : 'account.passwordTitle') | t }}</h2>
+          <p>{{ (auth.user()?.must_change_password ? 'account.passwordRequiredHelp' : 'account.passwordHelp') | t }}</p>
+        </div>
+      </header>
+      <form class="profile-form password-form" (ngSubmit)="changePassword()">
+
+        <label>
+          <span>{{ 'account.newPassword' | t }}</span>
+          <input type="password" name="newPassword" [(ngModel)]="newPassword" autocomplete="new-password" required minlength="8" maxlength="128" [disabled]="changingPassword">
+        </label>
+        <label>
+          <span>{{ 'account.confirmPassword' | t }}</span>
+          <input type="password" name="confirmPassword" [(ngModel)]="confirmPassword" autocomplete="new-password" required minlength="8" maxlength="128" [disabled]="changingPassword">
+        </label>
+        <button class="btn primary" type="submit" [disabled]="changingPassword || !newPassword || !confirmPassword">
+          {{ (changingPassword ? 'account.sending' : 'account.changePassword') | t }}
+        </button>
+        <p class="message error" role="alert" *ngIf="passwordError">{{ passwordError }}</p>
+        <p class="message success" role="status" *ngIf="passwordSuccess">{{ passwordSuccess }}</p>
+      </form>
+    </section>
 
     <section class="profile-section" *ngIf="auth.user()">
       <header class="section-head compact">

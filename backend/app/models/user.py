@@ -9,6 +9,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    temporary_password_hash = Column(String, nullable=True)
+    temporary_password_expires_at = Column(DateTime, nullable=True)
     display_name = Column(String, nullable=False)
     profile_type = Column(String, default="contributor", nullable=False)
     role = Column(String, default="contributor", nullable=False)

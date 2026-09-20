@@ -26,6 +26,34 @@ type AdminSection = 'recordings' | 'phrases' | 'accounts' | 'data';
   styleUrls: ['./v2-admin.component.scss'],
 })
 export class V2AdminComponent implements OnInit {
+  newUser: { email: string; password: string; display_name: string; role: AuthUser['role']; breton_level: AuthUser['breton_level']; organization: string; must_change_password: boolean } | null = null;
+  creatingUser = false;
+  showNewUserPassword = false;
+  createUserError = '';
+
+  openCreateUser(): void {
+    this.showNewUserPassword = false;
+    this.createUserError = '';
+    this.newUser = { email: '', password: '', display_name: '', role: 'contributor', breton_level: 'undefined', organization: '', must_change_password: true };
+  }
+
+  createUser(): void {
+    if (!this.newUser || this.creatingUser) return;
+    this.creatingUser = true;
+    this.createUserError = '';
+    this.auth.createUser({ ...this.newUser, email: this.newUser.email.trim(), display_name: this.newUser.display_name.trim() }).subscribe({
+      next: (user) => {
+        this.users = [user, ...this.users];
+        this.newUser = null;
+        this.creatingUser = false;
+        this.success = 'Compte créé. Communiquez le mot de passe initial à son titulaire.';
+      },
+      error: (err) => {
+        this.creatingUser = false;
+        this.createUserError = err?.status === 409 ? 'Cette adresse email possède déjà un compte.' : 'Création impossible. Vérifiez les champs et votre connexion.';
+      },
+    });
+  }
   @ViewChild('adminPlayer') private adminPlayer?: ElementRef<HTMLAudioElement>;
   overview: AdminDataOverview | null = null;
   storage: AdminStorageInfo | null = null;

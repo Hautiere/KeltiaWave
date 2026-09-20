@@ -284,6 +284,10 @@ button, input, select, textarea { font: inherit; }
 .edit-actions { border-top: 1px solid #e5eaf3; padding-top: 18px; background: #fff; }
 .edit-form label { display: grid; gap: 8px; color: #65738b; font-size: 12px; font-weight: 850; }
 .edit-form label.full { grid-column: 1 / -1; }
+.password-field { display: grid; gap: 8px; min-width: 0; }
+.password-controls { display: flex; align-items: stretch; gap: 8px; }
+.password-controls input { flex: 1; min-width: 0; }
+.password-controls button { flex-shrink: 0; }
 .edit-form textarea { min-height: 110px; resize: vertical; }
 .btn.danger { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
 
