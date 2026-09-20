@@ -1,0 +1,146 @@
+[
+  {
+    "id": "BR-MEET-001",
+    "level": "A1",
+    "subtheme": "saluer",
+    "french": "Bonjour.",
+    "english": "Hello.",
+    "breton_candidate": "Demat.",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-002",
+    "level": "A1",
+    "subtheme": "saluer",
+    "french": "Comment vas-tu ?",
+    "english": "How are you?",
+    "breton_candidate": "Penaos emañ kont ganit ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-003",
+    "level": "A1",
+    "subtheme": "identite",
+    "french": "Comment t’appelles-tu ?",
+    "english": "What is your name?",
+    "breton_candidate": "Petra eo da anv ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-004",
+    "level": "A1",
+    "subtheme": "origine",
+    "french": "D’où viens-tu ?",
+    "english": "Where are you from?",
+    "breton_candidate": "Eus pelec’h out ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-005",
+    "level": "A2",
+    "subtheme": "habitat",
+    "french": "Où habites-tu ?",
+    "english": "Where do you live?",
+    "breton_candidate": "Pelec’h emaout o chom ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-006",
+    "level": "A2",
+    "subtheme": "langues",
+    "french": "Parles-tu breton ?",
+    "english": "Do you speak Breton?",
+    "breton_candidate": "Ha komz a rez brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-007",
+    "level": "A2",
+    "subtheme": "langues",
+    "french": "J’apprends le breton.",
+    "english": "I am learning Breton.",
+    "breton_candidate": "O teskiñ brezhoneg emaon.",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-008",
+    "level": "A2",
+    "subtheme": "travail",
+    "french": "Que fais-tu dans la vie ?",
+    "english": "What do you do for a living?",
+    "breton_candidate": "Petra eo da vicher ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-009",
+    "level": "B1",
+    "subtheme": "apprentissage",
+    "french": "Depuis combien de temps apprends-tu le breton ?",
+    "english": "How long have you been learning Breton?",
+    "breton_candidate": "Abaoe pegoulz emaout o teskiñ brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-010",
+    "level": "B1",
+    "subtheme": "loisirs",
+    "french": "Qu’aimes-tu faire pendant ton temps libre ?",
+    "english": "What do you like doing in your free time?",
+    "breton_candidate": "Petra a blij dit ober pa vez amzer vak ganit ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-011",
+    "level": "B1",
+    "subtheme": "apprentissage",
+    "french": "Pourquoi as-tu commencé à apprendre le breton ?",
+    "english": "Why did you start learning Breton?",
+    "breton_candidate": "Perak ec’h eus kroget da zeskiñ brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-012",
+    "level": "B1",
+    "subtheme": "langues",
+    "french": "Avec qui parles-tu breton ?",
+    "english": "Who do you speak Breton with?",
+    "breton_candidate": "Gant piv e komzez brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-013",
+    "level": "B2",
+    "subtheme": "apprentissage",
+    "french": "Qu’est-ce qui te plaît le plus dans le breton ?",
+    "english": "What do you like most about Breton?",
+    "breton_candidate": "Petra a blij ar muiañ dit er brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-014",
+    "level": "B2",
+    "subtheme": "apprentissage",
+    "french": "Quelles difficultés rencontres-tu en apprenant le breton ?",
+    "english": "What difficulties do you encounter when learning Breton?",
+    "breton_candidate": "Peseurt diaesterioù a gavez pa zeskez brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-015",
+    "level": "B2",
+    "subtheme": "rencontres",
+    "french": "Comment as-tu rencontré les personnes avec qui tu parles breton ?",
+    "english": "How did you meet the people you speak Breton with?",
+    "breton_candidate": "Penaos ec’h eus graet anaoudegezh gant an dud a gomzez brezhoneg ganto ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  },
+  {
+    "id": "BR-MEET-016",
+    "level": "B2",
+    "subtheme": "apprentissage",
+    "french": "Que conseillerais-tu à quelqu’un qui commence à apprendre le breton ?",
+    "english": "What advice would you give someone starting to learn Breton?",
+    "breton_candidate": "Petra a aliezez d’unan a grog da zeskiñ brezhoneg ?",
+    "notes": "Formulation, traductions et niveau proposés pour un essai technique ; validation humaine requise."
+  }
+]
