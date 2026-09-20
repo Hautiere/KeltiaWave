@@ -34,11 +34,11 @@ import { AuthService } from '../../core/auth.service';
     </main>
   `,
   styles: [`
-    :host { display:block; padding:32px 16px; }
-    main { max-width:540px; margin:0 auto; padding:28px; border:1px solid #dce4f3; border-radius:16px; background:white; color:#142344; }
+    :host { display:block; min-height:100dvh; box-sizing:border-box; padding:48px 16px; background:#fbfcff; color:#071238; font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { max-width:540px; margin:0 auto; padding:28px; border:1px solid #dce4f3; border-radius:16px; background:white; color:#071238; box-shadow:0 14px 40px rgba(15, 23, 42, .05); }
     h1 { font-size:26px; margin:0 0 16px; } p { line-height:1.5; }
     form { display:flex; flex-direction:column; gap:10px; margin:24px 0; }
-    label { font-weight:600; } input:not([type=checkbox]) { width:100%; box-sizing:border-box; padding:12px; border:1px solid #b8c9e8; border-radius:8px; font:inherit; }
+    label { font-weight:600; } input:not([type=checkbox]) { width:100%; box-sizing:border-box; padding:12px; border:1px solid #dce4f3; border-radius:8px; background:#fbfcff; color:#071238; font:inherit; }
     small { margin-bottom:8px; } .visibility { display:flex; gap:8px; align-items:center; margin:8px 0; font-weight:400; }
     button { padding:12px 16px; border:0; border-radius:8px; color:white; background:#245ff5; font:inherit; cursor:pointer; }
     button:disabled { opacity:.6; cursor:default; } a { color:#245ff5; } .error { color:#b42318; }

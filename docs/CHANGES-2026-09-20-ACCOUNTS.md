@@ -17,3 +17,5 @@ Déploiement prévu : tag annoté `staging-accounts-password-recovery-2026-09-20
 ## Correction du parcours email
 
 Le lien remplace le mot de passe temporaire après un retour utilisateur signalant un échec de connexion. La présence d’un autre onglet connecté n’est pas une cause établie. Le backend expose `POST /api/auth/reset-password`, indépendant de la session actuelle. `PASSWORD_RESET_URL` fixe le domaine de destination. Les tests couvrent expiration, usage unique, remplacement du lien, validation du mot de passe et révocation des sessions, y compris lorsqu’un autre compte est connecté.
+
+La page de réinitialisation reprend le fond clair plein écran, la typographie et les couleurs de Komz. Le fond photographique historique ne transparaît plus derrière le formulaire, y compris dans les états de confirmation et de lien invalide.
