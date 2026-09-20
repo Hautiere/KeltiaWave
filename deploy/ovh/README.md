@@ -258,3 +258,7 @@ command line or included in the APK. Release builds do not return a credential.
 App updates retain access; uninstalling or wiping emulator data requires new
 provisioning. This is development-only device enrollment, not production user
 authentication. A debug device remains accessible to its authorized adb operator.
+
+### Lien de récupération du compte
+
+Configurer `PASSWORD_RESET_URL=https://komz.staging.keltiawave.com/reinitialiser-mot-de-passe` dans `shared/.env.staging`. Le backend envoie désormais un lien à usage unique et la page demande de choisir le nouveau mot de passe. Le déploiement ajoute `auth_version` aux comptes pour invalider les sessions après réinitialisation. Voir [le parcours de récupération](../../docs/password-recovery.md).

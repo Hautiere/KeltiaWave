@@ -37,7 +37,7 @@
     <header class="page-top">
       <div class="page-title">
         <a class="back-library" [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'">← {{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
-        <h1>{{ auth.user() ? 'Mon profil' : forgotPasswordOpen ? 'Mot de passe oublié' : 'Connexion' }}</h1>
+        <h1>{{ forgotPasswordOpen ? 'Mot de passe oublié' : auth.user() ? 'Mon profil' : 'Connexion' }}</h1>
       </div>
     </header>
 
@@ -103,11 +103,11 @@
       </form>
     </section>
 
-    <section class="profile-section recovery-section" *ngIf="forgotPasswordOpen && !auth.user()">
-      <p>Indiquez l’adresse email de votre compte. Vous recevrez un mot de passe temporaire valable 30 minutes, à remplacer après connexion.</p>
+    <section class="profile-section recovery-section" *ngIf="forgotPasswordOpen">
+      <p>Indiquez l’adresse email de votre compte. Vous recevrez un lien valable 30 minutes pour choisir votre nouveau mot de passe.</p>
       <form class="profile-form password-form" #recoveryForm="ngForm" (ngSubmit)="sendPasswordRecovery()">
         <label><span>Adresse email du compte</span><input type="email" name="recoveryEmail" [(ngModel)]="recoveryEmail" autocomplete="email" required email [disabled]="sendingRecovery"></label>
-        <button class="btn primary" type="submit" [disabled]="sendingRecovery || recoveryForm.invalid">{{ sendingRecovery ? 'Envoi…' : 'Envoyer un mot de passe temporaire' }}</button>
+        <button class="btn primary" type="submit" [disabled]="sendingRecovery || recoveryForm.invalid">{{ sendingRecovery ? 'Envoi…' : 'Recevoir le lien par email' }}</button>
         <p class="message success" role="status" *ngIf="recoveryMessage">{{ recoveryMessage }}</p>
         <p class="message error" role="alert" *ngIf="recoveryError">{{ recoveryError }}</p>
       </form>
@@ -117,7 +117,7 @@
     <div class="message error" *ngIf="error && !forgotPasswordOpen">{{ error }}</div>
     <div class="message success" *ngIf="success && !forgotPasswordOpen">{{ success }}</div>
 
-    <section class="profile-section" *ngIf="auth.user()" aria-labelledby="password-heading">
+    <section class="profile-section" *ngIf="auth.user() && !forgotPasswordOpen" aria-labelledby="password-heading">
       <header class="section-head compact">
         <div>
           <h2 id="password-heading">{{ (auth.user()?.must_change_password ? 'account.passwordRequiredTitle' : 'account.passwordTitle') | t }}</h2>
@@ -142,7 +142,7 @@
       </form>
     </section>
 
-    <section class="profile-section" *ngIf="auth.user()">
+    <section class="profile-section" *ngIf="auth.user() && !forgotPasswordOpen">
       <header class="section-head compact">
         <div>
           <h2>Informations personnelles</h2>

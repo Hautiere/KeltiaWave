@@ -88,6 +88,7 @@ def user_to_payload(user: User) -> dict:
 def create_access_token(user: User) -> str:
     payload = {
         "sub": str(user.id),
+        "version": user.auth_version or 0,
         "exp": int(time.time()) + TOKEN_TTL_SECONDS,
     }
     body = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode().rstrip("=")
@@ -139,7 +140,10 @@ def get_optional_user(
         return None
     payload = decode_access_token(token)
     user_id = int(payload["sub"])
-    return db.query(User).filter(User.id == user_id, User.active == True).first()
+    user = db.query(User).filter(User.id == user_id, User.active == True).first()
+    if user and payload.get("version", 0) != (user.auth_version or 0):
+        raise HTTPException(status_code=401, detail="Session expired")
+    return user
 
 
 def _sign(body: str) -> str:
