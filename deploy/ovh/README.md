@@ -239,3 +239,9 @@ is repaired in a separate maintenance operation, a reload/restart from that old
 mounted file can restore obsolete routing. Do not restart the shared proxy just
 for this staging test. For rollback, copy the saved original into the container,
 validate it and reload that explicit path as well.
+
+## Livraison comptes et récupération des mots de passe
+
+Version identifiée par le tag annoté `staging-accounts-password-recovery-2026-09-20`. Voir [le parcours et la configuration SMTP](../../docs/password-recovery.md) et [les changements](../../docs/CHANGES-2026-09-20-ACCOUNTS.md).
+
+Configurer les variables PASSWORD_RESET_EMAIL_ENABLED et SMTP_* dans le fichier privé staging. Le déploiement de cette version cible uniquement backend et corpus, depuis une archive Git du tag extraite dans un répertoire de livraison distinct. Sauvegarder PostgreSQL, le fichier de configuration privé et les identifiants des images actives avant activation. Ne pas modifier Caddy ni les conteneurs de production. Conserver le répertoire de livraison précédent pour le retour arrière ; les colonnes ajoutées aux comptes sont compatibles avec l’ancienne version.
