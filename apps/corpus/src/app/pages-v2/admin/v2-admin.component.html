@@ -353,7 +353,7 @@
           </select>
         </label>
         <label *ngIf="selectedSegmentSourceChoice === 'autre'"><span>Autre source</span><input [(ngModel)]="selectedSegment.source" placeholder="Précisez la source"></label>
-        <label *ngIf="selectedSegmentSourceChoice === 'internet'"><span>URL de la source *</span><input [(ngModel)]="selectedSegment.source_url" type="url" placeholder="https://…"></label>
+        <label *ngIf="selectedSegmentSourceChoice === 'internet'"><span>URL de la source *</span><input [(ngModel)]="selectedSegment.source_url" type="url" maxlength="2048" placeholder="https://…"></label>
         <label *ngIf="selectedSegmentDomainChoice === 'autre'"><span>Autre domaine</span><input [(ngModel)]="selectedSegment.domain" placeholder="Précisez le domaine"></label>
         <label><span>Niveau de la phrase</span><select [(ngModel)]="selectedSegment.level"><option value="">Non renseigné</option><option *ngFor="let level of phraseLevels" [value]="level">{{ level }}</option></select></label>
         <label><span>Région du locuteur</span><select [ngModel]="selectedSegmentRegionChoice" (ngModelChange)="changeSegmentRegion($event)"><option value="">Non renseignée</option><option *ngFor="let region of speakerRegions" [value]="region">{{ region }}</option></select></label>
@@ -374,7 +374,7 @@
 
       <div class="edit-actions">
         <button class="btn danger" type="button" (click)="deleteSelected()" [disabled]="saving || deletingSegmentId !== null">{{ 'adminData.delete' | t }}</button>
-        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving || (selectedSegmentSourceChoice === 'internet' && !selectedSegment.source_url?.trim())">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
+        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving || (selectedSegmentSourceChoice === 'internet' && !isValidPhraseSourceUrl(selectedSegment.source_url))">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
       </div>
     </aside>
   </div>
@@ -474,6 +474,11 @@
             <option *ngFor="let source of phraseSources" [value]="source.value">{{ source.label }}</option>
           </select>
         </label>
+        <label *ngIf="selectedPhraseSourceChoice === 'internet'">
+          <span>URL de la source *</span>
+          <input [(ngModel)]="phrase.source_url" type="url" maxlength="2048" placeholder="https://…" required>
+          <small *ngIf="!isValidPhraseSourceUrl(phrase.source_url)">Saisissez une URL HTTP(S) valide de 2048 caractères maximum.</small>
+        </label>
         <label *ngIf="selectedPhraseSourceChoice === 'autre'">
           <span>Autre source</span>
           <input [(ngModel)]="phrase.source" placeholder="Précisez la source">
@@ -481,7 +486,7 @@
       </div>
       <div class="edit-actions">
         <button class="btn danger" type="button" (click)="phraseDeletionCandidate = phrase">Supprimer</button>
-        <button class="btn primary" type="button" (click)="saveSelectedPhrase()" [disabled]="saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau">Enregistrer</button>
+        <button class="btn primary" type="button" (click)="saveSelectedPhrase()" [disabled]="saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau || (phrase.source === 'internet' && !isValidPhraseSourceUrl(phrase.source_url))">Enregistrer</button>
       </div>
     </aside>
   </div>

@@ -1,3 +1,4 @@
+import { isValidPhraseSourceUrl } from '../../core/phrase-provenance';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +27,7 @@ type AdminSection = 'recordings' | 'phrases' | 'accounts' | 'data';
   styleUrls: ['./v2-admin.component.scss'],
 })
 export class V2AdminComponent implements OnInit {
+  readonly isValidPhraseSourceUrl = isValidPhraseSourceUrl;
   newUser: { email: string; password: string; display_name: string; role: AuthUser['role']; breton_level: AuthUser['breton_level']; organization: string; must_change_password: boolean } | null = null;
   creatingUser = false;
   showNewUserPassword = false;
@@ -357,11 +359,16 @@ export class V2AdminComponent implements OnInit {
     if (!this.selectedPhrase) return;
     if (value !== 'autre') this.selectedPhrase.source = value || null;
     else if (this.phraseSources.some((source) => source.value === this.selectedPhrase?.source)) this.selectedPhrase.source = '';
+    if (value !== 'internet') this.selectedPhrase.source_url = null;
   }
 
   saveSelectedPhrase(): void {
     const phrase = this.selectedPhrase;
     if (!phrase || this.saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau) return;
+    if (phrase.source === 'internet' && !isValidPhraseSourceUrl(phrase.source_url)) {
+      this.error = 'Saisissez une URL HTTP(S) valide de 2048 caractères maximum.';
+      return;
+    }
     this.saving = true;
     this.error = null;
     this.api.updatePhrase(phrase.id, {
@@ -370,6 +377,7 @@ export class V2AdminComponent implements OnInit {
       theme: phrase.theme,
       niveau: phrase.niveau,
       source: phrase.source?.trim() || null,
+      source_url: phrase.source === 'internet' ? phrase.source_url?.trim() || null : null,
       auteur: phrase.auteur?.trim() || null,
       langue: phrase.langue || 'br',
     }).subscribe({
@@ -459,6 +467,10 @@ export class V2AdminComponent implements OnInit {
 
   saveSelected(): void {
     if (!this.selectedSegment || this.saving) return;
+    if (this.selectedSegment.source === 'internet' && !isValidPhraseSourceUrl(this.selectedSegment.source_url)) {
+      this.error = 'Saisissez une URL HTTP(S) valide de 2048 caractères maximum.';
+      return;
+    }
     this.saving = true;
     this.error = null;
     this.success = null;

@@ -1,3 +1,4 @@
+import { isValidPhraseSourceUrl } from '../../core/phrase-provenance';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +18,7 @@ import { V2SessionActionComponent } from '../shared/v2-session-action.component'
   styleUrls: ['./v2-write.component.scss'],
 })
 export class V2WriteComponent implements OnInit {
+  readonly isValidPhraseSourceUrl = isValidPhraseSourceUrl;
   texte = '';
   traductionFr = '';
   selectedDomains: string[] = [];
@@ -79,7 +81,7 @@ export class V2WriteComponent implements OnInit {
 
   get canSubmit(): boolean {
     const text = this.texte.trim();
-    const hasRequiredSourceUrl = this.selectedSource !== 'internet' || /^https?:\/\//i.test(this.sourceUrl.trim());
+    const hasRequiredSourceUrl = this.selectedSource !== 'internet' || isValidPhraseSourceUrl(this.sourceUrl);
     return this.canWriteRole && text.length >= 6 && text.length <= 180 && this.selectedDomains.length === 1 && !!this.selectedLevel && hasRequiredSourceUrl && !this.submitting;
   }
 
@@ -141,6 +143,11 @@ export class V2WriteComponent implements OnInit {
     }
     if (this.selectedDomains.length !== 1 || !this.selectedLevel) {
       this.error = 'Le thème et le niveau sont obligatoires.';
+      this.success = null;
+      return;
+    }
+    if (this.selectedSource === 'internet' && !isValidPhraseSourceUrl(this.sourceUrl)) {
+      this.error = 'Saisissez une URL HTTP(S) valide de 2048 caractères maximum.';
       this.success = null;
       return;
     }

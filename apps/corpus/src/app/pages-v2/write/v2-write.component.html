@@ -96,6 +96,7 @@
               <label class="custom-source" *ngIf="selectedSource === 'internet'">
                 <span>URL de la source *</span>
                 <input [(ngModel)]="sourceUrl" type="url" maxlength="2048" placeholder="https://…" [disabled]="submitting" required>
+                <small *ngIf="sourceUrl && !isValidPhraseSourceUrl(sourceUrl)">Saisissez une URL HTTP(S) valide de 2048 caractères maximum.</small>
               </label>
             </section>
           </div>

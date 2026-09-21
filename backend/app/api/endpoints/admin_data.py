@@ -18,6 +18,7 @@ from ...db import get_db
 from ...models.audio import Audio, AudioStatus, AudioValidation
 from ...models.phrase import Phrase
 from ...models.user import User
+from ...phrase_provenance import apply_phrase_provenance
 from ...storage import delete_audio_file, storage_backend_info, storage_ref_exists
 from scripts.export_corpus_dataset import EXPORT_FIELDS, audio_row, copy_storage_ref
 from scripts.import_corpus_dataset import import_dataset
@@ -463,6 +464,10 @@ def update_segment(
         raise HTTPException(status_code=404, detail="Audio not found")
     phrase = db.get(Phrase, audio.phrase_id)
     patch = payload.model_dump(exclude_unset=True)
+    if "source" in patch:
+        patch["source"] = (patch["source"] or "").strip() or None
+    if phrase is not None:
+        apply_phrase_provenance(patch, phrase.source, phrase.source_url)
 
     if "texte" in patch:
         text = (patch["texte"] or "").strip()
