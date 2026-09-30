@@ -64,7 +64,7 @@
               <div class="meta-head"><h2>{{ 'write.theme' | t }} *</h2><span>Choisissez un thème obligatoire</span></div>
               <div class="chip-grid">
                 <button type="button" *ngFor="let domain of domains" (click)="toggleDomain(domain.value)" [class.active]="isDomainSelected(domain.value)" [disabled]="submitting || (!isDomainSelected(domain.value) && selectedDomains.length >= maxDomains)">
-                  {{ domain.label }}
+                  {{ domain.labelKey | t }}
                 </button>
               </div>
             </section>

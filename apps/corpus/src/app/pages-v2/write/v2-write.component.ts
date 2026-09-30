@@ -8,6 +8,7 @@ import { ApiService, Phrase } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
+import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 
 @Component({
@@ -34,23 +35,7 @@ export class V2WriteComponent implements OnInit {
 
   readonly maxDomains = 1;
   readonly levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  readonly domains = [
-    { value: 'vie-quotidienne', label: '☕ Vie quotidienne' },
-    { value: 'education', label: '🎓 Éducation' },
-    { value: 'famille', label: '👨‍👩‍👧 Famille' },
-    { value: 'travail', label: '💼 Travail' },
-    { value: 'nature', label: '🌿 Nature' },
-    { value: 'transports', label: '🚗 Transports' },
-    { value: 'sante', label: '🩺 Santé' },
-    { value: 'culture-patrimoine', label: '🏰 Culture & patrimoine' },
-    { value: 'histoire', label: '📜 Histoire' },
-    { value: 'traditions-fetes', label: '🎉 Traditions & fêtes' },
-    { value: 'cuisine', label: '🍽 Cuisine' },
-    { value: 'sports-loisirs', label: '⚽ Sports & loisirs' },
-    { value: 'technologies', label: '💻 Technologies' },
-    { value: 'administration', label: '🏛 Administration' },
-    { value: 'non-classe', label: '📦 Non classé' },
-  ];
+  readonly domains = DOMAIN_OPTIONS.filter((domain) => !!domain.value);
   readonly sources = [
     { value: 'livre', label: '📚 Livre' },
     { value: 'manuel-scolaire', label: '📖 Manuel scolaire' },
@@ -129,7 +114,7 @@ export class V2WriteComponent implements OnInit {
   domainLabel(value?: string | null): string {
     const values = this.parseDomains(value);
     if (!values.length) return 'Sans theme';
-    return values.map((item) => this.domains.find((domain) => domain.value === item)?.label || item).join(', ');
+    return values.map((item) => this.domains.find((domain) => domain.value === canonicalDomain(item))?.label || item).join(', ');
   }
 
   sourceLabel(value?: string | null): string {

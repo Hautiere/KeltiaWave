@@ -16,6 +16,7 @@ import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 import { ApiService, Phrase } from '../../core/api.service';
+import { DOMAIN_OPTIONS } from '../../core/domains';
 
 type AdminSection = 'recordings' | 'phrases' | 'accounts' | 'data';
 
@@ -78,9 +79,15 @@ export class V2AdminComponent implements OnInit {
   readonly roles: AuthUser['role'][] = ['admin', 'teacher', 'contributor', 'learner'];
   readonly bretonLevels = ['undefined', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
   readonly phraseLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  readonly phraseThemes = ['vie-quotidienne', 'education', 'famille', 'travail', 'nature', 'transports', 'sante', 'culture-patrimoine', 'histoire', 'traditions-fetes', 'cuisine', 'sports-loisirs', 'technologies', 'administration', 'non-classe'];
+  readonly phraseThemes = [
+    ...DOMAIN_OPTIONS.filter((domain) => domain.value).map((domain) => domain.value),
+    'vie-quotidienne', 'education', 'famille', 'travail', 'nature', 'transports',
+    'sante', 'culture-patrimoine', 'histoire', 'traditions-fetes', 'cuisine',
+    'sports-loisirs', 'technologies', 'administration', 'non-classe',
+  ];
   readonly speakerRegions = ['Kerne (Cornouaille)', 'Leon (Léon)', 'Treger (Trégor)', 'Gwened (Vannetais)', 'Autre'];
   readonly phraseSources = [
+    { value: 'common-voice', label: 'Common Voice' },
     { value: 'livre', label: 'Livre' }, { value: 'manuel-scolaire', label: 'Manuel scolaire' },
     { value: 'cours-breton', label: 'Cours de breton' }, { value: 'presse-article', label: 'Presse / Article' },
     { value: 'internet', label: 'Internet' },
@@ -146,7 +153,7 @@ export class V2AdminComponent implements OnInit {
   get filteredPhrases(): Phrase[] {
     const query = this.phraseQuery.trim().toLocaleLowerCase();
     const filtered = this.phrases.filter((phrase) => {
-      const matchesQuery = !query || [phrase.texte, phrase.traduction_fr, phrase.auteur, phrase.source]
+      const matchesQuery = !query || [phrase.texte, phrase.traduction_fr, phrase.auteur, phrase.source, this.phraseSourceLabel(phrase.source), phrase.source === 'common-voice' ? 'Common Voices' : '']
         .some((value) => value?.toLocaleLowerCase().includes(query));
       return matchesQuery;
     });
@@ -173,6 +180,10 @@ export class V2AdminComponent implements OnInit {
       }
       return this.phraseSortDirection === 'asc' ? comparison : -comparison;
     });
+  }
+
+  phraseSourceLabel(source?: string | null): string {
+    return source === 'common-voice' ? 'Common Voice' : source || 'Source non renseignée';
   }
 
   get displayedSegments(): AdminSegment[] {

@@ -115,6 +115,29 @@ PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
 et `backend_data` conservent les données entre les redémarrages.
 
+## Lot Common Voice dans Komz
+
+Le manifeste `backend/data/common_voice_selected_50.csv` contient 50 phrases
+bretonnes sélectionnées, leurs traductions françaises, niveaux A1/A2, thèmes
+proposés et noms des meilleurs MP3 Common Voice. Les fichiers audio proviennent
+du jeu de données Common Voice breton et ne sont pas versionnés ici. Les champs
+`decision`, `traduction_statut` et `niveau_statut` signalent les propositions
+éditoriales encore à relire.
+
+Les scripts `backend/scripts/import_selected_phrases.py` et
+`backend/scripts/import_selected_common_voice_audios.py` simulent par défaut.
+Ils opèrent sur la base configurée par `DATABASE_URL` et exigent `--apply` pour
+écrire. Le second script requiert `--audio-root`, un répertoire contenant les
+MP3 nommés dans le manifeste. Il réutilise les phrases existantes et crée les
+audios avec l'origine `common-voice` et le statut `pending` : les votes Common
+Voice ne valent pas validation Komz.
+
+Dans la pile Docker **locale**, les 50 phrases et leurs 50 audios ont été
+importés et vérifiés le 1er octobre 2026. Les MP3 sont lisibles via l'API ;
+aucun import en staging ou production n'est inclus dans ce dépôt. Pour les
+thèmes, les limites du classement et les résultats de vérification, voir
+`docs/komz-themes.md`.
+
 ## Vérifications
 
 ```bash

@@ -195,11 +195,11 @@
                 <span>Actions</span>
               </div>
               <article class="phrase-row" *ngFor="let phrase of filteredPhrases">
-                <span class="identity"><strong>{{ phrase.texte }}</strong><small>#{{ phrase.id }} · {{ phrase.traduction_fr || 'Sans traduction' }}</small></span>
+                <span class="identity"><strong>{{ phrase.texte }}</strong><small>#{{ phrase.id }} · {{ phraseSourceLabel(phrase.source) }} · {{ phrase.traduction_fr || 'Sans traduction' }}</small></span>
                 <span>{{ phrase.auteur || 'Auteur non renseigné' }}</span>
                 <span class="status review">{{ phrase.theme || 'À classer' }}</span>
                 <span>{{ phrase.niveau || '—' }}</span>
-                <span>{{ phrase.source || '—' }}</span>
+                <span>{{ phraseSourceLabel(phrase.source) }}</span>
                 <span class="row-actions">
                   <button class="link-btn" type="button" (click)="editPhrase(phrase)">Modifier</button>
                   <button class="trash-btn" type="button" (click)="phraseDeletionCandidate = phrase" aria-label="Supprimer la phrase">

@@ -8,6 +8,7 @@ import { AuthService } from '../../core/auth.service';
 import { audioFileUrl } from '../../core/constants';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
+import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 
 interface AudioRow {
@@ -66,19 +67,9 @@ export class V2AudioHomeComponent implements OnInit {
 
   readonly themes: ThemeFilter[] = [
     { value: '', labelKey: 'v2.allThemes', icon: '♪', tone: 'blue' },
-    { value: 'vie-quotidienne', labelKey: 'domain.dailyLife', icon: '☕', tone: 'green' },
-    { value: 'education', labelKey: 'domain.education', icon: '◈', tone: 'purple' },
-    { value: 'transports', labelKey: 'domain.transport', icon: '▣', tone: 'sky' },
-    { value: 'famille', labelKey: 'domain.family', icon: '●●', tone: 'orange' },
-    { value: 'travail', labelKey: 'domain.work', icon: '▤', tone: 'brown' },
-    { value: 'nature', labelKey: 'domain.nature', icon: '◒', tone: 'leaf' },
-    { value: 'sante', labelKey: 'domain.health', icon: '♧', tone: 'red' },
-    { value: 'culture-patrimoine', labelKey: 'domain.culture', icon: '◇', tone: 'gold' },
-    { value: 'histoire', labelKey: 'domain.history', icon: '▥', tone: 'amber' },
-    { value: 'cuisine', labelKey: 'domain.cooking', icon: '◌', tone: 'rose' },
-    { value: 'sports-loisirs', labelKey: 'domain.sports', icon: '◎', tone: 'lime' },
-    { value: 'technologies', labelKey: 'domain.technology', icon: '⌘', tone: 'indigo' },
-    { value: 'administration', labelKey: 'domain.administration', icon: '⌂', tone: 'slate' },
+    ...DOMAIN_OPTIONS.filter((domain) => !!domain.value).map((domain) => ({
+      value: domain.value, labelKey: domain.labelKey, icon: domain.icon || '♪', tone: domain.tone || 'blue',
+    })),
   ];
 
   readonly sourceFilters: LibraryFilterOption[] = [
@@ -514,45 +505,7 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   private canonicalTheme(value?: string | null): string {
-    const normalized = (value ?? '')
-      .trim()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/&/g, 'et')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-    const aliases: Record<string, string> = {
-      quotidien: 'vie-quotidienne',
-      'vie-quotidienne': 'vie-quotidienne',
-      daily: 'vie-quotidienne',
-      'daily-life': 'vie-quotidienne',
-      ecole: 'education',
-      'ecole-et-formation': 'education',
-      'ecole-formation': 'education',
-      education: 'education',
-      transports: 'transports',
-      transport: 'transports',
-      famille: 'famille',
-      travail: 'travail',
-      nature: 'nature',
-      'nature-et-environnement': 'nature',
-      'nature-environnement': 'nature',
-      sante: 'sante',
-      culture: 'culture-patrimoine',
-      patrimoine: 'culture-patrimoine',
-      'culture-patrimoine': 'culture-patrimoine',
-      histoire: 'histoire',
-      cuisine: 'cuisine',
-      'sports-loisirs': 'sports-loisirs',
-      sport: 'sports-loisirs',
-      sports: 'sports-loisirs',
-      technologie: 'technologies',
-      technologies: 'technologies',
-      'technologie-medias': 'technologies',
-      administration: 'administration',
-    };
-    return aliases[normalized] || normalized;
+    return canonicalDomain(value);
   }
 
   private canonicalSource(value?: string | null): string {
