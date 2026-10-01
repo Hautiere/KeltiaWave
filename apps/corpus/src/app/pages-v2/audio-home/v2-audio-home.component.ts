@@ -74,6 +74,7 @@ export class V2AudioHomeComponent implements OnInit {
 
   readonly sourceFilters: LibraryFilterOption[] = [
     { value: '', labelKey: 'v2.allSources', icon: '◎' },
+    { value: 'common-voice', labelKey: 'v2.commonVoice', icon: '♪' },
     { value: 'creation-originale', labelKey: 'source.original', icon: '▤' },
     { value: 'livre', labelKey: 'source.book', icon: '▥' },
     { value: 'dictionnaire', labelKey: 'source.dictionary', icon: '▥' },
@@ -107,8 +108,15 @@ export class V2AudioHomeComponent implements OnInit {
 
   get corpusRows(): AudioRow[] {
     return this.sortLibraryRows(this.filterRows(
-      this.toRows(this.approvedAudios).filter(({ audio }) => this.teacherDecision(audio) === 'approved'),
+      this.toRows(this.approvedAudios).filter(({ audio }) =>
+        this.teacherDecision(audio) === 'approved' || this.isOwnerApprovedBatch(audio)),
     ));
+  }
+
+  isOwnerApprovedBatch(audio: AudioRead): boolean {
+    return audio.status === 'approved'
+      && audio.phrase_source === 'common-voice'
+      && (audio.validation_comment || '').startsWith('Approbation en lot demandée par le propriétaire');
   }
 
   sortLibraryBy(column: 'phrase' | 'theme' | 'level' | 'region' | 'date'): void {
@@ -271,6 +279,7 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   pronunciationLevel(audio: AudioRead): string {
+    if (this.isOwnerApprovedBatch(audio)) return '—';
     const level = (audio.validations ?? [])
       .find((item) => (item.validator_role === 'teacher' || item.validator_role === 'admin') && item.decision === 'approved')
       ?.pronunciation_level;
@@ -289,7 +298,7 @@ export class V2AudioHomeComponent implements OnInit {
 
   sourceLabel(row: AudioRow): string {
     const sourceUrl = this.sourceUrl(row);
-    if (!sourceUrl) return '—';
+    if (!sourceUrl) return row.phrase?.source === 'common-voice' ? 'Common Voice' : '—';
     try {
       return new URL(sourceUrl).hostname.replace(/^www\./, '');
     } catch {

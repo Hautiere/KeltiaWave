@@ -169,10 +169,11 @@
             </div>
             <span class="validation-summary approved">{{ pronunciationLevel(row.audio) }}</span>
             <span class="region-cell" [title]="pronunciationRegion(row.audio)">{{ pronunciationRegion(row.audio) }}</span>
-            <span class="speaker">{{ row.audio.contributor_name || row.audio.contributor_email || ('v2.speaker' | t) }} · {{ row.audio.contributor_school || ('v2.classFallback' | t) }}</span>
+            <span class="speaker" *ngIf="isOwnerApprovedBatch(row.audio); else recordedSpeaker" [title]="row.audio.validation_comment || ''">{{ 'v2.bulkApproved' | t }}</span>
+            <ng-template #recordedSpeaker><span class="speaker">{{ row.audio.contributor_name || row.audio.contributor_email || ('v2.speaker' | t) }} · {{ row.audio.contributor_school || ('v2.classFallback' | t) }}</span></ng-template>
             <span class="source-cell">
               <a *ngIf="sourceUrl(row) as url; else noSource" [href]="url" target="_blank" rel="noopener noreferrer" [title]="url">{{ sourceLabel(row) }} ↗</a>
-              <ng-template #noSource>—</ng-template>
+              <ng-template #noSource>{{ sourceLabel(row) }}</ng-template>
             </span>
             <time>{{ displayDate(row.audio.created_at) }}</time>
           </article>
