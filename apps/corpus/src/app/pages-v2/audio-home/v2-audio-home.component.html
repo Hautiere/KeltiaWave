@@ -111,7 +111,7 @@
 
       <section class="theme-strip" [attr.aria-label]="'v2.filterByTheme' | t">
         <h2>{{ 'v2.filterByTheme' | t }}</h2>
-        <div>
+        <div [class.expanded]="showAllThemes">
           <button
             type="button"
             *ngFor="let theme of visibleThemes"
@@ -121,7 +121,7 @@
             <span class="theme-glyph" [ngClass]="theme.tone">{{ theme.icon }}</span>{{ themeFilterLabel(theme) }}
           </button>
           <div class="theme-more" *ngIf="hiddenThemes.length">
-            <button type="button" (click)="showAllThemes = !showAllThemes">{{ 'nav.more' | t }}⌄</button>
+            <button type="button" [attr.aria-expanded]="showAllThemes" (click)="showAllThemes = !showAllThemes">{{ 'nav.more' | t }} {{ showAllThemes ? '⌃' : '⌄' }}</button>
             <div class="theme-menu" *ngIf="showAllThemes">
               <button
                 type="button"

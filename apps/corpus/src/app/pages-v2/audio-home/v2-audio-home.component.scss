@@ -168,6 +168,7 @@ button, input, select { font: inherit; }
 .theme-strip { display: grid; gap: 12px; }
 .theme-strip h2 { margin: 0; font-size: 14px; }
 .theme-strip > div { display: flex; flex-wrap: nowrap; gap: 10px; align-items: center; min-width: 0; }
+.theme-strip > div.expanded { flex-wrap: wrap; }
 .theme-strip button {
   min-height: 38px;
   display: inline-flex;
@@ -185,23 +186,10 @@ button, input, select { font: inherit; }
 }
 .theme-strip button.active { color: #fff; border-color: #2563eb; background: #2563eb; box-shadow: 0 12px 26px rgba(37, 99, 235, .20); }
 .theme-strip button.active .theme-glyph { color: #2563eb; background: #fff; }
-.theme-more { position: relative; flex: 0 0 auto; }
+.theme-more { display: contents; }
 .theme-menu {
-  position: absolute;
-  z-index: 5;
-  top: calc(100% + 8px);
-  right: 0;
-  width: min(280px, calc(100vw - 32px));
-  display: grid !important;
-  grid-template-columns: 1fr;
-  gap: 8px !important;
-  border: 1px solid #dbe4f0;
-  border-radius: 8px;
-  padding: 10px;
-  background: #fff;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, .14);
+  display: contents;
 }
-.theme-menu button { justify-content: flex-start; width: 100%; }
 
 .audio-section { display: grid; gap: 14px; }
 .audio-section header { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
