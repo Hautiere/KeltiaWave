@@ -40,6 +40,7 @@ services:
       DEPLOY_SLOT: ${DEPLOY_SLOT:-candidate}
       STAGING_RECORD_DEVICE_SHA256: ${STAGING_RECORD_DEVICE_SHA256:-}
       MODELS_ROOT: /models
+      HF_HOME: /app/data/hf-cache
       VOSK_MODEL_PATH: ${VOSK_MODEL_PATH:-/models/vosk-model-br-25.02}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-keltiawave}
       AUDIO_STORAGE: s3

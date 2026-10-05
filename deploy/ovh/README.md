@@ -156,6 +156,24 @@ Les sauvegardes de promotion se trouvent dans
 le Caddyfile, PostgreSQL, MinIO, les données de l'application historique et les
 empreintes SHA-256.
 
+## Modèle de prosodie Komz
+
+Le backend conserve le cache Hugging Face dans `/app/data/hf-cache` sur le volume
+`backend_data`. Après le premier déploiement de chaque pile, télécharger les
+deux fichiers du modèle public dans le conteneur backend correspondant :
+
+```sh
+cd /home/ubuntu/apps/keltiawave/releases/staging
+docker compose --env-file /home/ubuntu/apps/keltiawave/shared/.env.staging \
+  -f deploy/ovh/docker-compose.candidate.yml exec -T backend python -c \
+  "from huggingface_hub import snapshot_download; snapshot_download('Orange/Speaker-wavLM-pro', allow_patterns=['config.json', 'model.safetensors'])"
+```
+
+Remplacer `staging` par `production` et utiliser `.env.production` pour la pile
+publique. Sans ces poids, l'API renvoie `hf_prosody: null` et Komz ne peut pas
+afficher de pourcentage de prosodie. La similarité affichée reste expérimentale
+et ne constitue pas une note validée de prononciation.
+
 ## Capacitor mobile CORS
 
 The explicit allowlist includes `http://localhost`, `https://localhost` and

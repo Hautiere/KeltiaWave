@@ -50,4 +50,9 @@ Pour installer une fois les poids dans le volume local :
 docker compose --env-file .env -f deploy/docker-compose.yml -p deploy exec -T backend python -c "from huggingface_hub import snapshot_download; snapshot_download('Orange/Speaker-wavLM-pro', allow_patterns=['config.json', 'model.safetensors'])"
 ```
 
-Le service utilise `HF_HOME=/app/data/hf-cache` dans Docker Compose. Le modèle ajoute environ 1,27 Go de poids et les dépendances PyTorch alourdissent fortement l'image backend.
+Le service utilise `HF_HOME=/app/data/hf-cache` dans les piles Docker locales et
+OVH. Ce répertoire est conservé par le volume `backend_data` ; les poids doivent
+être téléchargés une fois dans chaque pile (staging et production). Sans eux,
+`hf_prosody` vaut `null` et le pourcentage de prosodie n'est pas affiché. Le
+modèle ajoute environ 1,27 Go de poids et les dépendances PyTorch alourdissent
+fortement l'image backend.
