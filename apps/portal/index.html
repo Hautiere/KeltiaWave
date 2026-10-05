@@ -384,17 +384,9 @@
       filter: saturate(1.04);
     }
 
-    .tool-card.is-unavailable {
-      opacity: .38;
-      filter: grayscale(1);
-      background: #f1f3f6;
-      box-shadow: none;
-    }
-
-    .tool-card.is-unavailable a {
-      pointer-events: none;
-      color: #8290a8;
-    }
+    [data-tool][hidden] { display: none !important; }
+    .apps-empty[hidden] { display: none !important; }
+    .apps-empty { grid-column: 1 / -1; margin: 0; color: var(--muted); font-weight: 700; }
 
     .tool-photo.transcribe,
     .tool-photo.studio,
@@ -1333,12 +1325,12 @@
 
         <nav class="nav" aria-label="Main navigation">
           <a class="active" href="index.html" data-i18n="navHome">Home</a>
-          <a data-language-link href="https://voices.keltiawave.com/" data-i18n="toolListen">Listen</a>
-          <a data-language-link href="https://komz.keltiawave.com/" data-i18n="toolKomz">Komz</a>
-          <a data-language-link href="https://learning.keltiawave.com/" data-i18n="toolPlay">Play</a>
-          <a data-language-link href="https://transcription.keltiawave.com/record.html" data-i18n="toolRecord">Record</a>
-          <a data-language-link href="https://transcription.keltiawave.com/transcribe.html" data-i18n="navTranscribe">Transcribe</a>
-          <a data-language-link href="https://transcription.keltiawave.com/studio.html" data-i18n="toolSubtitles">Subtitles</a>
+          <a data-tool="library" data-language-link href="https://voices.keltiawave.com/" data-i18n="toolListen">Listen</a>
+          <a data-tool="komz" data-language-link href="https://komz.keltiawave.com/" data-i18n="toolKomz">Komz</a>
+          <a data-tool="play" data-language-link href="https://learning.keltiawave.com/" data-i18n="toolPlay">Play</a>
+          <a data-tool="record" data-language-link href="https://transcription.keltiawave.com/record.html" data-i18n="toolRecord">Record</a>
+          <a data-tool="transcribe" data-language-link href="https://transcription.keltiawave.com/transcribe.html" data-i18n="navTranscribe">Transcribe</a>
+          <a data-tool="subtitles" data-language-link href="https://transcription.keltiawave.com/studio.html" data-i18n="toolSubtitles">Subtitles</a>
           <a href="about.html" data-i18n="navAbout">About</a>
           <a href="feedback.html" data-i18n="navCommunity">Feedback</a>
         </nav>
@@ -1358,6 +1350,7 @@
 
       <div class="hero">
         <div class="hero-copy">
+          <span class="pill" data-i18n="beta">⚗ We are in beta</span>
           <h1 data-i18n-html="heroTitle">Listen. Speak.<br>Record. <span class="hero-highlight">Explore.</span></h1>
           <p class="hero-lead" data-i18n="heroText">Ride the digital wave of<br>Breton, Welsh and Cornish.</p>
           <p class="hero-detail" data-i18n="heroDetail">Explore voices, record speech, transcribe audio, create subtitles and practise Brittonic languages.</p>
@@ -1382,6 +1375,7 @@
     <main class="content">
       <section class="tool-grid" id="apps" aria-label="KeltiaWave tools">
         <h2 class="apps-heading" data-i18n="appsHeading">〰 Try your apps</h2>
+        <p class="apps-empty" data-i18n="noAppsCornish" hidden>Apps for Cornish are coming soon.</p>
         <article class="tool-card" data-tool="library">
           <div class="tool-copy">
             <span class="tool-icon orange" aria-hidden="true"><svg viewBox="0 0 96 96"><path d="M48 24C33 14 20 14 7 19v56c14-5 28-4 41 5 13-9 27-10 41-5V19c-13-5-26-5-41 5zM48 24v56M20 47h8m7-8v17m9-25v34m11-18h8m7-10v20m7-14v8"/></svg></span>
@@ -1510,6 +1504,7 @@
           heroDetail: "Explore voices, record speech, transcribe audio, create subtitles and practise Brittonic languages.",
           getStarted: "Explore KeltiaWave →",
           appsHeading: "〰 Try your apps",
+          noAppsCornish: "Apps for Cornish are coming soon.",
           discover: "Discover the project →",
           toolListen: "Listen",
           toolKomz: "Komz",
@@ -1554,6 +1549,7 @@
           heroText: "Dilyn ton ddigidol y Llydaweg, y Gymraeg a'r Gernyweg.",
           heroDetail: "Archwiliwch leisiau, recordiwch lais, trawsgrifiwch sain, crëwch isdeitlau ac ymarferwch ieithoedd Brythonaidd.",
           appsHeading: "〰 Rhowch gynnig ar yr apiau",
+          noAppsCornish: "Mae apiau Cernyweg yn dod yn fuan.",
           getStarted: "Archwilio’r apiau →",
           discover: "Darganfod y prosiect →",
           toolListen: "Gwrando",
@@ -1599,6 +1595,7 @@
           heroText: "Heuilhit gwagennoù niverel ar brezhoneg, ar c'hembraeg hag ar c'herneveureg.",
           heroDetail: "Dizoleiñ mouezhioù, enrollañ ar gomz, treuzskrivañ sonioù, krouiñ istitloù ha pleustriñ ar yezhoù predenek.",
           appsHeading: "〰 Taolit pled ouzh an arloadoù",
+          noAppsCornish: "Arloadoù evit ar c'herneveureg a zeuio a-benn nebeut.",
           getStarted: "Dizoleiñ an arloadoù →",
           discover: "Dizoleiñ ar raktres →",
           toolListen: "Selaou",
@@ -1690,6 +1687,7 @@
         const nextLanguage = cleanLanguage(language);
         document.documentElement.lang = nextLanguage;
         applyTranslations(nextLanguage);
+        selectAppLanguage(nextLanguage === "cy" ? "cy" : "br");
         links.forEach((link) => {
           link.href = withLanguage(appHref(link), nextLanguage);
         });
@@ -1708,9 +1706,9 @@
         const availableTools = availability[language] || availability.br;
         toolCards.forEach((card) => {
           const isAvailable = availableTools.has(card.dataset.tool);
-          card.classList.toggle("is-unavailable", !isAvailable);
-          card.setAttribute("aria-disabled", String(!isAvailable));
+          card.hidden = !isAvailable;
         });
+        document.querySelector(".apps-empty").hidden = language !== "kw";
       }
 
       function selectAppLanguage(language) {
@@ -1729,10 +1727,6 @@
 
       appLanguageCards.forEach((card) => {
         const language = card.dataset.appLanguage;
-        card.addEventListener("mouseenter", () => previewAppLanguage(language));
-        card.addEventListener("mouseleave", () => previewAppLanguage(selectedAppLanguage));
-        card.addEventListener("focus", () => previewAppLanguage(language));
-        card.addEventListener("blur", () => previewAppLanguage(selectedAppLanguage));
         card.addEventListener("click", () => selectAppLanguage(language));
         card.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -1743,7 +1737,6 @@
       });
 
       setLanguage(initialLanguage());
-      selectAppLanguage("br");
     })();
   </script>
 </body>
