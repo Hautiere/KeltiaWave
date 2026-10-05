@@ -76,6 +76,7 @@ ensure_dev_columns()
 def ensure_phrase_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("phrases")}
     wanted = {
+        "subdomain": "TEXT",
         "source": "TEXT",
         "source_url": "TEXT",
         "traduction_fr": "TEXT",

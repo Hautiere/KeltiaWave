@@ -9,6 +9,7 @@ import { audioFileUrl } from '../../core/constants';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
 import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
+import { subdomainsFor, subdomainLabel, type SubdomainOption } from '../../core/subdomains';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 
 interface AudioRow {
@@ -47,8 +48,12 @@ export class V2AudioHomeComponent implements OnInit {
   loading = true;
   error: string | null = null;
   query = '';
+  searchInput = '';
   selectedTheme = '';
   selectedLevel = '';
+  selectedSubdomain = '';
+  readonly unclassifiedSubdomain = '__unclassified__';
+  private searchTimer?: ReturnType<typeof setTimeout>;
   selectedDuration = '';
   selectedSource = '';
   selectedValidation = '';
@@ -58,8 +63,8 @@ export class V2AudioHomeComponent implements OnInit {
   activeAudioId: number | null = null;
   isPlayingAudio = false;
   playbackError: string | null = null;
-  librarySort: 'phrase' | 'theme' | 'level' | 'region' | 'date' = 'date';
-  librarySortDirection: 'asc' | 'desc' = 'desc';
+  librarySort: 'phrase' | 'theme' | 'level' | 'region' | 'date' = 'phrase';
+  librarySortDirection: 'asc' | 'desc' = 'asc';
 
   readonly waveformBars = [
     12, 20, 30, 16, 22, 14, 28, 36, 18, 12, 24, 16, 10, 20, 14, 8, 18, 12,
@@ -71,6 +76,100 @@ export class V2AudioHomeComponent implements OnInit {
       value: domain.value, labelKey: domain.labelKey, icon: domain.icon || '♪', tone: domain.tone || 'blue',
     })),
   ];
+  private readonly themeImages: Record<string, string> = {
+    rencontres: '01_meeting-people.jpg',
+    'maison-quotidien': '02_home-daily-life.jpg',
+    'famille-relations': '03_family-relationships.jpg',
+    'alimentation-achats': '04_food-cooking-shopping.jpg',
+    deplacements: '05_travel-transport.jpg',
+    'nature-meteo': '06_nature-environment.jpg',
+    'travail-etudes': '07_work-studies.jpg',
+    'sante-bien-etre': '08_health-well-being.jpg',
+    'culture-fetes': '09_everyday-situations.jpg',
+    'loisirs-sport': '10_leisure-sport.jpg',
+    'histoire-patrimoine': '11_culture-society.jpg',
+    'demarches-services': '12_practical-information.jpg',
+    'numerique-technologies': '13_digital-life-technology.jpg',
+  };
+
+  get journeyCopy() {
+    const copy = {
+      fr: { choose: 'Choisissez un domaine', chooseHelp: 'Sélectionnez une image pour découvrir et écouter les phrases validées.', back: '← Tous les domaines', listen: 'Écoutez les voix validées, puis entraînez-vous avec une phrase.', practice: 'Répéter et comparer →', count: 'phrases', phrases: 'Phrases du domaine', all: 'Toutes', level: 'Niveau', subdomain: 'Sous-domaine', allSubdomains: 'Tous les sous-domaines', unclassified: 'Non classées', search: 'Rechercher dans les phrases du domaine', searchHint: 'Rechercher une phrase, un mot…', found: 'phrases trouvées', noResults: 'Aucune phrase ne correspond à ces critères.', noResultsHelp: 'Essayez de modifier le niveau, le sous-domaine ou votre recherche.', noSubdomain: 'Aucune phrase disponible pour ce sous-domaine pour le moment.', noDomain: 'Aucune phrase disponible dans ce domaine pour le moment.', reset: 'Réinitialiser les filtres', retry: 'Réessayer' },
+      en: { choose: 'Choose a theme', chooseHelp: 'Select an image to explore and listen to approved phrases.', back: '← All themes', listen: 'Listen to approved voices, then practise a phrase.', practice: 'Repeat and compare →', count: 'phrases', phrases: 'Phrases in this theme', all: 'All', level: 'Level', subdomain: 'Subdomain', allSubdomains: 'All subdomains', unclassified: 'Unclassified', search: 'Search phrases in this theme', searchHint: 'Search a phrase or word…', found: 'phrases found', noResults: 'No phrases match these criteria.', noResultsHelp: 'Try changing the level, subdomain or search.', noSubdomain: 'No phrases are available for this subdomain yet.', noDomain: 'No phrases are available in this theme yet.', reset: 'Reset filters', retry: 'Retry' },
+      br: { choose: 'Dibabit un tem', chooseHelp: 'Dibabit ur skeudenn evit selaou ar frazennoù aprouet.', back: '← An holl demoù', listen: 'Selaouit ar mouezhioù aprouet, ha pleustrit gant ur frazenn.', practice: 'Adlavaret ha keñveriañ →', count: 'frazenn', phrases: 'Frazennoù an tem', all: 'An holl', level: 'Live', subdomain: 'Is-tem', allSubdomains: 'An holl is-temoù', unclassified: 'Disrannet ebet', search: 'Klask e frazennoù an tem', searchHint: 'Klask ur frazenn pe ur ger…', found: 'frazenn kavet', noResults: 'Frazenn ebet o klotañ gant an dibaboù-mañ.', noResultsHelp: 'Kemmañ al live, an is-tem pe ar c’hlask.', noSubdomain: 'Frazenn ebet evit an is-tem-mañ evit poent.', noDomain: 'Frazenn ebet evit an tem-mañ evit poent.', reset: 'Adderaouekaat ar siloù', retry: 'Klask en-dro' },
+      cy: { choose: 'Dewiswch thema', chooseHelp: 'Dewiswch ddelwedd i wrando ar frawddegau cymeradwy.', back: '← Pob thema', listen: 'Gwrandewch ar leisiau cymeradwy, yna ymarferwch frawddeg.', practice: 'Ailadrodd a chymharu →', count: 'brawddeg', phrases: 'Brawddegau’r thema', all: 'Pob un', level: 'Lefel', subdomain: 'Is thema', allSubdomains: 'Pob is thema', unclassified: 'Heb eu dosbarthu', search: 'Chwilio brawddegau’r thema', searchHint: 'Chwilio am frawddeg neu air…', found: 'brawddeg wedi’i chanfod', noResults: 'Nid oes brawddegau sy’n cyfateb i’r meini prawf.', noResultsHelp: 'Newidiwch y lefel, yr is thema neu’r chwiliad.', noSubdomain: 'Nid oes brawddegau ar gael yn yr is thema hon eto.', noDomain: 'Nid oes brawddegau ar gael yn y thema hon eto.', reset: 'Ailosod hidlwyr', retry: 'Rhoi cynnig arall' },
+    };
+    return copy[this.i18n.language()] || copy.fr;
+  }
+
+  get libraryThemes(): ThemeFilter[] {
+    return this.themes.slice(1);
+  }
+
+  get subdomainOptions(): SubdomainOption[] {
+    return subdomainsFor(this.selectedTheme);
+  }
+
+  get domainRows(): AudioRow[] {
+    if (!this.selectedTheme) return [];
+    return this.approvedRows().filter((row) =>
+      (row.phrase?.theme || row.audio.domain || '').split(',')
+        .some((value) => this.canonicalTheme(value) === this.selectedTheme));
+  }
+
+  readonly libraryLevels = ['', 'A1', 'A2', 'B1', 'B2'];
+
+  levelCount(level: string): number {
+    return this.domainRows.filter((row) => !level || row.phrase?.niveau?.toUpperCase() === level).length;
+  }
+
+  subdomainCount(value: string): number {
+    return this.domainRows.filter((row) => row.phrase?.subdomain === value).length;
+  }
+
+  get unclassifiedCount(): number {
+    return this.domainRows.filter((row) => !row.phrase?.subdomain).length;
+  }
+
+  private matchesSubdomain(row: AudioRow): boolean {
+    if (!this.selectedSubdomain) return true;
+    if (this.selectedSubdomain === this.unclassifiedSubdomain) return !row.phrase?.subdomain;
+    return row.phrase?.subdomain === this.selectedSubdomain;
+  }
+
+  get isDomainEmpty(): boolean {
+    return !this.loading && !this.error && !this.domainRows.length;
+  }
+
+  get isSubdomainEmpty(): boolean {
+    return !this.loading && !this.error && !!this.selectedSubdomain
+      && !this.domainRows.some((row) => this.matchesSubdomain(row));
+  }
+
+  rowSubdomain(row: AudioRow): string | null {
+    return subdomainLabel(this.selectedTheme, row.phrase?.subdomain);
+  }
+
+  get selectedThemeInfo(): ThemeFilter | undefined {
+    return this.themes.find((theme) => theme.value === this.selectedTheme);
+  }
+
+  themeImage(value: string): string {
+    const filename = this.themeImages[value];
+    return filename ? `/assets/themes/${filename}?v=20261004` : '/assets/coast-brittany.jpg';
+  }
+
+  themeCount(value: string): number {
+    return this.approvedRows().filter((row) =>
+      (row.phrase?.theme || row.audio.domain || '').split(',')
+        .some((theme) => this.canonicalTheme(theme) === value)).length;
+  }
+
+  private audioThemes(audio: AudioRead): string[] {
+    const phrase = this.phrases.find((item) => item.id === audio.phrase_id)
+      || this.fallbackPhrases.find((item) => item.id === audio.phrase_id);
+    return (phrase?.theme || audio.domain || '').split(',').map((item) => this.canonicalTheme(item));
+  }
 
   readonly sourceFilters: LibraryFilterOption[] = [
     { value: '', labelKey: 'v2.allSources', icon: '◎' },
@@ -107,10 +206,18 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   get corpusRows(): AudioRow[] {
-    return this.sortLibraryRows(this.filterRows(
-      this.toRows(this.approvedAudios).filter(({ audio }) =>
-        this.teacherDecision(audio) === 'approved' || this.isOwnerApprovedBatch(audio)),
-    ));
+    return this.sortLibraryRows(this.filterRows(this.domainRows));
+  }
+
+  private approvedRows(): AudioRow[] {
+    const byPhrase = new Map<number, AudioRow>();
+    for (const row of this.toRows(this.approvedAudios)) {
+      if (!row.phrase || byPhrase.has(row.phrase.id)) continue;
+      if (this.teacherDecision(row.audio) === 'approved' || this.isOwnerApprovedBatch(row.audio)) {
+        byPhrase.set(row.phrase.id, row);
+      }
+    }
+    return [...byPhrase.values()];
   }
 
   isOwnerApprovedBatch(audio: AudioRead): boolean {
@@ -204,8 +311,30 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   selectTheme(value: string): void {
+    this.libraryPlayer?.nativeElement.pause();
+    this.activeAudioId = null;
+    this.isPlayingAudio = false;
     this.selectedTheme = value;
+    this.resetPhraseFilters();
     this.showAllThemes = false;
+  }
+
+  onSearchChange(value: string): void {
+    this.searchInput = value;
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => { this.query = value; }, 200);
+  }
+
+  resetPhraseFilters(): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.selectedLevel = '';
+    this.selectedSubdomain = '';
+    this.searchInput = '';
+    this.query = '';
+  }
+
+  retryLoad(): void {
+    this.load();
   }
 
   resetFilters(): void {
@@ -428,6 +557,7 @@ export class V2AudioHomeComponent implements OnInit {
       const matchesTheme = !this.selectedTheme || rowThemes.includes(this.selectedTheme);
       const level = row.phrase?.niveau || row.audio.speaker_level || '';
       const matchesLevel = !this.selectedLevel || level === this.selectedLevel;
+      const matchesSubdomain = this.matchesSubdomain(row);
       const duration = this.durationCategory(row);
       const matchesDuration = !this.selectedDuration || duration === 'unknown' || duration === this.selectedDuration;
       const matchesSource = !this.selectedSource || this.sourceKeys(row).includes(this.selectedSource);
@@ -446,7 +576,7 @@ export class V2AudioHomeComponent implements OnInit {
         row.audio.speaker_region,
         row.audio.speaker_city,
       ].join(' ').toLowerCase();
-      return matchesTheme && matchesLevel && matchesDuration && matchesSource && matchesValidation && matchesRegion && (!query || haystack.includes(query));
+      return matchesTheme && matchesLevel && matchesSubdomain && matchesDuration && matchesSource && matchesValidation && matchesRegion && (!query || haystack.includes(query));
     });
   }
 

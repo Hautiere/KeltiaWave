@@ -33,3 +33,21 @@ ne doit exposer aucun compte de test peut utiliser `DISABLE_TEST_ACCOUNTS=true`.
 Le traitement vocal nécessite FFmpeg et les modèles décrits dans
 `models/README.md`. La santé du service est disponible sur `/healthz` et Swagger
 sur `/docs`.
+
+# Analyse locale du rythme
+
+`POST /api/transcribe/rhythm` accepte un fichier `audio_file` (WAV, MP3 ou autre format audio pris en charge par le backend). Le champ facultatif `reference_file` ajoute une comparaison avec une voix de référence :
+
+```sh
+curl -F audio_file=@learner.wav -F reference_file=@reference.mp3 http://127.0.0.1:8100/api/transcribe/rhythm
+```
+
+La réponse contient la durée parlée, les pauses, un contour d'intensité normalisé et des pics de relief acoustique pour chaque audio. Avec une référence, elle ajoute `rhythm_score`, `pace_score`, `pause_score` et `emphasis_score` (0 à 100). L'algorithme aligne les contours avec une déformation temporelle limitée. Si les poids sont présents dans le cache local, `hf_prosody.cosine_similarity` donne aussi la similarité globale du modèle libre [Orange/Speaker-wavLM-pro](https://huggingface.co/Orange/Speaker-wavLM-pro) (licence CC-BY-SA-3.0). La route ne fait appel à aucun service distant payant ; si le modèle manque, `hf_prosody` vaut `null`. Ces nombres sont expérimentaux, pas une note validée de prononciation ou de placement de l'accent tonique. Les clips sont limités à 30 secondes.
+
+Pour installer une fois les poids dans le volume local :
+
+```sh
+docker compose --env-file .env -f deploy/docker-compose.yml -p deploy exec -T backend python -c "from huggingface_hub import snapshot_download; snapshot_download('Orange/Speaker-wavLM-pro', allow_patterns=['config.json', 'model.safetensors'])"
+```
+
+Le service utilise `HF_HOME=/app/data/hf-cache` dans Docker Compose. Le modèle ajoute environ 1,27 Go de poids et les dépendances PyTorch alourdissent fortement l'image backend.

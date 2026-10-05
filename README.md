@@ -111,6 +111,10 @@ média, de la langue et du moteur immédiatement autour de l'aperçu vidéo ; la
 matrice conserve davantage de largeur pour le texte grâce à des timecodes
 compacts.
 
+Le portail présente désormais les six outils depuis une page d'accueil
+multilingue (anglais, gallois et breton), avec des accès directs à Listen,
+Komz, Play, Record, Transcribe et Subtitles.
+
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
 et `backend_data` conservent les données entre les redémarrages.
@@ -133,10 +137,22 @@ audios avec l'origine `common-voice` et le statut `pending` : les votes Common
 Voice ne valent pas validation Komz.
 
 Dans la pile Docker **locale**, les 50 phrases et leurs 50 audios ont été
-importés et vérifiés le 1er octobre 2026. Les MP3 sont lisibles via l'API ;
-aucun import en staging ou production n'est inclus dans ce dépôt. Pour les
-thèmes, les limites du classement et les résultats de vérification, voir
-`docs/komz-themes.md`.
+importés et vérifiés le 1er octobre 2026. Un second lot de 550 phrases et
+audios a ensuite été préparé sur 11 thèmes. Le 2 octobre 2026, les 600 phrases
+et audios Common Voice ont été transférés sur le staging et la production OVH
+via une archive Bibliothèque ZIP ciblée. Les 550 nouveaux audios ont été
+approuvés en lot à la demande du propriétaire sans contrôle d'écoute ; les
+traductions et niveaux automatiques restent à relire. Pour les thèmes et les
+résultats de vérification, voir `docs/komz-themes.md` et
+`docs/common-voice-1000.md`.
+
+Library affiche les domaines sous forme d'images, puis les phrases avec un
+audio approuvé. Niveau, sous-domaine et recherche se combinent ; une phrase
+peut être ouverte directement dans Komz pour l'enregistrer et la comparer à la
+référence. Komz propose une estimation expérimentale des mots reconnus et du
+rythme après enregistrement. Le détail de ces parcours et des sous-domaines
+figure dans `docs/komz-themes.md` ; l'API d'analyse du rythme est décrite dans
+`backend/README.md`.
 
 ## Vérifications
 
@@ -151,6 +167,10 @@ Le staging et la production sont deux piles Docker indépendantes sur OVH. Les
 déploiements partent d'une révision Git commise et poussée, construisent les
 conteneurs sur des ports liés à `127.0.0.1`, puis vérifient les interfaces, les
 données Komz et les médias Play avant toute exposition publique.
+
+Pour livrer un tag précis en staging, définir `DEPLOY_REF` sur ce tag : le
+script archive cette révision et ne prend pas les modifications locales non
+commitées.
 
 ```bash
 # Mettre à jour le staging persistant

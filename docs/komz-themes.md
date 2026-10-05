@@ -1,5 +1,20 @@
 # Thèmes Komz
 
+## Parcours Komz et Library
+
+- **Komz** : choisir un thème, choisir une phrase, enregistrer sa voix, puis écouter son enregistrement et la voix de référence pour les comparer. La liste des phrases ne propose pas la lecture de la référence. Le score éventuel reste une estimation.
+- **Library** : choisir l'image d'un domaine, consulter ses phrases validées et écouter leurs enregistrements. Le lien « Répéter et comparer » ouvre directement la phrase dans Komz ; la référence y devient accessible après l'enregistrement de l'utilisateur.
+
+Les deux parcours utilisent le même corpus de phrases et d'audios approuvés. Les phrases sans audio approuvé peuvent être affichées dans Komz sur demande, mais ne figurent pas dans la liste des voix de Library.
+
+### Filtres Library
+
+La page d'un domaine propose les niveaux Toutes, A1, A2, B1 et B2, un sous-domaine et une recherche textuelle combinables. Les compteurs portent sur les phrases distinctes ayant un audio approuvé. La taxonomie des sous-domaines est définie dans `apps/corpus/src/app/core/subdomains.ts` ; le champ `Phrase.subdomain` est facultatif et peut être renseigné par l'API de création ou de mise à jour.
+
+La liste Komz reprend les mêmes sous-domaines, leurs compteurs et le choix « Non classées ». Ses compteurs tiennent compte du réglage « Inclure les phrases sans audio ». Le niveau et le sous-domaine se combinent pour filtrer les phrases à pratiquer.
+
+Un préclassement lexical prudent a été appliqué à la base **locale** : 258 des 555 phrases distinctes avec audio approuvé ont un sous-domaine proposé. Les 297 autres restent accessibles via « Non classées » ; 52 ont plusieurs correspondances possibles et 245 n'ont pas de correspondance suffisante. Le fichier `../datasets/exports/library_subdomains_proposed.csv` garde les propositions et leur statut pour relecture. Le script `backend/scripts/apply_subdomain_proposals.py` n'écrase jamais un sous-domaine existant et vérifie l'identifiant, le texte et le thème avant la mise à jour. Un sous-domaine encore vide apparaît avec le compteur 0 et un message explicite quand on le choisit. Aucun tag transversal n'a été appliqué.
+
 Les 13 thèmes éditoriaux affichés par Corpus/Komz sont définis dans
 `apps/corpus/src/app/core/domains.ts`. Les nouvelles phrases utilisent ces valeurs :
 

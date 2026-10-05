@@ -34,155 +34,75 @@
   </header>
 
   <main class="kw-main">
-    <aside class="library-sidebar">
-      <section class="side-section filters">
-        <h2>{{ 'v2.filters' | t }}</h2>
-        <label>
-          <span>{{ 'v2.theme' | t }}</span>
-          <select [(ngModel)]="selectedTheme">
-            <option *ngFor="let theme of themes" [value]="theme.value">{{ themeFilterLabel(theme) }}</option>
-          </select>
-        </label>
-        <label>
-          <span>{{ 'corpus.level' | t }}</span>
-          <select [(ngModel)]="selectedLevel">
-            <option value="">{{ 'corpus.allLevels' | t }}</option>
-            <option *ngFor="let level of levelOptions" [value]="level">{{ level }}</option>
-          </select>
-        </label>
-        <label>
-          <span>{{ 'v2.duration' | t }}</span>
-          <select [(ngModel)]="selectedDuration">
-            <option value="">{{ 'v2.allDurations' | t }}</option>
-            <option value="short">{{ 'v2.durationShort' | t }}</option>
-            <option value="medium">{{ 'v2.durationMedium' | t }}</option>
-            <option value="long">{{ 'v2.durationLong' | t }}</option>
-          </select>
-        </label>
-      </section>
-
-      <section class="side-section dynamic-filters">
-        <h2>{{ 'v2.advancedFilters' | t }}</h2>
-        <label>
-          <span>{{ 'v2.source' | t }}</span>
-          <select [(ngModel)]="selectedSource">
-            <option *ngFor="let option of sourceFilters" [value]="option.value">{{ filterLabel(option) }}</option>
-          </select>
-        </label>
-        <label>
-          <span>{{ 'corpus.validationLevel' | t }}</span>
-          <select [(ngModel)]="selectedValidation">
-            <option *ngFor="let option of validationFilters" [value]="option.value">{{ filterLabel(option) }}</option>
-          </select>
-        </label>
-        <label>
-          <span>Région de prononciation</span>
-          <select [(ngModel)]="selectedRegion">
-            <option value="">Toutes les régions</option>
-            <option *ngFor="let region of validationRegionOptions" [value]="region">{{ region }}</option>
-          </select>
-        </label>
-      </section>
-    </aside>
-
     <section class="library-content">
-      <section class="library-hero">
-        <div class="library-hero-copy">
-          <span class="eyebrow">{{ 'v2.audioLibrary' | t }}</span>
-          <h1>{{ 'home.title' | t }}</h1>
-          <p>{{ 'home.subtitle' | t }}</p>
-        </div>
-        <div class="library-hero-visual" aria-hidden="true">
-          <div class="language-pills">
-            <span class="pill"><img src="/assets/flag-brittany.png" alt="">BRETON</span>
-            <span class="pill"><img src="/assets/flag-wales.svg" alt="">WELSH</span>
-            <span class="pill"><img src="/assets/flag-cornwall.svg" alt="">CORNISH</span>
+      <ng-container *ngIf="!selectedTheme">
+        <section class="library-hero library-home-hero">
+          <div class="library-hero-copy">
+            <span class="eyebrow">{{ 'v2.audioLibrary' | t }}</span>
+            <h1>{{ 'home.title' | t }}</h1>
+            <p>{{ 'home.subtitle' | t }}</p>
           </div>
-        </div>
-      </section>
-
-      <section class="search-row" [attr.aria-label]="'adminData.search' | t">
-        <label class="search-box">
-          <input [(ngModel)]="query" type="search" [placeholder]="'v2.searchPlaceholder' | t">
-          <span>⌕</span>
-        </label>
-        <button class="reset-btn" type="button" (click)="resetFilters()">☷ {{ 'v2.resetFilters' | t }}</button>
-      </section>
-
-      <section class="theme-strip" [attr.aria-label]="'v2.filterByTheme' | t">
-        <h2>{{ 'v2.filterByTheme' | t }}</h2>
-        <div [class.expanded]="showAllThemes">
-          <button
-            type="button"
-            *ngFor="let theme of visibleThemes"
-            [class.active]="selectedTheme === theme.value"
-            (click)="selectTheme(theme.value)"
-          >
-            <span class="theme-glyph" [ngClass]="theme.tone">{{ theme.icon }}</span>{{ themeFilterLabel(theme) }}
-          </button>
-          <div class="theme-more" *ngIf="hiddenThemes.length">
-            <button type="button" [attr.aria-expanded]="showAllThemes" (click)="showAllThemes = !showAllThemes">{{ 'nav.more' | t }} {{ showAllThemes ? '⌃' : '⌄' }}</button>
-            <div class="theme-menu" *ngIf="showAllThemes">
-              <button
-                type="button"
-                *ngFor="let theme of hiddenThemes"
-                [class.active]="selectedTheme === theme.value"
-                (click)="selectTheme(theme.value)"
-              >
-                <span class="theme-glyph" [ngClass]="theme.tone">{{ theme.icon }}</span>{{ themeFilterLabel(theme) }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="message error" *ngIf="error">{{ error }}</div>
-      <div class="message error" *ngIf="playbackError">{{ playbackError }}</div>
-
-      <section class="audio-section">
-        <header>
-          <div>
-            <h2>{{ 'v2.library' | t }}</h2>
-            <p>{{ 'v2.corpusRecordingsHelp' | t }}</p>
-          </div>
-        </header>
-        <div class="audio-list matrix-list" *ngIf="!loading && corpusRows.length; else corpusState">
-          <div class="audio-row matrix-header">
-            <span>Audio</span>
-            <button type="button" (click)="sortLibraryBy('phrase')">Phrase <b>{{ librarySortIndicator('phrase') }}</b></button>
-            <button type="button" (click)="sortLibraryBy('theme')">{{ 'v2.theme' | t }} <b>{{ librarySortIndicator('theme') }}</b></button>
-            <span>Signal</span>
-            <button type="button" (click)="sortLibraryBy('level')">Niveau <b>{{ librarySortIndicator('level') }}</b></button>
-            <button type="button" (click)="sortLibraryBy('region')">Région / pays <b>{{ librarySortIndicator('region') }}</b></button>
-            <span>Locuteur</span>
-            <span>Source</span>
-            <button type="button" (click)="sortLibraryBy('date')">Date <b>{{ librarySortIndicator('date') }}</b></button>
-          </div>
-          <article class="audio-row" *ngFor="let row of corpusRows">
-            <button class="play-btn" type="button" [attr.aria-label]="'nav.listen' | t" [class.playing]="isRowPlaying(row)" (click)="toggleAudio(row)">
-              {{ isRowPlaying(row) ? 'Ⅱ' : '▶' }}
+        </section>
+        <section class="library-themes" *ngIf="!loading">
+          <h2>{{ journeyCopy.choose }}</h2>
+          <p>{{ journeyCopy.chooseHelp }}</p>
+          <div class="library-theme-grid">
+            <button type="button" class="library-theme-card" *ngFor="let theme of libraryThemes" (click)="selectTheme(theme.value)">
+              <span class="library-theme-art"><img [src]="themeImage(theme.value)" [class.family-photo]="theme.value === 'famille-relations'" [class.digital-photo]="theme.value === 'numerique-technologies'" alt="" loading="lazy"><span class="theme-glyph" [ngClass]="theme.tone">{{ theme.icon }}</span></span>
+              <span class="library-theme-info"><strong>{{ themeFilterLabel(theme) }}</strong><small>{{ themeCount(theme.value) }} {{ journeyCopy.count }}</small><b aria-hidden="true">→</b></span>
             </button>
-            <strong [title]="phraseText(row)">{{ phrasePreview(row) }}</strong>
-            <span class="tag">{{ themeLabel(row.phrase?.theme || row.audio.domain) }}</span>
-            <div class="waveform" [class.active]="isRowPlaying(row)" aria-hidden="true">
-              <span *ngFor="let height of waveformBars; let i = index" [style.height.px]="height" [class.primary]="i < 9"></span>
-            </div>
-            <span class="validation-summary approved">{{ pronunciationLevel(row.audio) }}</span>
-            <span class="region-cell" [title]="pronunciationRegion(row.audio)">{{ pronunciationRegion(row.audio) }}</span>
-            <span class="speaker" *ngIf="isOwnerApprovedBatch(row.audio); else recordedSpeaker" [title]="row.audio.validation_comment || ''">{{ 'v2.bulkApproved' | t }}</span>
-            <ng-template #recordedSpeaker><span class="speaker">{{ row.audio.contributor_name || row.audio.contributor_email || ('v2.speaker' | t) }} · {{ row.audio.contributor_school || ('v2.classFallback' | t) }}</span></ng-template>
-            <span class="source-cell">
-              <a *ngIf="sourceUrl(row) as url; else noSource" [href]="url" target="_blank" rel="noopener noreferrer" [title]="url">{{ sourceLabel(row) }} ↗</a>
-              <ng-template #noSource>{{ sourceLabel(row) }}</ng-template>
-            </span>
-            <time>{{ displayDate(row.audio.created_at) }}</time>
-          </article>
-        </div>
-        <ng-template #corpusState>
-          <p class="empty-state">{{ loading ? ('corpus.loading' | t) : ('v2.noCorpusRecordings' | t) }}</p>
-        </ng-template>
-      </section>
+          </div>
+        </section>
+      </ng-container>
 
+      <ng-container *ngIf="selectedTheme">
+        <button class="library-back" type="button" (click)="selectTheme('')">{{ journeyCopy.back }}</button>
+        <section class="library-domain-hero">
+          <span class="library-domain-symbol theme-glyph" [ngClass]="selectedThemeInfo?.tone || 'blue'">{{ selectedThemeInfo?.icon }}</span>
+          <div class="library-domain-copy">
+            <span class="eyebrow">LIBRARY · 02 / 02</span>
+            <h1>{{ themeLabel(selectedTheme) }}</h1>
+            <p>{{ journeyCopy.listen }}</p>
+          </div>
+          <img [src]="themeImage(selectedTheme)" [class.family-photo]="selectedTheme === 'famille-relations'" [class.digital-photo]="selectedTheme === 'numerique-technologies'" alt="">
+        </section>
+        <div class="library-phrase-toolbar">
+          <div>
+            <h2>{{ journeyCopy.phrases }}</h2>
+            <span aria-live="polite">{{ corpusRows.length }} {{ journeyCopy.found }}</span>
+          </div>
+        </div>
+        <div class="library-phrase-filters" *ngIf="!loading && !error && !isDomainEmpty">
+          <div class="library-level-filter" role="group" [attr.aria-label]="journeyCopy.level">
+            <span>{{ journeyCopy.level }} :</span>
+            <button type="button" *ngFor="let level of libraryLevels" [class.active]="selectedLevel === level" [attr.aria-pressed]="selectedLevel === level" (click)="selectedLevel = level">{{ level || journeyCopy.all }} ({{ levelCount(level) }})</button>
+          </div>
+          <label class="library-subdomain-filter"><span>{{ journeyCopy.subdomain }}</span>
+            <select [(ngModel)]="selectedSubdomain">
+              <option value="">{{ journeyCopy.allSubdomains }}</option>
+              <option *ngFor="let option of subdomainOptions" [value]="option.value">{{ option.label }} ({{ subdomainCount(option.value) }})</option>
+              <option [value]="unclassifiedSubdomain">{{ journeyCopy.unclassified }} ({{ unclassifiedCount }})</option>
+            </select>
+          </label>
+          <label class="library-search"><span class="sr-only">{{ journeyCopy.search }}</span><input [ngModel]="searchInput" (ngModelChange)="onSearchChange($event)" type="search" [placeholder]="journeyCopy.searchHint"></label>
+        </div>
+        <div class="message error" *ngIf="playbackError" role="alert">{{ playbackError }}</div>
+        <ul class="library-phrase-list" *ngIf="!loading && !error && corpusRows.length">
+          <li class="library-phrase-row" *ngFor="let row of corpusRows">
+            <button class="play-btn" type="button" [attr.aria-label]="('nav.listen' | t) + ' : ' + phraseText(row)" [class.playing]="isRowPlaying(row)" (click)="toggleAudio(row)">{{ isRowPlaying(row) ? 'Ⅱ' : '▶' }}</button>
+            <div class="library-phrase-text"><strong>{{ phraseText(row) }}</strong><small *ngIf="row.phrase?.traduction_fr">{{ row.phrase?.traduction_fr }}</small></div>
+            <span class="library-phrase-meta">{{ row.phrase?.niveau || '—' }}<ng-container *ngIf="rowSubdomain(row) as subdomain"> · {{ subdomain }}</ng-container></span>
+            <a class="practice-link" *ngIf="row.phrase" routerLink="/lire" [queryParams]="{ phraseId: row.phrase.id }" [attr.aria-label]="journeyCopy.practice + ' : ' + phraseText(row)">{{ journeyCopy.practice }}</a>
+          </li>
+        </ul>
+        <div class="empty-state" *ngIf="!loading && !error && !corpusRows.length">
+          <p>{{ isDomainEmpty ? journeyCopy.noDomain : isSubdomainEmpty ? journeyCopy.noSubdomain : journeyCopy.noResults }}</p>
+          <p *ngIf="!isDomainEmpty && !isSubdomainEmpty">{{ journeyCopy.noResultsHelp }}</p>
+          <button type="button" *ngIf="!isDomainEmpty" (click)="resetPhraseFilters()">{{ journeyCopy.reset }}</button>
+        </div>
+        <p class="empty-state" *ngIf="loading">{{ 'corpus.loading' | t }}</p>
+      </ng-container>
+      <div class="message error" *ngIf="error" role="alert">{{ error }} <button type="button" (click)="retryLoad()">{{ journeyCopy.retry }}</button></div>
     </section>
   </main>
 
