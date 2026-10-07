@@ -1660,7 +1660,10 @@
           if (productionUrl.pathname.includes("studio")) return "https://subtitles.staging.keltiawave.com/";
           if (productionUrl.hostname === "transcription.keltiawave.com") return "https://transcribe.staging.keltiawave.com/";
         }
-        if (!localPortal) return productionUrl.toString();
+        if (!localPortal) {
+          if (productionUrl.hostname === "komz.keltiawave.com") return "https://komz.keltiawave.com/lire";
+          return productionUrl.toString();
+        }
 
         if (productionUrl.hostname === "learning.keltiawave.com") return "http://127.0.0.1:4300/";
         if (productionUrl.hostname === "komz.keltiawave.com") return "http://127.0.0.1:4200/lire";
