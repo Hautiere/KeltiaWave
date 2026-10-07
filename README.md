@@ -111,9 +111,9 @@ média, de la langue et du moteur immédiatement autour de l'aperçu vidéo ; la
 matrice conserve davantage de largeur pour le texte grâce à des timecodes
 compacts.
 
-Le portail présente désormais les six outils depuis une page d'accueil
-multilingue (anglais, gallois et breton), avec des accès directs à Listen,
-Komz, Play, Record, Transcribe et Subtitles.
+Le portail présente les outils depuis une page d'accueil multilingue et
+transmet la langue choisie à Komz et Listen. En gallois, seuls Transcribe et
+Subtitles sont proposés ; en cornique, aucune application n'est affichée.
 
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
@@ -146,13 +146,28 @@ traductions et niveaux automatiques restent à relire. Pour les thèmes et les
 résultats de vérification, voir `docs/komz-themes.md` et
 `docs/common-voice-1000.md`.
 
-Library affiche les domaines sous forme d'images, puis les phrases avec un
-audio approuvé. Niveau, sous-domaine et recherche se combinent ; une phrase
-peut être ouverte directement dans Komz pour l'enregistrer et la comparer à la
-référence. Komz propose une estimation expérimentale des mots reconnus et du
-rythme après enregistrement. Le détail de ces parcours et des sous-domaines
-figure dans `docs/komz-themes.md` ; l'API d'analyse du rythme est décrite dans
+Listen affiche les thèmes sous forme d'images, puis les phrases avec un audio
+approuvé. Niveau, sous-domaine et recherche se combinent. L'utilisateur écoute
+d'abord la voix de référence ; le lien vers la pratique dans Komz devient alors
+disponible pour cette phrase. Dans Komz, il choisit un thème et une phrase,
+enregistre sa voix et obtient son score avant de pouvoir écouter la voix de
+référence. Cette dernière est présentée dans un encadré explicatif sous le
+score. Les estimations des mots reconnus, du rythme et de la prosodie restent
+expérimentales. Le détail des thèmes et sous-domaines figure dans
+`docs/komz-themes.md` ; l'API d'analyse du rythme est décrite dans
 `backend/README.md`.
+
+Dans **Admin > Phrases proposées**, la recherche et le filtre par thème se
+combinent. Quand un thème est sélectionné, le tableau affiche le sous-thème à
+la place du thème et permet de trier cette colonne. Le formulaire de création
+ou de modification permet de choisir un domaine et, facultativement, un
+sous-domaine. Les anciens domaines sont rapprochés des 13 domaines éditoriaux
+pour l'affichage et le filtrage.
+
+Dans **Admin > Audio recordings**, le filtre par thème s'applique aux
+enregistrements avant la limite de résultats. Le tableau compact affiche le
+sous-thème de la phrase associée dans une colonne triable ; les phrases sans
+sous-thème portent la mention « Sans sous-thème ».
 
 ## Vérifications
 
@@ -174,7 +189,7 @@ commitées.
 
 ```bash
 # Mettre à jour le staging persistant
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_REF=komz-listen-admin-themes-2026-10-07 \
   ./scripts/deploy-staging-ovh.sh --apply
 
 # Construire une candidate production en clonant les données du staging

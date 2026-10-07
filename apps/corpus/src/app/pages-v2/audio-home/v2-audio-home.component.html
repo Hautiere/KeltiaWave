@@ -4,7 +4,7 @@
       <a class="brand" href="https://keltiawave.com/" aria-label="Portail KeltiaWave">
         <span class="brand-avatar"><img src="/assets/keltiawave-mascot.webp" alt=""></span>
         <span>
-          <span class="brand-title"><span class="brand-product library-product">KeltiaWave</span> <span>Library</span></span>
+          <span class="brand-title"><span class="brand-product library-product">KeltiaWave</span> <span>Listen</span></span>
           <span class="brand-subtitle">{{ 'v2.brandSubtitle' | t }}</span>
         </span>
       </a>
@@ -38,9 +38,9 @@
       <ng-container *ngIf="!selectedTheme">
         <section class="library-hero library-home-hero">
           <div class="library-hero-copy">
-            <span class="eyebrow">{{ 'v2.audioLibrary' | t }}</span>
-            <h1>{{ 'home.title' | t }}</h1>
-            <p>{{ 'home.subtitle' | t }}</p>
+            <span class="eyebrow">LISTEN · 01 / 02</span>
+            <h1>{{ journeyCopy.heading }}</h1>
+            <p>{{ journeyCopy.chooseHelp }}</p>
           </div>
         </section>
         <section class="library-themes" *ngIf="!loading">
@@ -60,7 +60,7 @@
         <section class="library-domain-hero">
           <span class="library-domain-symbol theme-glyph" [ngClass]="selectedThemeInfo?.tone || 'blue'">{{ selectedThemeInfo?.icon }}</span>
           <div class="library-domain-copy">
-            <span class="eyebrow">LIBRARY · 02 / 02</span>
+            <span class="eyebrow">LISTEN · 02 / 02</span>
             <h1>{{ themeLabel(selectedTheme) }}</h1>
             <p>{{ journeyCopy.listen }}</p>
           </div>
@@ -92,7 +92,8 @@
             <button class="play-btn" type="button" [attr.aria-label]="('nav.listen' | t) + ' : ' + phraseText(row)" [class.playing]="isRowPlaying(row)" (click)="toggleAudio(row)">{{ isRowPlaying(row) ? 'Ⅱ' : '▶' }}</button>
             <div class="library-phrase-text"><strong>{{ phraseText(row) }}</strong><small *ngIf="row.phrase?.traduction_fr">{{ row.phrase?.traduction_fr }}</small></div>
             <span class="library-phrase-meta">{{ row.phrase?.niveau || '—' }}<ng-container *ngIf="rowSubdomain(row) as subdomain"> · {{ subdomain }}</ng-container></span>
-            <a class="practice-link" *ngIf="row.phrase" routerLink="/lire" [queryParams]="{ phraseId: row.phrase.id }" [attr.aria-label]="journeyCopy.practice + ' : ' + phraseText(row)">{{ journeyCopy.practice }}</a>
+            <a class="practice-link" *ngIf="row.phrase && listenedAudioIds.has(row.audio.id)" routerLink="/lire" [queryParams]="{ phraseId: row.phrase.id }" [attr.aria-label]="journeyCopy.practice + ' : ' + phraseText(row)">{{ journeyCopy.practice }}</a>
+            <span class="practice-prompt" *ngIf="row.phrase && !listenedAudioIds.has(row.audio.id)">{{ journeyCopy.listenFirst }}</span>
           </li>
         </ul>
         <div class="empty-state" *ngIf="!loading && !error && !corpusRows.length">

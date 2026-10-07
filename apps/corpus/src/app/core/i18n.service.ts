@@ -2200,8 +2200,18 @@ export class I18nService {
   }
 
   private initialLanguage(): AppLanguage {
+    const requested = new URLSearchParams(window.location.search).get('lang');
+    if (requested === 'fr' || requested === 'br' || requested === 'en' || requested === 'cy') {
+      localStorage.setItem('corpus-language', requested);
+      document.documentElement.lang = requested;
+      return requested;
+    }
     const saved = localStorage.getItem('corpus-language');
-    if (saved === 'fr' || saved === 'br' || saved === 'en' || saved === 'cy') return saved;
+    if (saved === 'fr' || saved === 'br' || saved === 'en' || saved === 'cy') {
+      document.documentElement.lang = saved;
+      return saved;
+    }
+    document.documentElement.lang = 'fr';
     return 'fr';
   }
 }

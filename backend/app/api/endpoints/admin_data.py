@@ -4,8 +4,10 @@ import csv
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import shutil
 import tempfile
+import unicodedata
 import zipfile
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile, status
@@ -24,6 +26,38 @@ from scripts.export_corpus_dataset import EXPORT_FIELDS, audio_row, copy_storage
 from scripts.import_corpus_dataset import import_dataset
 
 router = APIRouter()
+
+PHRASE_DOMAINS = {
+    "rencontres", "maison-quotidien", "famille-relations", "alimentation-achats",
+    "deplacements", "travail-etudes", "sante-bien-etre", "nature-meteo",
+    "loisirs-sport", "culture-fetes", "histoire-patrimoine", "demarches-services",
+    "numerique-technologies",
+}
+LEGACY_DOMAINS = {
+    "vie-quotidienne": "maison-quotidien", "quotidien": "maison-quotidien",
+    "daily": "maison-quotidien", "daily-life": "maison-quotidien",
+    "famille": "famille-relations", "cuisine": "alimentation-achats",
+    "transports": "deplacements", "transport": "deplacements",
+    "travail": "travail-etudes", "education": "travail-etudes",
+    "ecole": "travail-etudes", "ecole-formation": "travail-etudes",
+    "ecole-et-formation": "travail-etudes", "sante": "sante-bien-etre",
+    "nature": "nature-meteo", "nature-environnement": "nature-meteo",
+    "nature-et-environnement": "nature-meteo", "sports-loisirs": "loisirs-sport",
+    "sports": "loisirs-sport", "sport": "loisirs-sport",
+    "culture": "histoire-patrimoine", "patrimoine": "histoire-patrimoine",
+    "culture-patrimoine": "histoire-patrimoine", "histoire": "histoire-patrimoine",
+    "traditions-fetes": "culture-fetes", "administration": "demarches-services",
+    "technologies": "numerique-technologies", "technologie": "numerique-technologies",
+    "technologie-medias": "numerique-technologies",
+}
+
+
+def canonical_phrase_domain(value: str | None) -> str:
+    normalized = unicodedata.normalize("NFD", (value or "").strip().lower())
+    normalized = "".join(char for char in normalized if unicodedata.category(char) != "Mn")
+    normalized = normalized.replace("&", "et")
+    normalized = "-".join(part for part in re.split(r"[^a-z0-9]+", normalized) if part)
+    return LEGACY_DOMAINS.get(normalized, normalized)
 
 
 class SegmentUpdate(BaseModel):
@@ -98,6 +132,7 @@ def segment_payload(audio: Audio, phrase: Phrase | None) -> dict:
         "source": phrase.source if phrase else audio.phrase_source,
         "source_url": phrase.source_url if phrase else None,
         "domain": audio.domain or (phrase.theme if phrase else None),
+        "subdomain": phrase.subdomain if phrase else None,
         "level": phrase.niveau if phrase else None,
         "speaker_region": audio.speaker_region,
         "speaker_city": audio.speaker_city,
@@ -414,6 +449,7 @@ def clear_dataset(
 def list_segments(
     query: str = "",
     dataset: str = "",
+    theme: str = "",
     status_filter: str = Query("", alias="status"),
     limit: int = Query(250, ge=1, le=1000),
     _: User = Depends(require_admin),
@@ -434,6 +470,16 @@ def list_segments(
     result = []
     for audio, phrase in pairs:
         if audio_status and audio.status != audio_status:
+            continue
+        domains = {
+            canonical_phrase_domain(value)
+            for value in (audio.domain or (phrase.theme if phrase else "") or "").split(",")
+            if value.strip()
+        }
+        if theme == "__unclassified__":
+            if domains & PHRASE_DOMAINS:
+                continue
+        elif theme and theme not in domains:
             continue
         row_dataset = dataset_name(phrase, audio) if phrase else (audio.phrase_source or "sans-source")
         if dataset and row_dataset != dataset:

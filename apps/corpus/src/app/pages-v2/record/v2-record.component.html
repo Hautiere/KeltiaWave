@@ -76,14 +76,14 @@
       <div class="practice-grid">
         <section class="practice-panel record-panel">
           <div class="panel-heading"><span class="panel-mark green">●</span><h2>{{ copy.record }}</h2></div>
-          <button class="record-orb" type="button" [class.recording]="isRecording" [disabled]="submitting" (click)="isRecording ? stopRecording() : startRecording()" [attr.aria-label]="isRecording ? ('record.stop' | t) : ('record.button' | t)"><span *ngIf="isRecording" aria-hidden="true">■</span><img *ngIf="!isRecording" src="/assets/brand/brezhoneg-fanch-triskell-transparent.png" alt="" aria-hidden="true"></button>
+          <button class="record-orb" type="button" [class.recording]="isRecording" [disabled]="submitting || assessing" (click)="isRecording ? stopRecording() : startRecording()" [attr.aria-label]="isRecording ? ('record.stop' | t) : ('record.button' | t)"><span *ngIf="isRecording" aria-hidden="true">■</span><img *ngIf="!isRecording" src="/assets/brand/brezhoneg-fanch-triskell-transparent.png" alt="" aria-hidden="true"></button>
           <strong class="record-time">{{ mmss(durationSec) }} / 02:00</strong><small class="record-hint">{{ isRecording ? ('record.stop' | t) : ('record.button' | t) }}</small>
         </section>
       </div>
       <section class="compare-card" *ngIf="blobUrl">
         <h2>{{ copy.compare }}</h2>
         <div class="compare-row"><button class="compare-play own-voice" type="button" (click)="playRecorded()" [attr.aria-label]="copy.record">▶</button><audio #recordedPreview [src]="blobUrl" controls preload="metadata" (error)="onRecordedAudioError()"></audio><strong>{{ copy.record }}</strong></div>
-        <div class="compare-row" *ngIf="referenceAudio as reference"><span>▶</span><audio [src]="'/api/audios/' + reference.id + '/file'" controls preload="none"></audio><strong>{{ copy.listen }}</strong></div>
+        <p class="panel-note" *ngIf="referenceAudio && !rhythmAssessment">{{ copy.referenceAfterScore }}</p>
         <p class="panel-note" *ngIf="!referenceAudio">{{ copy.noAudio }}</p>
         <div class="assessment-actions" *ngIf="referenceAudio"><button type="button" (click)="assessPronunciation()" [disabled]="assessing || submitting">{{ assessing ? copy.assessing : copy.assess }}</button><p>{{ copy.scoreHelp }}</p></div>
         <section class="score-card" *ngIf="rhythmAssessment as rhythm" aria-live="polite">
@@ -99,6 +99,13 @@
           <p class="score-details">{{ copy.rhythmHelp }}</p>
         </section>
         <div class="assessment-note" *ngIf="assessmentMessage">{{ assessmentMessage }}</div>
+        <section class="reference-card" *ngIf="rhythmAssessment && referenceAudio as reference" aria-labelledby="reference-title">
+          <div class="reference-heading">
+            <span class="reference-icon" aria-hidden="true">♫</span>
+            <div><h3 id="reference-title">{{ copy.listen }}</h3><p>{{ copy.referenceHelp }}</p></div>
+          </div>
+          <audio [src]="'/api/audios/' + reference.id + '/file'" controls preload="none" [attr.aria-label]="copy.listen"></audio>
+        </section>
         <div class="record-fields"><label>{{ 'record.region' | t }}<select [(ngModel)]="speakerRegion"><option value="">—</option><option value="bro-dreger">Tregor</option><option value="bro-leon">Leon</option><option value="bro-gernev">Cornouaille</option><option value="bro-wened">Vannetais</option><option value="other">Autre</option></select></label><label>{{ 'record.level' | t }}<select [(ngModel)]="speakerLevel"><option value="">—</option><option value="beginner">{{ 'level.beginner' | t }}</option><option value="intermediate">{{ 'level.intermediate' | t }}</option><option value="advanced">{{ 'level.advanced' | t }}</option><option value="native-heritage">{{ 'level.nativeHeritage' | t }}</option></select></label></div>
         <p class="submission-error" *ngIf="error" role="alert">{{ error }}</p>
         <p class="submission-feedback" *ngIf="success" role="status">✓ {{ success }}</p>

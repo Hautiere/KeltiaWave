@@ -293,6 +293,12 @@
 .score-item strong { color: #102a52; font-size: 22px; }
 .score-item strong small { color: #67809d; font-size: 12px; }
 .score-details { margin: 12px 0 0; color: #60758c; font-size: 12px; }
+.reference-card { display: grid; gap: 16px; margin-top: 20px; padding: 20px; border: 1px solid #bcd4fa; border-left: 5px solid #2563eb; border-radius: 14px; background: #f3f8ff; }
+.reference-heading { display: flex; align-items: flex-start; gap: 12px; }
+.reference-icon { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: #dceaff; color: #225bd5; font-size: 22px; }
+.reference-heading h3 { margin: 0 0 5px; color: #143b79; font-size: 19px; }
+.reference-heading p { margin: 0; color: #526b8a; font-size: 13px; line-height: 1.45; }
+.reference-card audio { width: 100%; height: 48px; }
 .assessment-note { margin-top: 12px; padding: 12px; border-radius: 10px; background: #fff8e8; color: #79540b; font-size: 13px; }
 .practice-tip { margin-top: 16px; padding: 18px 22px; border-radius: 12px; background: #e6f9ec; color: #20673c; font-size: 13px; font-weight: 750; }
 @media (max-width: 900px) { .theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -1,13 +1,13 @@
 # Thèmes Komz
 
-## Parcours Komz et Library
+## Parcours Komz et Listen
 
-- **Komz** : choisir un thème, choisir une phrase, enregistrer sa voix, puis écouter son enregistrement et la voix de référence pour les comparer. La liste des phrases ne propose pas la lecture de la référence. Le score éventuel reste une estimation.
-- **Library** : choisir l'image d'un domaine, consulter ses phrases validées et écouter leurs enregistrements. Le lien « Répéter et comparer » ouvre directement la phrase dans Komz ; la référence y devient accessible après l'enregistrement de l'utilisateur.
+- **Komz** : choisir un thème et une phrase, enregistrer sa voix, puis demander le score expérimental. La voix de référence devient accessible sous le score, avec un titre et un texte expliquant comment comparer la prononciation, le rythme et les pauses.
+- **Listen** : choisir l'image d'un domaine, consulter ses phrases validées et écouter la voix de référence. Le lien « Répéter et comparer » apparaît pour la phrase après cette écoute et ouvre directement Komz.
 
-Les deux parcours utilisent le même corpus de phrases et d'audios approuvés. Les phrases sans audio approuvé peuvent être affichées dans Komz sur demande, mais ne figurent pas dans la liste des voix de Library.
+Les deux parcours utilisent le même corpus de phrases et d'audios approuvés. Les phrases sans audio approuvé peuvent être affichées dans Komz sur demande, mais ne figurent pas dans la liste des voix de Listen.
 
-### Filtres Library
+### Filtres Listen
 
 La page d'un domaine propose les niveaux Toutes, A1, A2, B1 et B2, un sous-domaine et une recherche textuelle combinables. Les compteurs portent sur les phrases distinctes ayant un audio approuvé. La taxonomie des sous-domaines est définie dans `apps/corpus/src/app/core/subdomains.ts` ; le champ `Phrase.subdomain` est facultatif et peut être renseigné par l'API de création ou de mise à jour.
 

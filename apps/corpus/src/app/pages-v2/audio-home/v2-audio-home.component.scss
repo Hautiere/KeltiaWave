@@ -279,6 +279,7 @@ button, input, select { font: inherit; }
 .source-cell a:hover, .source-cell a:focus-visible { text-decoration: underline; }
 .practice-link { justify-self: start; border-radius: 999px; padding: 9px 12px; background: #e1f7e8; color: #148446; font-size: 11px; font-weight: 900; white-space: nowrap; }
 .practice-link:hover, .practice-link:focus-visible { background: #c7efd5; }
+.practice-prompt { justify-self: start; color: #61738f; font-size: 11px; font-weight: 700; }
 .audio-row:last-child { border-bottom: 0; }
 .library-player { display: none; }
 .theme-glyph {
