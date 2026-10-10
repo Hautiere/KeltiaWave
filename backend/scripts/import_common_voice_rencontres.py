@@ -159,6 +159,8 @@ def run(path: Path, *, apply: bool) -> dict[str, int]:
             "audios_a_creer": sum(audio is None for _, _, audio in planned),
             "audios_a_approuver": sum(audio is None or audio.status == AudioStatus.pending for _, _, audio in planned),
             "sous_themes_a_renseigner": sum(phrase is None or not phrase.subdomain for _, phrase, _ in planned),
+            "traductions_a_renseigner": sum(entry.translation is not None and (phrase is None or not phrase.traduction_fr)
+                                              for entry, phrase, _ in planned),
         }
         if not apply:
             return report
@@ -174,6 +176,8 @@ def run(path: Path, *, apply: bool) -> dict[str, int]:
                         db.flush()
                     elif not phrase.subdomain:
                         phrase.subdomain = entry.subdomain
+                    if entry.translation and not phrase.traduction_fr:
+                        phrase.traduction_fr = entry.translation
                     if audio is None:
                         clip = Path(temp_dir) / entry.filename
                         clip.write_bytes(entry.data)
