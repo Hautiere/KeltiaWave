@@ -10,6 +10,7 @@ class Phrase(Base):
     texte = Column(String, nullable=False)
     traduction_fr = Column(String, nullable=True)
     theme = Column(String, nullable=True)     # ex: "général"
+    subdomain = Column(String, nullable=True)  # sous-domaine éditorial facultatif
     niveau = Column(String, nullable=True)    # ex: "A1"
     source = Column(String, nullable=True)    # ex: "livre", "dictionnaire", "archive-dastum"
     source_url = Column(String, nullable=True)

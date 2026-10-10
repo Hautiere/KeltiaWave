@@ -1,3 +1,4 @@
+import { isValidPhraseSourceUrl } from '../../core/phrase-provenance';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +8,7 @@ import { ApiService, Phrase } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
+import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 
 @Component({
@@ -17,6 +19,7 @@ import { V2SessionActionComponent } from '../shared/v2-session-action.component'
   styleUrls: ['./v2-write.component.scss'],
 })
 export class V2WriteComponent implements OnInit {
+  readonly isValidPhraseSourceUrl = isValidPhraseSourceUrl;
   texte = '';
   traductionFr = '';
   selectedDomains: string[] = [];
@@ -32,23 +35,7 @@ export class V2WriteComponent implements OnInit {
 
   readonly maxDomains = 1;
   readonly levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  readonly domains = [
-    { value: 'vie-quotidienne', label: '☕ Vie quotidienne' },
-    { value: 'education', label: '🎓 Éducation' },
-    { value: 'famille', label: '👨‍👩‍👧 Famille' },
-    { value: 'travail', label: '💼 Travail' },
-    { value: 'nature', label: '🌿 Nature' },
-    { value: 'transports', label: '🚗 Transports' },
-    { value: 'sante', label: '🩺 Santé' },
-    { value: 'culture-patrimoine', label: '🏰 Culture & patrimoine' },
-    { value: 'histoire', label: '📜 Histoire' },
-    { value: 'traditions-fetes', label: '🎉 Traditions & fêtes' },
-    { value: 'cuisine', label: '🍽 Cuisine' },
-    { value: 'sports-loisirs', label: '⚽ Sports & loisirs' },
-    { value: 'technologies', label: '💻 Technologies' },
-    { value: 'administration', label: '🏛 Administration' },
-    { value: 'non-classe', label: '📦 Non classé' },
-  ];
+  readonly domains = DOMAIN_OPTIONS.filter((domain) => !!domain.value);
   readonly sources = [
     { value: 'livre', label: '📚 Livre' },
     { value: 'manuel-scolaire', label: '📖 Manuel scolaire' },
@@ -79,7 +66,7 @@ export class V2WriteComponent implements OnInit {
 
   get canSubmit(): boolean {
     const text = this.texte.trim();
-    const hasRequiredSourceUrl = this.selectedSource !== 'internet' || /^https?:\/\//i.test(this.sourceUrl.trim());
+    const hasRequiredSourceUrl = this.selectedSource !== 'internet' || isValidPhraseSourceUrl(this.sourceUrl);
     return this.canWriteRole && text.length >= 6 && text.length <= 180 && this.selectedDomains.length === 1 && !!this.selectedLevel && hasRequiredSourceUrl && !this.submitting;
   }
 
@@ -127,7 +114,7 @@ export class V2WriteComponent implements OnInit {
   domainLabel(value?: string | null): string {
     const values = this.parseDomains(value);
     if (!values.length) return 'Sans theme';
-    return values.map((item) => this.domains.find((domain) => domain.value === item)?.label || item).join(', ');
+    return values.map((item) => this.domains.find((domain) => domain.value === canonicalDomain(item))?.label || item).join(', ');
   }
 
   sourceLabel(value?: string | null): string {
@@ -141,6 +128,11 @@ export class V2WriteComponent implements OnInit {
     }
     if (this.selectedDomains.length !== 1 || !this.selectedLevel) {
       this.error = 'Le thème et le niveau sont obligatoires.';
+      this.success = null;
+      return;
+    }
+    if (this.selectedSource === 'internet' && !isValidPhraseSourceUrl(this.sourceUrl)) {
+      this.error = 'Saisissez une URL HTTP(S) valide de 2048 caractères maximum.';
       this.success = null;
       return;
     }

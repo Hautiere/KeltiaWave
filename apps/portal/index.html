@@ -384,17 +384,9 @@
       filter: saturate(1.04);
     }
 
-    .tool-card.is-unavailable {
-      opacity: .38;
-      filter: grayscale(1);
-      background: #f1f3f6;
-      box-shadow: none;
-    }
-
-    .tool-card.is-unavailable a {
-      pointer-events: none;
-      color: #8290a8;
-    }
+    [data-tool][hidden] { display: none !important; }
+    .apps-empty[hidden] { display: none !important; }
+    .apps-empty { grid-column: 1 / -1; margin: 0; color: var(--muted); font-weight: 700; }
 
     .tool-photo.transcribe,
     .tool-photo.studio,
@@ -1135,6 +1127,7 @@
         font-size: 8px;
       }
       .mobile-app-shortcuts a span { width: 28px; height: 28px; border-radius: 9px; font-size: 14px; }
+      .mobile-app-shortcuts a small { max-width: 100%; overflow-wrap: anywhere; font-size: 8px; font-weight: inherit; line-height: 1.05; }
       .mobile-app-shortcuts a[data-tool="record"] span,
       .mobile-app-shortcuts a[data-tool="komz"] span { color: #087b52; background: #dcf8eb; }
       .mobile-app-shortcuts a[data-tool="subtitles"] span,
@@ -1216,6 +1209,110 @@
       .community-card { border-radius: 16px; box-shadow: 0 8px 20px rgba(12,34,76,.06); }
       .footer { padding-bottom: 10px; }
     }
+
+    /* Landing page: keep the Beg an Dorchenn photograph and use simple app illustrations. */
+    .apps-heading { grid-column: 1 / -1; margin: 0 0 4px; color: var(--ink); font-size: clamp(23px, 2.6vw, 32px); font-weight: 900; }
+    .hero-highlight { color: #1765ef; white-space: nowrap; }
+    .hero-highlight::after { display: block; width: 92%; height: 11px; margin: -1px 0 0 auto; border-bottom: 4px solid #448fff; border-radius: 50%; content: ""; }
+    .hero-cta { display: inline-flex; align-items: center; justify-content: center; width: max-content; min-height: 48px; margin-top: 8px; border-radius: 999px; padding: 0 30px; color: #fff; background: #1765ef; box-shadow: 0 12px 25px rgba(23,101,239,.25); font-size: 16px; font-weight: 800; }
+    .hero-cta:hover { background: #0955dc; }
+    .hero .hero-lead { max-width: 470px; font-size: clamp(21px, 2.2vw, 29px); line-height: 1.2; font-weight: 760; white-space: normal; }
+    .hero .hero-detail { max-width: 450px; font-size: 16px; line-height: 1.45; font-weight: 450; white-space: normal; }
+    .tool-icon { width: 48px; height: 48px; color: var(--blue); background: transparent !important; box-shadow: none !important; }
+    .tool-icon svg { width: 100%; height: 100%; overflow: visible; fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .tool-icon svg path[ d^="m40"] { fill: currentColor; stroke: none; }
+    .tool-icon.purple { color: #6d39ef; }
+    .tool-icon.green { color: #09a977; }
+    .tool-icon.orange { color: #f16a16; }
+    .tool-icon.blue { color: #1765ef; }
+    .tool-grid::before { display: none !important; }
+    .tool-photo { display: none !important; }
+    .tool-card { min-height: 190px; grid-template-rows: 1fr; border: 1px solid #e0eafa !important; border-radius: 25px; background: linear-gradient(135deg, #f7f3ff, #eee7ff) !important; }
+    .tool-card[data-tool="record"] { background: linear-gradient(135deg, #f0fffa, #dcf8f5) !important; }
+    .tool-card[data-tool="subtitles"] { background: linear-gradient(135deg, #fff8f1, #ffebdc) !important; }
+    .tool-card[data-tool="play"] { background: linear-gradient(135deg, #f2f7ff, #e3eeff) !important; }
+    .tool-card[data-tool="komz"] { background: linear-gradient(135deg, #f1fff8, #def9eb) !important; }
+    .tool-card[data-tool="library"] { background: linear-gradient(135deg, #fffaf0, #fff0d6) !important; }
+    .tool-copy { grid-column: 1; grid-row: 1; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 20px; padding: 24px 28px; }
+    .tool-card h2 { margin: 0 0 10px; font-size: clamp(23px, 2.2vw, 30px); }
+    .tool-card p { max-width: 240px; min-height: 45px; margin: 0 0 17px; font-size: 16px; line-height: 1.38; }
+    .tool-card a { font-size: 16px; }
+    .game-pills { margin: -8px 0 10px; }
+    .game-pills span { font-size: 12px; }
+
+    @media (min-width: 1001px) {
+      .page { display: block; padding: 0; }
+      .hero-stage { display: block; min-height: 0; background: none; }
+      .topbar { width: min(100% - 72px, 1300px); }
+      .hero { position: relative; display: flex; align-items: center; width: min(100% - 72px, 1300px); min-height: 370px; margin: 6px auto 0; border: 0; border-radius: 17px; padding: 24px 36px; overflow: hidden; background: linear-gradient(90deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.88) 34%,rgba(255,255,255,.34) 66%,rgba(255,255,255,.2) 100%),url("assets/la torche bro kerne.png") center 45% / cover no-repeat; box-shadow: 0 14px 34px rgba(12,34,76,.07); }
+      .hero-copy { position: relative; z-index: 2; width: min(520px, 55%); gap: 12px; }
+      .hero h1 { max-width: 540px; font-size: clamp(45px, 4vw, 60px); line-height: .98; letter-spacing: -.05em; }
+      .hero .hero-lead { font-size: clamp(19px, 1.6vw, 24px); }
+      .hero-surfer { position: absolute; right: 70px; bottom: -3px; z-index: 1; display: block; width: 180px; max-height: 310px; object-fit: contain; object-position: bottom; filter: drop-shadow(0 10px 14px rgba(7,25,67,.18)); pointer-events: none; }
+      .location-card { display: none; }
+      .content { display: block; width: min(100% - 72px, 1300px); margin: 0 auto; padding: 28px 0; }
+      .tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 0; }
+      .language-panel, .community-grid { margin-top: 26px; }
+      .footer { width: min(100% - 72px, 1300px); margin: 0 auto; }
+    }
+    @media (min-width: 1221px) {
+      .hero { width: 100%; min-height: clamp(250px, 32vh, 310px); margin: 0; border-radius: 0; padding: 16px max(24px, calc((100vw - 1300px) / 2)); background-position: center 45%; }
+      .hero-copy { gap: 8px; }
+      .hero h1 { font-size: clamp(42px, 3.4vw, 54px); }
+      .hero .hero-lead { font-size: 19px; }
+      .hero .hero-detail { font-size: 13px; }
+      .hero-cta { min-height: 37px; padding: 0 22px; font-size: 13px; }
+      .hero-surfer { right: max(5vw, calc((100vw - 1300px) / 2)); width: 145px; max-height: 245px; }
+      .content { width: min(100% - 48px, 1600px); }
+      .content { padding: 12px 0 6px; }
+      .tool-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+      .apps-heading { margin: 0; font-size: 23px; }
+      .tool-card { min-width: 0; min-height: 142px; }
+      .tool-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 13px 15px; }
+      .tool-icon { flex: 0 0 auto; width: 28px; height: 28px; }
+      .tool-card h2 { margin: 0 0 5px; font-size: 17px; }
+      .tool-card p { min-height: 34px; margin: 0 0 6px; font-size: 11px; line-height: 1.25; }
+      .tool-card a { font-size: 11px; }
+      .game-pills { margin: -2px 0 6px; }
+      .game-pills span { padding: 2px 5px; font-size: 9px; }
+      .language-panel, .community-grid { margin-top: 10px; }
+      .language-card { min-height: 50px; }
+      .community-card { min-height: 62px; padding: 10px 14px; }
+      .footer { padding: 5px 0; font-size: 10px; }
+    }
+    @media (max-width: 1000px) {
+      .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .tool-copy { grid-template-columns: 54px minmax(0, 1fr); gap: 12px; padding: 20px; }
+      .tool-icon { width: 42px; height: 42px; }
+      .tool-card { min-height: 160px; }
+    }
+    @media (min-width: 761px) and (max-width: 1000px) {
+      .hero-stage { background: none; }
+      .hero { min-height: 355px; background: linear-gradient(90deg,rgba(255,255,255,.97),rgba(255,255,255,.82) 44%,rgba(255,255,255,.2)),url("assets/la torche bro kerne.png") center 45% / cover no-repeat; }
+      .hero-surfer { position: absolute; right: 28px; bottom: 0; display: block; width: 125px; max-height: 220px; object-fit: contain; object-position: bottom; }
+    }
+    @media (max-width: 760px) {
+      .hero { min-height: 410px; background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,.97) 48%, rgba(255,255,255,.12) 100%), url("assets/la torche bro kerne.png") center bottom / 100% auto no-repeat, #eef7fb; }
+      .hero h1 { max-width: 360px; font-size: clamp(36px, 9.2vw, 48px); }
+      .hero .hero-lead { max-width: 320px; font-size: 20px; }
+      .hero .hero-detail { max-width: 320px; font-size: 13px; }
+      .hero-cta { min-height: 44px; font-size: 14px; }
+      .location-card { display: none; }
+      .tool-grid { grid-template-columns: 1fr; padding-top: 0; }
+      .tool-card { min-height: 126px; }
+      .tool-copy { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 14px; padding: 17px 20px; }
+      .tool-icon { width: 54px; height: 54px; }
+      .tool-icon svg { stroke-width: 6; }
+      .mobile-app-shortcuts a span { width: 28px; height: 28px; font-size: 14px; }
+      .hero-surfer { right: 8px; bottom: 3px; display: block; width: 95px; max-height: 145px; }
+      .tool-card h2 { font-size: 19px; }
+      .tool-card p { min-height: 0; margin-bottom: 8px; font-size: 12px; }
+      .tool-card a { font-size: 12px; }
+      .game-pills span { font-size: 9px; }
+    }
+    @media (max-width: 390px) {
+      .tool-card { min-height: 118px; }
+    }
   </style>
 </head>
 <body>
@@ -1228,10 +1325,12 @@
 
         <nav class="nav" aria-label="Main navigation">
           <a class="active" href="index.html" data-i18n="navHome">Home</a>
-          <a data-language-link href="https://learning.keltiawave.com/">Play</a>
-          <a data-language-link href="https://komz.keltiawave.com/">Komz</a>
-          <a data-language-link href="https://voices.keltiawave.com/">Library</a>
-          <a data-language-link href="https://transcription.keltiawave.com/transcribe.html" data-i18n="navTranscribe">Transcribe</a>
+          <a data-tool="library" data-language-link href="https://voices.keltiawave.com/" data-i18n="toolListen">Listen</a>
+          <a data-tool="komz" data-language-link href="https://komz.keltiawave.com/" data-i18n="toolKomz">Komz</a>
+          <a data-tool="play" data-language-link href="https://learning.keltiawave.com/" data-i18n="toolPlay">Play</a>
+          <a data-tool="record" data-language-link href="https://transcription.keltiawave.com/record.html" data-i18n="toolRecord">Record</a>
+          <a data-tool="transcribe" data-language-link href="https://transcription.keltiawave.com/transcribe.html" data-i18n="navTranscribe">Transcribe</a>
+          <a data-tool="subtitles" data-language-link href="https://transcription.keltiawave.com/studio.html" data-i18n="toolSubtitles">Subtitles</a>
           <a href="about.html" data-i18n="navAbout">About</a>
           <a href="feedback.html" data-i18n="navCommunity">Feedback</a>
         </nav>
@@ -1252,34 +1351,71 @@
       <div class="hero">
         <div class="hero-copy">
           <span class="pill" data-i18n="beta">⚗ We are in beta</span>
-          <h1 data-i18n-html="heroTitle">Surfing the digital wave<br><span class="script">for Brittonic languages</span></h1>
-          <p data-i18n="heroText">KeltiaWave is a new independent project. We build simple digital tools to learn, practise and share Breton and Welsh. Cornish tools will follow.</p>
-          <aside class="feedback-note"><span>♥</span><p><strong>Your feedback helps us improve!</strong>All tools are free and open source.</p></aside>
+          <h1 data-i18n-html="heroTitle">Listen. Speak.<br>Record. <span class="hero-highlight">Explore.</span></h1>
+          <p class="hero-lead" data-i18n="heroText">Ride the digital wave of<br>Breton, Welsh and Cornish.</p>
+          <p class="hero-detail" data-i18n="heroDetail">Explore voices, record speech, transcribe audio, create subtitles and practise Brittonic languages.</p>
+          <a class="hero-cta" href="#apps" data-i18n="getStarted">Explore KeltiaWave →</a>
         </div>
 
-        <img class="hero-surfer" src="assets/avatar_Keltiawave_surfer_transparent.png" alt="KeltiaWave avatar">
+        <img class="hero-surfer" src="assets/avatar_Keltiawave_surfer_transparent.png" alt="" aria-hidden="true">
 
-        <div class="location-card" aria-label="Photo location">
-          <span>⌖</span>
-          <span><strong>Beg an Dorchenn</strong><small>Penn-ar-Bed, Breizh</small></span>
-        </div>
+        <div class="location-card" aria-label="Photo location"><span>⌖</span><span><strong>Beg an Dorchenn</strong><small>Penn-ar-Bed, Breizh</small></span></div>
       </div>
     </section>
 
     <nav class="mobile-app-shortcuts" aria-label="App shortcuts">
-      <a data-tool="transcribe" data-language-link href="https://transcription.keltiawave.com/transcribe.html"><span>≡</span>Transcribe</a>
-      <a data-tool="record" data-language-link href="https://transcription.keltiawave.com/record.html"><span>♩</span>Record</a>
-      <a data-tool="subtitles" data-language-link href="https://transcription.keltiawave.com/studio.html"><span>▣</span>Subtitles</a>
-      <a data-tool="play" data-language-link href="https://learning.keltiawave.com/"><span>▶</span>Play</a>
-      <a data-tool="komz" data-language-link href="https://komz.keltiawave.com/"><span>◉</span>Komz</a>
-      <a data-tool="library" data-language-link href="https://voices.keltiawave.com/"><span>≋</span>Library</a>
+      <a data-tool="library" data-language-link href="https://voices.keltiawave.com/"><span aria-hidden="true">≋</span><small data-i18n="toolListen">Listen</small></a>
+      <a data-tool="komz" data-language-link href="https://komz.keltiawave.com/"><span aria-hidden="true">◉</span><small data-i18n="toolKomz">Komz</small></a>
+      <a data-tool="play" data-language-link href="https://learning.keltiawave.com/"><span aria-hidden="true">▶</span><small data-i18n="toolPlay">Play</small></a>
+      <a data-tool="record" data-language-link href="https://transcription.keltiawave.com/record.html"><span aria-hidden="true">♩</span><small data-i18n="toolRecord">Record</small></a>
+      <a data-tool="transcribe" data-language-link href="https://transcription.keltiawave.com/transcribe.html"><span aria-hidden="true">≡</span><small data-i18n="toolTranscribe">Transcribe</small></a>
+      <a data-tool="subtitles" data-language-link href="https://transcription.keltiawave.com/studio.html"><span aria-hidden="true">▣</span><small data-i18n="toolSubtitles">Subtitles</small></a>
     </nav>
 
     <main class="content">
-      <section class="tool-grid" aria-label="KeltiaWave tools">
+      <section class="tool-grid" id="apps" aria-label="KeltiaWave tools">
+        <h2 class="apps-heading" data-i18n="appsHeading">〰 Try your apps</h2>
+        <p class="apps-empty" data-i18n="noAppsCornish" hidden>Apps for Cornish are coming soon.</p>
+        <article class="tool-card" data-tool="library">
+          <div class="tool-copy">
+            <span class="tool-icon orange" aria-hidden="true"><svg viewBox="0 0 96 96"><path d="M48 24C33 14 20 14 7 19v56c14-5 28-4 41 5 13-9 27-10 41-5V19c-13-5-26-5-41 5zM48 24v56M20 47h8m7-8v17m9-25v34m11-18h8m7-10v20m7-14v8"/></svg></span>
+            <div><h2 data-i18n="toolListen">Listen</h2><p data-i18n="toolLibraryText">Explore voices, phrases and themes</p><a class="orange-link" data-language-link href="https://voices.keltiawave.com/" data-i18n="openLibrary">Open Listen →</a></div>
+          </div>
+          <img class="tool-photo corpus" src="assets/service-photo-corpus.png" alt="Validated voices library">
+        </article>
+        <article class="tool-card" data-tool="komz">
+          <div class="tool-copy">
+            <span class="tool-icon green" aria-hidden="true"><svg viewBox="0 0 96 96"><path d="M13 20h48a12 12 0 0 1 12 12v29a12 12 0 0 1-12 12H42L26 86V73H13A12 12 0 0 1 1 61V32A12 12 0 0 1 13 20zM74 17h8a12 12 0 0 1 12 12v27a12 12 0 0 1-10 12"/><path d="M22 47h4m9-8v17m9-26v35m9-21v8m9-14v21"/></svg></span>
+            <div><h2 data-i18n="toolKomz">Komz</h2><p data-i18n="toolKomzText">Practise your pronunciation</p><a class="green-link" data-language-link href="https://komz.keltiawave.com/" data-i18n="openKomz">Open Komz →</a></div>
+          </div>
+          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Speaking practice">
+        </article>
+        <article class="tool-card" data-tool="play">
+          <div class="tool-copy">
+            <span class="tool-icon blue" aria-hidden="true"><svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="31"/><path d="m40 31 24 17-24 17zM8 36c-5 7-5 17 0 24m80-24c5 7 5 17 0 24"/></svg></span>
+            <div>
+              <h2 data-i18n="toolPlay">Play</h2>
+              <p data-i18n="toolPlayText">Listen and test your skills</p>
+              <div class="game-pills"><span data-i18n="gameFill">Fill</span><span data-i18n="gameOrder">Order</span><span data-i18n="gameQuiz">Quiz</span></div>
+              <a class="blue-link" data-language-link href="https://learning.keltiawave.com/" data-i18n="openPlay">Open Play →</a>
+            </div>
+          </div>
+          <img class="tool-photo" src="assets/services-quad.png" alt="KeltiaWave learning games">
+        </article>
+        <article class="tool-card" data-tool="record">
+          <div class="tool-copy">
+            <span class="tool-icon green" aria-hidden="true"><svg viewBox="0 0 96 96"><rect x="35" y="9" width="26" height="51" rx="13"/><path d="M22 43v10a26 26 0 0 0 52 0V43M48 79V66m-16 13h32M12 37c-6 8-6 22 0 30m72-30c6 8 6 22 0 30"/></svg></span>
+            <div>
+              <h2 data-i18n="toolRecord">Record</h2>
+              <p data-i18n="toolRecordText">Record your voice and contribute</p>
+              <a class="green-link" data-language-link href="https://transcription.keltiawave.com/record.html" data-i18n="openRecord">Open Record →</a>
+            </div>
+          </div>
+          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Recording microphone">
+        </article>
         <article class="tool-card" data-tool="transcribe">
           <div class="tool-copy">
-            <span class="tool-icon purple">≋</span>
+            <span class="tool-icon purple" aria-hidden="true"><svg viewBox="0 0 96 96"><path d="M8 48v-9m12 22V27m12 42V17m12 52V26m12 35V35m12 13h20M68 62h20"/></svg></span>
             <div>
               <h2 data-i18n="toolTranscribe">Transcribe</h2>
               <p data-i18n="toolTranscribeText">Turn audio/video into text</p>
@@ -1288,58 +1424,16 @@
           </div>
           <img class="tool-photo transcribe" src="assets/service-photo-transcribe.png" alt="Transcription interface on a laptop">
         </article>
-
-        <article class="tool-card" data-tool="record">
-          <div class="tool-copy">
-            <span class="tool-icon green">♩</span>
-            <div>
-              <h2 data-i18n="toolRecord">Record</h2>
-              <p data-i18n="toolRecordText">Record your voice</p>
-              <a class="green-link" data-language-link href="https://transcription.keltiawave.com/record.html" data-i18n="openRecord">Open Record →</a>
-            </div>
-          </div>
-          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Recording microphone">
-        </article>
-
         <article class="tool-card" id="subtitle" data-tool="subtitles">
           <div class="tool-copy">
-            <span class="tool-icon orange">▣</span>
+            <span class="tool-icon orange" aria-hidden="true"><svg viewBox="0 0 96 96"><rect x="9" y="16" width="78" height="64" rx="9"/><path d="M22 35h43M22 49h52M22 63h27m8 0h18"/></svg></span>
             <div>
-              <h2>Subtitles</h2>
+              <h2 data-i18n="toolSubtitles">Subtitles</h2>
               <p data-i18n="toolStudioText">Create and edit subtitles</p>
               <a class="orange-link" data-language-link href="https://transcription.keltiawave.com/studio.html" data-i18n="openStudio">Open Studio →</a>
             </div>
           </div>
           <img class="tool-photo studio" src="assets/service-photo-studio.png" alt="Subtitle editing interface">
-        </article>
-
-        <article class="tool-card" data-tool="play">
-          <div class="tool-copy">
-            <span class="tool-icon blue">▶</span>
-            <div>
-              <h2>Play</h2>
-              <p data-i18n="toolPlayText">Test your listening skills</p>
-              <div class="game-pills"><span>Fill</span><span>Order</span><span>Quiz</span></div>
-              <a class="blue-link" data-language-link href="https://learning.keltiawave.com/" data-i18n="openPlay">Open Play →</a>
-            </div>
-          </div>
-          <img class="tool-photo" src="assets/services-quad.png" alt="KeltiaWave learning games">
-        </article>
-
-        <article class="tool-card" data-tool="komz">
-          <div class="tool-copy">
-            <span class="tool-icon green">◉</span>
-            <div><h2>Komz</h2><p data-i18n="toolKomzText">Practise your pronunciation</p><a class="green-link" data-language-link href="https://komz.keltiawave.com/" data-i18n="openKomz">Open Komz →</a></div>
-          </div>
-          <img class="tool-photo record" src="assets/service-photo-record.png" alt="Speaking practice">
-        </article>
-
-        <article class="tool-card" data-tool="library">
-          <div class="tool-copy">
-            <span class="tool-icon orange">≋</span>
-            <div><h2>Library</h2><p data-i18n="toolLibraryText">Explore Breton audio recordings</p><a class="orange-link" data-language-link href="https://voices.keltiawave.com/" data-i18n="openLibrary">Open Library →</a></div>
-          </div>
-          <img class="tool-photo corpus" src="assets/service-photo-corpus.png" alt="Validated voices library">
         </article>
 
       </section>
@@ -1405,21 +1499,31 @@
           navAbout: "About",
           navCommunity: "Feedback",
           beta: "⚗ We are in beta",
-          heroTitle: 'Surfing the digital wave<br><span class="script">for Brittonic languages</span>',
-          heroText: "KeltiaWave is a new independent project. We build simple digital tools to learn, practise and share Breton and Welsh. Cornish tools will follow.",
-          getStarted: "Explore the apps →",
+          heroTitle: 'Listen. Speak.<br>Record. <span class="hero-highlight">Explore.</span>',
+          heroText: "Ride the digital wave of Breton, Welsh and Cornish.",
+          heroDetail: "Explore voices, record speech, transcribe audio, create subtitles and practise Brittonic languages.",
+          getStarted: "Explore KeltiaWave →",
+          appsHeading: "〰 Try your apps",
+          noAppsCornish: "Apps for Cornish are coming soon.",
           discover: "Discover the project →",
-          toolPlayText: "Test your listening skills",
+          toolListen: "Listen",
+          toolKomz: "Komz",
+          toolPlay: "Play",
+          toolSubtitles: "Subtitles",
+          gameFill: "Fill",
+          gameOrder: "Order",
+          gameQuiz: "Quiz",
+          toolPlayText: "Listen and test your skills",
           openPlay: "Open Play →",
           toolKomzText: "Practise your pronunciation",
           openKomz: "Open Komz →",
-          toolLibraryText: "Explore Breton audio recordings",
-          openLibrary: "Open Library →",
+          toolLibraryText: "Explore voices, phrases and themes",
+          openLibrary: "Open Listen →",
           toolTranscribe: "Transcribe",
           toolTranscribeText: "Turn audio/video into text",
           openTranscribe: "Open Transcribe →",
           toolRecord: "Record",
-          toolRecordText: "Record your voice",
+          toolRecordText: "Record your voice and contribute",
           openRecord: "Open Record →",
           toolStudio: "Subtitle Studio",
           toolStudioText: "Create and edit subtitles",
@@ -1441,16 +1545,26 @@
           navAbout: "Amdanom",
           navCommunity: "Adborth",
           beta: "⚗ Rydym mewn beta",
-          heroTitle: 'Syrffio’r don ddigidol<br><span class="script">ar gyfer ieithoedd Brittonic</span>',
-          heroText: "Mae KeltiaWave yn brosiect annibynnol newydd. Rydym yn creu offer syml i ddysgu, ymarfer a rhannu Llydaweg a Chymraeg. Bydd offer Cernyweg yn dilyn.",
+          heroTitle: 'Gwrando. Siarad.<br>Recordio. <span class="hero-highlight">Archwilio.</span>',
+          heroText: "Dilyn ton ddigidol y Llydaweg, y Gymraeg a'r Gernyweg.",
+          heroDetail: "Archwiliwch leisiau, recordiwch lais, trawsgrifiwch sain, crëwch isdeitlau ac ymarferwch ieithoedd Brythonaidd.",
+          appsHeading: "〰 Rhowch gynnig ar yr apiau",
+          noAppsCornish: "Mae apiau Cernyweg yn dod yn fuan.",
           getStarted: "Archwilio’r apiau →",
           discover: "Darganfod y prosiect →",
+          toolListen: "Gwrando",
+          toolKomz: "Komz",
+          toolPlay: "Chwarae",
+          toolSubtitles: "Isdeitlau",
+          gameFill: "Llenwi",
+          gameOrder: "Trefnu",
+          gameQuiz: "Cwis",
           toolPlayText: "Dysgu drwy fideos byr a gemau rhyngweithiol",
-          openPlay: "Agor Play →",
+          openPlay: "Agor Chwarae →",
           toolKomzText: "Ymarfer siarad a gwella eich ynganiad",
           openKomz: "Agor Komz →",
           toolLibraryText: "Archwilio recordiadau sain Llydaweg",
-          openLibrary: "Agor Library →",
+          openLibrary: "Agor Gwrando →",
           toolTranscribe: "Trawsgrifio",
           toolTranscribeText: "Sain/fideo i destun",
           openTranscribe: "Agor Trawsgrifio →",
@@ -1459,7 +1573,7 @@
           openRecord: "Agor Recordio →",
           toolStudio: "Stiwdio Isdeitlau",
           toolStudioText: "Creu a golygu isdeitlau",
-          openStudio: "Agor y Stiwdio →",
+          openStudio: "Agor Isdeitlau →",
           toolCorpusText: "Corpws Llydaweg am y tro",
           openCorpus: "Agor y Corpws →",
           languageBreton: "Llydaweg",
@@ -1477,16 +1591,26 @@
           navAbout: "Diwar-benn",
           navCommunity: "Ho soñj",
           beta: "⚗ E beta emaomp",
-          heroTitle: 'Surfing war ar wagenn niverel<br><span class="script">evit ar yezhoù Brittonic</span>',
-          heroText: "Ur raktres dizalc’h nevez eo KeltiaWave. Krouiñ a reomp ostilhoù eeun evit deskiñ, pleustriñ ha rannañ brezhoneg ha kembraeg. Ostilhoù kerneveureg a zeuio da-heul.",
+          heroTitle: 'Selaou. Komz.<br>Enrollañ. <span class="hero-highlight">Dizoleiñ.</span>',
+          heroText: "Heuilhit gwagennoù niverel ar brezhoneg, ar c'hembraeg hag ar c'herneveureg.",
+          heroDetail: "Dizoleiñ mouezhioù, enrollañ ar gomz, treuzskrivañ sonioù, krouiñ istitloù ha pleustriñ ar yezhoù predenek.",
+          appsHeading: "〰 Taolit pled ouzh an arloadoù",
+          noAppsCornish: "Arloadoù evit ar c'herneveureg a zeuio a-benn nebeut.",
           getStarted: "Dizoleiñ an arloadoù →",
           discover: "Dizoleiñ ar raktres →",
+          toolListen: "Selaou",
+          toolKomz: "Komz",
+          toolPlay: "C'hoari",
+          toolSubtitles: "Istitloù",
+          gameFill: "Leuniañ",
+          gameOrder: "Urzhiañ",
+          gameQuiz: "C'hoari-goulennoù",
           toolPlayText: "Deskiñ dre videoioù berr ha c’hoarioù etregwezhiat",
-          openPlay: "Digeriñ Play →",
+          openPlay: "Digeriñ C'hoari →",
           toolKomzText: "Pleustriñ da gomz ha gwellaat ho distagadur",
           openKomz: "Digeriñ Komz →",
           toolLibraryText: "Dizoleiñ enrolladennoù son brezhoneg",
-          openLibrary: "Digeriñ Library →",
+          openLibrary: "Digeriñ Selaou →",
           toolTranscribe: "Treuzskrivañ",
           toolTranscribeText: "Audio/video da destenn",
           openTranscribe: "Digeriñ Treuzskrivañ →",
@@ -1495,7 +1619,7 @@
           openRecord: "Digeriñ Enrollañ →",
           toolStudio: "Studio istitloù",
           toolStudioText: "Krouiñ ha reizhañ istitloù",
-          openStudio: "Digeriñ ar Studio →",
+          openStudio: "Digeriñ Istitloù →",
           toolCorpusText: "Korpus brezhoneg evit poent",
           openCorpus: "Digeriñ ar c’horpus →",
           languageBreton: "Brezhoneg",
@@ -1536,7 +1660,10 @@
           if (productionUrl.pathname.includes("studio")) return "https://subtitles.staging.keltiawave.com/";
           if (productionUrl.hostname === "transcription.keltiawave.com") return "https://transcribe.staging.keltiawave.com/";
         }
-        if (!localPortal) return productionUrl.toString();
+        if (!localPortal) {
+          if (productionUrl.hostname === "komz.keltiawave.com") return "https://komz.keltiawave.com/lire";
+          return productionUrl.toString();
+        }
 
         if (productionUrl.hostname === "learning.keltiawave.com") return "http://127.0.0.1:4300/";
         if (productionUrl.hostname === "komz.keltiawave.com") return "http://127.0.0.1:4200/lire";
@@ -1563,6 +1690,7 @@
         const nextLanguage = cleanLanguage(language);
         document.documentElement.lang = nextLanguage;
         applyTranslations(nextLanguage);
+        selectAppLanguage(nextLanguage === "cy" ? "cy" : "br");
         links.forEach((link) => {
           link.href = withLanguage(appHref(link), nextLanguage);
         });
@@ -1581,9 +1709,9 @@
         const availableTools = availability[language] || availability.br;
         toolCards.forEach((card) => {
           const isAvailable = availableTools.has(card.dataset.tool);
-          card.classList.toggle("is-unavailable", !isAvailable);
-          card.setAttribute("aria-disabled", String(!isAvailable));
+          card.hidden = !isAvailable;
         });
+        document.querySelector(".apps-empty").hidden = language !== "kw";
       }
 
       function selectAppLanguage(language) {
@@ -1602,10 +1730,6 @@
 
       appLanguageCards.forEach((card) => {
         const language = card.dataset.appLanguage;
-        card.addEventListener("mouseenter", () => previewAppLanguage(language));
-        card.addEventListener("mouseleave", () => previewAppLanguage(selectedAppLanguage));
-        card.addEventListener("focus", () => previewAppLanguage(language));
-        card.addEventListener("blur", () => previewAppLanguage(selectedAppLanguage));
         card.addEventListener("click", () => selectAppLanguage(language));
         card.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -1616,7 +1740,6 @@
       });
 
       setLanguage(initialLanguage());
-      selectAppLanguage("br");
     })();
   </script>
 </body>

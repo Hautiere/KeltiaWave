@@ -44,6 +44,7 @@ export interface AdminSegment {
   source?: string | null;
   source_url?: string | null;
   domain?: string | null;
+  subdomain?: string | null;
   level?: string | null;
   speaker_region?: string | null;
   speaker_city?: string | null;
@@ -111,11 +112,12 @@ export class AdminDataService {
     return this.http.get<AdminDataset[]>(`${this.baseUrl}/datasets`, { headers: this.auth.authHeaders });
   }
 
-  segments(params: { query?: string; dataset?: string; status?: string } = {}) {
+  segments(params: { query?: string; dataset?: string; status?: string; theme?: string } = {}) {
     let httpParams = new HttpParams();
     if (params.query) httpParams = httpParams.set('query', params.query);
     if (params.dataset) httpParams = httpParams.set('dataset', params.dataset);
     if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.theme) httpParams = httpParams.set('theme', params.theme);
     return this.http.get<AdminSegment[]>(`${this.baseUrl}/segments`, {
       headers: this.auth.authHeaders,
       params: httpParams,

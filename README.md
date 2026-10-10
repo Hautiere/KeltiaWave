@@ -111,9 +111,63 @@ média, de la langue et du moteur immédiatement autour de l'aperçu vidéo ; la
 matrice conserve davantage de largeur pour le texte grâce à des timecodes
 compacts.
 
+Le portail présente les outils depuis une page d'accueil multilingue et
+transmet la langue choisie à Komz et Listen. En gallois, seuls Transcribe et
+Subtitles sont proposés ; en cornique, aucune application n'est affichée.
+
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
 et `backend_data` conservent les données entre les redémarrages.
+
+## Lot Common Voice dans Komz
+
+Le manifeste `backend/data/common_voice_selected_50.csv` contient 50 phrases
+bretonnes sélectionnées, leurs traductions françaises, niveaux A1/A2, thèmes
+proposés et noms des meilleurs MP3 Common Voice. Les fichiers audio proviennent
+du jeu de données Common Voice breton et ne sont pas versionnés ici. Les champs
+`decision`, `traduction_statut` et `niveau_statut` signalent les propositions
+éditoriales encore à relire.
+
+Les scripts `backend/scripts/import_selected_phrases.py` et
+`backend/scripts/import_selected_common_voice_audios.py` simulent par défaut.
+Ils opèrent sur la base configurée par `DATABASE_URL` et exigent `--apply` pour
+écrire. Le second script requiert `--audio-root`, un répertoire contenant les
+MP3 nommés dans le manifeste. Il réutilise les phrases existantes et crée les
+audios avec l'origine `common-voice` et le statut `pending` : les votes Common
+Voice ne valent pas validation Komz.
+
+Dans la pile Docker **locale**, les 50 phrases et leurs 50 audios ont été
+importés et vérifiés le 1er octobre 2026. Un second lot de 550 phrases et
+audios a ensuite été préparé sur 11 thèmes. Le 2 octobre 2026, les 600 phrases
+et audios Common Voice ont été transférés sur le staging et la production OVH
+via une archive Bibliothèque ZIP ciblée. Les 550 nouveaux audios ont été
+approuvés en lot à la demande du propriétaire sans contrôle d'écoute ; les
+traductions et niveaux automatiques restent à relire. Pour les thèmes et les
+résultats de vérification, voir `docs/komz-themes.md` et
+`docs/common-voice-1000.md`.
+
+Listen affiche les thèmes sous forme d'images, puis les phrases avec un audio
+approuvé. Niveau, sous-domaine et recherche se combinent. L'utilisateur écoute
+d'abord la voix de référence ; le lien vers la pratique dans Komz devient alors
+disponible pour cette phrase. Dans Komz, il choisit un thème et une phrase,
+enregistre sa voix et obtient son score avant de pouvoir écouter la voix de
+référence. Cette dernière est présentée dans un encadré explicatif sous le
+score. Les estimations des mots reconnus, du rythme et de la prosodie restent
+expérimentales. Le détail des thèmes et sous-domaines figure dans
+`docs/komz-themes.md` ; l'API d'analyse du rythme est décrite dans
+`backend/README.md`.
+
+Dans **Admin > Phrases proposées**, la recherche et le filtre par thème se
+combinent. Quand un thème est sélectionné, le tableau affiche le sous-thème à
+la place du thème et permet de trier cette colonne. Le formulaire de création
+ou de modification permet de choisir un domaine et, facultativement, un
+sous-domaine. Les anciens domaines sont rapprochés des 13 domaines éditoriaux
+pour l'affichage et le filtrage.
+
+Dans **Admin > Audio recordings**, le filtre par thème s'applique aux
+enregistrements avant la limite de résultats. Le tableau compact affiche le
+sous-thème de la phrase associée dans une colonne triable ; les phrases sans
+sous-thème portent la mention « Sans sous-thème ».
 
 ## Vérifications
 
@@ -129,9 +183,13 @@ déploiements partent d'une révision Git commise et poussée, construisent les
 conteneurs sur des ports liés à `127.0.0.1`, puis vérifient les interfaces, les
 données Komz et les médias Play avant toute exposition publique.
 
+Pour livrer un tag précis en staging, définir `DEPLOY_REF` sur ce tag : le
+script archive cette révision et ne prend pas les modifications locales non
+commitées.
+
 ```bash
 # Mettre à jour le staging persistant
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_REF=komz-listen-admin-themes-2026-10-07 \
   ./scripts/deploy-staging-ovh.sh --apply
 
 # Construire une candidate production en clonant les données du staging

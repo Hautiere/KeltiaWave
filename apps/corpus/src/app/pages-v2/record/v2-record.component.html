@@ -10,7 +10,7 @@
       </a>
 
       <nav class="kw-nav" aria-label="Navigation V2">
-        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/home-bibliotheque'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
         <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
         <a *ngIf="auth.user()?.role !== 'teacher'" class="active" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
         <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
@@ -35,137 +35,84 @@
   </header>
 
   <main class="kw-main">
-    <section class="work-layout">
-      <aside class="work-sidebar">
-        <section class="side-card">
-          <h2 class="side-title">{{ 'v2.progress' | t }}</h2>
-          <div class="progress-line">
-            <span>{{ 'v2.progress' | t }}</span>
-            <strong>{{ completionPosition }}</strong>
-            <span class="progress-bar"><span [style.width.%]="progressPercent"></span></span>
-          </div>
-          <div class="progress-line"><span>{{ 'v2.connectedQuestion' | t }}</span><strong>{{ auth.user() ? ('v2.yes' | t) : ('v2.no' | t) }}</strong></div>
-          <div class="progress-line"><span>{{ 'adminData.status' | t }}</span><strong>{{ lastBlob ? ('record.listenBeforeSend' | t) : (isRecording ? ('record.stop' | t) : ('record.button' | t)) }}</strong></div>
-        </section>
+    <div class="journey-empty" *ngIf="loading">{{ 'record.loading' | t }}</div>
+    <div class="journey-empty error" *ngIf="!loading && error && stage !== 'practice'">{{ error }}</div>
+    <section class="theme-stage" *ngIf="!loading && stage === 'themes'">
+      <div class="journey-hero"><span class="journey-symbol">◉</span><div><small>KOMZ · 01 / 03</small><h1>{{ copy.choose }}</h1><p>{{ copy.intro }}</p></div></div>
+      <div class="journey-heading"><h2>{{ copy.themes }}</h2><span>{{ availableDomains.length }} {{ copy.themes }}</span></div>
+      <div class="theme-grid">
+        <button type="button" class="theme-tile" *ngFor="let domain of availableDomains" (click)="selectDomain(domain.value)">
+          <span class="tile-art" [ngClass]="domain.tone"><img [src]="themeImage(domain.value)" [class.digital-photo]="domain.value === 'numerique-technologies'" [class.family-photo]="domain.value === 'famille-relations'" alt="" loading="lazy"><span>{{ domain.icon }}</span></span>
+          <span class="tile-info"><strong>{{ domain.labelKey | t }}</strong><small>{{ domainCount(domain.value) }} {{ copy.phrases }}</small><b>↗</b></span>
+        </button>
+      </div>
+    </section>
 
-        <section class="side-card">
-          <h2 class="side-title">{{ 'v2.myClass' | t }}</h2>
-          <a class="class-summary class-summary-link" *ngIf="hasClassContext; else recordClassInfo" routerLink="/ma-classe">
-            <span class="class-label"><span class="side-ico">◌</span>{{ classLabel }}</span>
-            <span class="class-note">{{ classHelp }}</span>
-          </a>
-          <ng-template #recordClassInfo>
-            <div class="class-summary">
-              <span class="class-label"><span class="side-ico">◌</span>{{ classLabel }}</span>
-              <span class="class-note">{{ classHelp }}</span>
-            </div>
-          </ng-template>
-        </section>
-
-        <section class="help-card">
-          <h2 class="side-title">{{ 'record.eyebrow' | t }}</h2>
-          <p>{{ 'record.stepWriteText' | t }}</p>
-        </section>
-      </aside>
-
-      <section class="work-content">
-        <div class="work-topline">
-          <strong class="phrase-count">{{ phrasePosition }}</strong>
-          <div class="language-tabs">
-            <span class="pill"><img src="/assets/flag-brittany.png" alt="">BRETON</span>
-            <span class="pill muted"><img src="/assets/flag-wales.svg" alt="">WELSH</span>
-            <span class="pill muted"><img src="/assets/flag-cornwall.svg" alt="">CORNISH</span>
-          </div>
-        </div>
-
-        <article class="focus-card record-card">
-          <ng-container *ngIf="!loading && currentPhrase; else loadingOrEmpty">
-            <span class="status review">{{ 'record.stepRead' | t }}</span>
-            <h1>{{ currentPhrase.texte }}</h1>
-            <p class="phrase-meta">
-              {{ currentPhrase.theme || ('domain.undefined' | t) }}
-              <span>·</span>
-              {{ currentPhrase.niveau || ('level.undefined' | t) }}
-            </p>
-
-            <button
-              class="big-play mic-button"
-              type="button"
-              [class.recording]="isRecording"
-              [disabled]="submitting"
-              (click)="isRecording ? stopRecording() : startRecording()"
-              [attr.aria-label]="isRecording ? ('record.stop' | t) : ('record.button' | t)"
-            >
-              <img *ngIf="!isRecording" src="/assets/brand/brezhoneg-fanch-triskell-transparent.png" alt="">
-              <span *ngIf="isRecording">■</span>
-            </button>
-
-            <div class="record-wave" [class.active]="isRecording" aria-hidden="true">
-              <span *ngFor="let item of [1,2,3,4,5,6,7,8,9,10,11,12]"></span>
-            </div>
-
-            <div class="focus-caption">
-              {{ isRecording ? ('record.stop' | t) : (lastBlob ? ('record.listenBeforeSend' | t) : ('record.needPhrase' | t)) }}
-              <strong>{{ mmss(durationSec) }} / 02:00</strong>
-            </div>
-
-            <div class="meta-grid">
-              <label>
-                <span>{{ 'record.region' | t }}</span>
-                <select [(ngModel)]="speakerRegion" [disabled]="isRecording || submitting">
-                  <option value="">{{ 'domain.undefined' | t }}</option>
-                  <option value="bro-dreger">Tregor</option>
-                  <option value="bro-leon">Leon</option>
-                  <option value="bro-gernev">Cornouaille</option>
-                  <option value="bro-wened">Vannetais</option>
-                  <option value="other">Autre</option>
-                </select>
-              </label>
-              <label>
-                <span>{{ 'record.level' | t }}</span>
-                <select [(ngModel)]="speakerLevel" [disabled]="isRecording || submitting">
-                  <option value="">{{ 'level.undefined' | t }}</option>
-                  <option value="beginner">{{ 'level.beginner' | t }}</option>
-                  <option value="intermediate">{{ 'level.intermediate' | t }}</option>
-                  <option value="advanced">{{ 'level.advanced' | t }}</option>
-                  <option value="native-heritage">{{ 'level.nativeHeritage' | t }}</option>
-                </select>
-              </label>
-            </div>
-
-            <audio class="audio-preview" *ngIf="blobUrl" [src]="blobUrl" controls></audio>
-
-            <div class="message error" *ngIf="error">{{ error }}</div>
-            <div class="message success" *ngIf="success">{{ success }}</div>
-
-            <div class="focus-actions">
-              <button class="btn ghost" type="button" (click)="resetRecording()" [disabled]="isRecording || submitting || !lastBlob">{{ 'record.retry' | t }}</button>
-              <button class="btn primary" type="button" (click)="submitRecording()" [disabled]="!lastBlob || isRecording || submitting">
-                {{ submitting ? ('record.sending' | t) : ('record.send' | t) }}
-              </button>
-            </div>
-
-            <nav class="phrase-navigation" aria-label="Navigation entre les phrases">
-              <button class="btn ghost" type="button" (click)="previousPhrase()" [disabled]="phrases.length < 2 || isRecording || submitting">
-                ← {{ 'v2.previous' | t }}
-              </button>
-              <button class="btn ghost" type="button" (click)="nextPhrase()" [disabled]="phrases.length < 2 || isRecording || submitting">
-                {{ 'v2.next' | t }} →
-              </button>
-            </nav>
-          </ng-container>
-
-          <ng-template #loadingOrEmpty>
-            <div class="empty-block" *ngIf="loading">{{ 'record.loading' | t }}</div>
-            <div class="empty-block error" *ngIf="!loading && error">{{ error }}</div>
-          </ng-template>
+    <section class="phrase-stage" *ngIf="!loading && stage === 'phrases'">
+      <button class="journey-back" type="button" (click)="backToThemes()">{{ copy.backThemes }}</button>
+      <div class="journey-hero domain-hero"><span class="journey-symbol" [ngClass]="selectedDomain?.tone || 'green'">{{ selectedDomain?.icon }}</span><div><small>KOMZ · 02 / 03</small><h1>{{ selectedDomain?.labelKey || 'v2.theme' | t }}</h1><p>{{ copy.intro }}</p></div></div>
+      <div class="phrase-toolbar"><div class="level-tabs" role="group" [attr.aria-label]="subdomainCopy.level"><button type="button" *ngFor="let level of ['all','A1','A2','B1','B2','C1','C2']" [class.active]="selectedLevel === level" [attr.aria-pressed]="selectedLevel === level" (click)="selectedLevel = level">{{ level === 'all' ? copy.all : level }} ({{ levelCount(level) }})</button></div><span aria-live="polite">{{ filteredPhrases.length }} {{ copy.phrases }}</span></div>
+      <label class="subdomain-filter"><span>{{ subdomainCopy.label }}</span><select [(ngModel)]="selectedSubdomain"><option value="">{{ subdomainCopy.all }}</option><option *ngFor="let option of subdomainOptions" [value]="option.value">{{ option.label }} ({{ subdomainCount(option.value) }})</option><option [value]="unclassifiedSubdomain">{{ subdomainCopy.unclassified }} ({{ unclassifiedCount }})</option></select></label>
+      <label class="audio-availability"><input type="checkbox" [checked]="!onlyWithAudio" (change)="onlyWithAudio = !$any($event.target).checked">{{ copy.showWithoutAudio }}</label>
+      <div class="phrase-list" *ngIf="filteredPhrases.length; else emptyLevel">
+        <article class="phrase-row" *ngFor="let phrase of filteredPhrases">
+          <div><strong>{{ phrase.texte }}</strong><small>{{ phrase.traduction_fr }}</small></div>
+          <span class="row-level">{{ phrase.niveau || '—' }}<ng-container *ngIf="phraseSubdomain(phrase) as subdomain"> · {{ subdomain }}</ng-container></span>
+          <button type="button" class="row-practice" (click)="selectPhrase(phrase)">{{ copy.practice }}</button>
         </article>
+      </div>
+      <ng-template #emptyLevel><div class="journey-empty">{{ subdomainCopy.empty }} <button type="button" (click)="resetPhraseFilters()">{{ subdomainCopy.reset }}</button></div></ng-template>
+    </section>
 
-        <div class="advice">
-          <strong>{{ 'validation.title' | t }}</strong>
-          {{ 'record.uploadOk' | t }}
-        </div>
+    <section class="practice-stage" *ngIf="stage === 'practice' && currentPhrase">
+      <div class="practice-topbar">
+        <button class="journey-back" type="button" (click)="backToPhrases()" [disabled]="isRecording || submitting">{{ copy.backPhrases }}</button>
+        <div class="practice-pager"><strong>{{ phrasePosition }}</strong><button type="button" (click)="previousPhrase()" [disabled]="filteredPhrases.length < 2 || isRecording || submitting" [attr.aria-label]="'v2.previous' | t">‹</button><button type="button" (click)="nextPhrase()" [disabled]="filteredPhrases.length < 2 || isRecording || submitting" [attr.aria-label]="'v2.next' | t">›</button></div>
+      </div>
+      <div class="practice-phrase-card">
+        <div><span class="practice-overline">KOMZ · {{ selectedDomain?.labelKey || 'v2.theme' | t }}</span><h1>{{ currentPhrase.texte }}</h1><p>{{ currentPhrase.traduction_fr }}</p></div>
+        <span class="row-level">{{ currentPhrase.niveau || '—' }}</span>
+      </div>
+      <div class="practice-grid">
+        <section class="practice-panel record-panel">
+          <div class="panel-heading"><span class="panel-mark green">●</span><h2>{{ copy.record }}</h2></div>
+          <button class="record-orb" type="button" [class.recording]="isRecording" [disabled]="submitting || assessing" (click)="isRecording ? stopRecording() : startRecording()" [attr.aria-label]="isRecording ? ('record.stop' | t) : ('record.button' | t)"><span *ngIf="isRecording" aria-hidden="true">■</span><img *ngIf="!isRecording" src="/assets/brand/brezhoneg-fanch-triskell-transparent.png" alt="" aria-hidden="true"></button>
+          <strong class="record-time">{{ mmss(durationSec) }} / 02:00</strong><small class="record-hint">{{ isRecording ? ('record.stop' | t) : ('record.button' | t) }}</small>
+        </section>
+      </div>
+      <section class="compare-card" *ngIf="blobUrl">
+        <h2>{{ copy.compare }}</h2>
+        <div class="compare-row"><button class="compare-play own-voice" type="button" (click)="playRecorded()" [attr.aria-label]="copy.record">▶</button><audio #recordedPreview [src]="blobUrl" controls preload="metadata" (error)="onRecordedAudioError()"></audio><strong>{{ copy.record }}</strong></div>
+        <p class="panel-note" *ngIf="referenceAudio && !rhythmAssessment">{{ copy.referenceAfterScore }}</p>
+        <p class="panel-note" *ngIf="!referenceAudio">{{ copy.noAudio }}</p>
+        <div class="assessment-actions" *ngIf="referenceAudio"><button type="button" (click)="assessPronunciation()" [disabled]="assessing || submitting">{{ assessing ? copy.assessing : copy.assess }}</button><p>{{ copy.scoreHelp }}</p></div>
+        <section class="score-card" *ngIf="rhythmAssessment as rhythm" aria-live="polite">
+          <div class="score-total"><div><small>{{ copy.overallLabel }}</small><strong>{{ overallScore === null ? '—' : overallScore }}<span *ngIf="overallScore !== null"> / 100</span></strong></div><p>{{ copy.overallHelp }}</p></div>
+          <div class="score-breakdown">
+            <div class="score-item"><span>{{ copy.wordsLabel }} <small>40 %</small></span><strong>{{ score === null ? '—' : score }}<small *ngIf="score !== null"> / 100</small></strong></div>
+            <div class="score-item"><span>{{ copy.rhythmLabel }} <small>30 %</small></span><strong>{{ rhythm.rhythm }}<small> / 100</small></strong></div>
+            <div class="score-item"><span>{{ copy.hfLabel }} <small>30 %</small></span><strong>{{ hfSimilarity === null ? '—' : hfSimilarity }}<small *ngIf="hfSimilarity !== null"> / 100</small></strong></div>
+          </div>
+          <p class="score-details">{{ copy.paceLabel }} : {{ rhythm.pace }} / 100 · {{ copy.pauseLabel }} : {{ rhythm.pauses }} / 100 · {{ copy.emphasisLabel }} : {{ rhythm.emphasis }} / 100</p>
+          <p class="score-details" *ngIf="score !== null">{{ copy.recognized }} : « {{ recognizedText }} »</p>
+          <p class="score-details">{{ copy.hfHelp }}</p>
+          <p class="score-details">{{ copy.rhythmHelp }}</p>
+        </section>
+        <div class="assessment-note" *ngIf="assessmentMessage">{{ assessmentMessage }}</div>
+        <section class="reference-card" *ngIf="rhythmAssessment && referenceAudio as reference" aria-labelledby="reference-title">
+          <div class="reference-heading">
+            <span class="reference-icon" aria-hidden="true">♫</span>
+            <div><h3 id="reference-title">{{ copy.listen }}</h3><p>{{ copy.referenceHelp }}</p></div>
+          </div>
+          <audio [src]="'/api/audios/' + reference.id + '/file'" controls preload="none" [attr.aria-label]="copy.listen"></audio>
+        </section>
+        <div class="record-fields"><label>{{ 'record.region' | t }}<select [(ngModel)]="speakerRegion"><option value="">—</option><option value="bro-dreger">Tregor</option><option value="bro-leon">Leon</option><option value="bro-gernev">Cornouaille</option><option value="bro-wened">Vannetais</option><option value="other">Autre</option></select></label><label>{{ 'record.level' | t }}<select [(ngModel)]="speakerLevel"><option value="">—</option><option value="beginner">{{ 'level.beginner' | t }}</option><option value="intermediate">{{ 'level.intermediate' | t }}</option><option value="advanced">{{ 'level.advanced' | t }}</option><option value="native-heritage">{{ 'level.nativeHeritage' | t }}</option></select></label></div>
+        <p class="submission-error" *ngIf="error" role="alert">{{ error }}</p>
+        <p class="submission-feedback" *ngIf="success" role="status">✓ {{ success }}</p>
+        <div class="record-actions"><button type="button" (click)="resetRecording()" [disabled]="submitting">{{ 'record.retry' | t }}</button><button type="button" class="row-practice" *ngIf="!submittedRecording" (click)="submitRecording()" [disabled]="submitting || assessing">{{ submitting ? ('record.sending' | t) : ('record.send' | t) }}</button><button type="button" class="row-practice" *ngIf="submittedRecording" (click)="continueAfterSubmit()">{{ filteredPhrases.length < 2 ? copy.backPhrases : copy.nextPhrase }}</button></div>
       </section>
+      <div class="message error" *ngIf="error && !blobUrl">{{ error }}</div>
+      <div class="practice-tip">✦ {{ copy.tip }}</div>
     </section>
   </main>
 

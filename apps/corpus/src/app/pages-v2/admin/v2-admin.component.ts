@@ -1,3 +1,4 @@
+import { isValidPhraseSourceUrl } from '../../core/phrase-provenance';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +16,8 @@ import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 import { ApiService, Phrase } from '../../core/api.service';
+import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
+import { subdomainsFor, subdomainLabel } from '../../core/subdomains';
 
 type AdminSection = 'recordings' | 'phrases' | 'accounts' | 'data';
 
@@ -26,6 +29,35 @@ type AdminSection = 'recordings' | 'phrases' | 'accounts' | 'data';
   styleUrls: ['./v2-admin.component.scss'],
 })
 export class V2AdminComponent implements OnInit {
+  readonly isValidPhraseSourceUrl = isValidPhraseSourceUrl;
+  newUser: { email: string; password: string; display_name: string; role: AuthUser['role']; breton_level: AuthUser['breton_level']; organization: string; must_change_password: boolean } | null = null;
+  creatingUser = false;
+  showNewUserPassword = false;
+  createUserError = '';
+
+  openCreateUser(): void {
+    this.showNewUserPassword = false;
+    this.createUserError = '';
+    this.newUser = { email: '', password: '', display_name: '', role: 'contributor', breton_level: 'undefined', organization: '', must_change_password: true };
+  }
+
+  createUser(): void {
+    if (!this.newUser || this.creatingUser) return;
+    this.creatingUser = true;
+    this.createUserError = '';
+    this.auth.createUser({ ...this.newUser, email: this.newUser.email.trim(), display_name: this.newUser.display_name.trim() }).subscribe({
+      next: (user) => {
+        this.users = [user, ...this.users];
+        this.newUser = null;
+        this.creatingUser = false;
+        this.success = 'Compte créé. Communiquez le mot de passe initial à son titulaire.';
+      },
+      error: (err) => {
+        this.creatingUser = false;
+        this.createUserError = err?.status === 409 ? 'Cette adresse email possède déjà un compte.' : 'Création impossible. Vérifiez les champs et votre connexion.';
+      },
+    });
+  }
   @ViewChild('adminPlayer') private adminPlayer?: ElementRef<HTMLAudioElement>;
   overview: AdminDataOverview | null = null;
   storage: AdminStorageInfo | null = null;
@@ -48,9 +80,11 @@ export class V2AdminComponent implements OnInit {
   readonly roles: AuthUser['role'][] = ['admin', 'teacher', 'contributor', 'learner'];
   readonly bretonLevels = ['undefined', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
   readonly phraseLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  readonly phraseThemes = ['vie-quotidienne', 'education', 'famille', 'travail', 'nature', 'transports', 'sante', 'culture-patrimoine', 'histoire', 'traditions-fetes', 'cuisine', 'sports-loisirs', 'technologies', 'administration', 'non-classe'];
+  readonly phraseDomains = DOMAIN_OPTIONS.filter((domain) => domain.value);
+  readonly phraseThemes = this.phraseDomains.map((domain) => domain.value);
   readonly speakerRegions = ['Kerne (Cornouaille)', 'Leon (Léon)', 'Treger (Trégor)', 'Gwened (Vannetais)', 'Autre'];
   readonly phraseSources = [
+    { value: 'common-voice', label: 'Common Voice' },
     { value: 'livre', label: 'Livre' }, { value: 'manuel-scolaire', label: 'Manuel scolaire' },
     { value: 'cours-breton', label: 'Cours de breton' }, { value: 'presse-article', label: 'Presse / Article' },
     { value: 'internet', label: 'Internet' },
@@ -60,10 +94,12 @@ export class V2AdminComponent implements OnInit {
   ];
 
   query = '';
+  recordingThemeFilter = '';
   phraseQuery = '';
-  phraseSort: 'recent' | 'phrase' | 'author' | 'theme' | 'level' | 'source' = 'recent';
+  phraseThemeFilter = '';
+  phraseSort: 'recent' | 'phrase' | 'author' | 'theme' | 'subdomain' | 'level' | 'source' = 'recent';
   phraseSortDirection: 'asc' | 'desc' = 'asc';
-  recordingSort: 'phrase' | 'dataset' | 'status' = 'phrase';
+  recordingSort: 'phrase' | 'subdomain' | 'dataset' | 'status' = 'phrase';
   recordingSortDirection: 'asc' | 'desc' = 'asc';
   datasetFilter = '';
   statusFilter = '';
@@ -116,9 +152,13 @@ export class V2AdminComponent implements OnInit {
   get filteredPhrases(): Phrase[] {
     const query = this.phraseQuery.trim().toLocaleLowerCase();
     const filtered = this.phrases.filter((phrase) => {
-      const matchesQuery = !query || [phrase.texte, phrase.traduction_fr, phrase.auteur, phrase.source]
+      const matchesQuery = !query || [phrase.texte, phrase.traduction_fr, phrase.auteur, phrase.source, this.phraseSourceLabel(phrase.source), phrase.source === 'common-voice' ? 'Common Voices' : '']
         .some((value) => value?.toLocaleLowerCase().includes(query));
-      return matchesQuery;
+      const matchesTheme = !this.phraseThemeFilter
+        || (this.phraseThemeFilter === '__unclassified__'
+          ? !phrase.theme || !this.phraseThemes.includes(canonicalDomain(phrase.theme))
+          : canonicalDomain(phrase.theme) === this.phraseThemeFilter);
+      return matchesQuery && matchesTheme;
     });
     return filtered.sort((a, b) => {
       let comparison = 0;
@@ -130,6 +170,9 @@ export class V2AdminComponent implements OnInit {
       } else if (this.phraseSort === 'theme') {
         comparison = (a.theme || 'zzzz').localeCompare(b.theme || 'zzzz', 'fr')
           || (a.niveau || 'zz').localeCompare(b.niveau || 'zz', 'fr')
+          || a.texte.localeCompare(b.texte, 'fr');
+      } else if (this.phraseSort === 'subdomain') {
+        comparison = (this.phraseSubdomainLabel(a) || 'zzzz').localeCompare(this.phraseSubdomainLabel(b) || 'zzzz', 'fr')
           || a.texte.localeCompare(b.texte, 'fr');
       } else if (this.phraseSort === 'level') {
         comparison = (a.niveau || 'zz').localeCompare(b.niveau || 'zz', 'fr')
@@ -145,16 +188,54 @@ export class V2AdminComponent implements OnInit {
     });
   }
 
+  phraseSourceLabel(source?: string | null): string {
+    return source === 'common-voice' ? 'Common Voice' : source || 'Source non renseignée';
+  }
+
+  phraseThemeLabel(theme?: string | null): string {
+    if (!theme) return 'À classer';
+    return this.phraseDomains.find((domain) => domain.value === canonicalDomain(theme))?.label || theme;
+  }
+
+  phraseSubdomainLabel(phrase: Phrase): string | null {
+    return subdomainLabel(canonicalDomain(phrase.theme), phrase.subdomain);
+  }
+
+  changePhraseThemeFilter(value: string): void {
+    this.phraseThemeFilter = value;
+    this.phraseSort = value && value !== '__unclassified__' ? 'subdomain' : 'recent';
+    this.phraseSortDirection = 'asc';
+  }
+
+  get selectedPhraseSubdomains() {
+    return subdomainsFor(canonicalDomain(this.selectedPhrase?.theme));
+  }
+
+  get hasUnknownSelectedPhraseSubdomain(): boolean {
+    return !!this.selectedPhrase?.subdomain
+      && !this.selectedPhraseSubdomains.some((option) => option.value === this.selectedPhrase?.subdomain);
+  }
+
+  changeSelectedPhraseTheme(value: string): void {
+    if (!this.selectedPhrase) return;
+    if (canonicalDomain(this.selectedPhrase.theme) !== value) this.selectedPhrase.subdomain = null;
+    this.selectedPhrase.theme = value;
+  }
+
   get displayedSegments(): AdminSegment[] {
     return [...this.segments].sort((a, b) => {
-      const left = this.recordingSort === 'phrase' ? a.texte : this.recordingSort === 'dataset' ? a.dataset : a.status;
-      const right = this.recordingSort === 'phrase' ? b.texte : this.recordingSort === 'dataset' ? b.dataset : b.status;
+      const left = this.recordingSort === 'phrase' ? a.texte : this.recordingSort === 'subdomain' ? this.segmentSubdomainLabel(a) : this.recordingSort === 'dataset' ? a.dataset : a.status;
+      const right = this.recordingSort === 'phrase' ? b.texte : this.recordingSort === 'subdomain' ? this.segmentSubdomainLabel(b) : this.recordingSort === 'dataset' ? b.dataset : b.status;
       const comparison = (left || '').localeCompare(right || '', 'fr');
       return this.recordingSortDirection === 'asc' ? comparison : -comparison;
     });
   }
 
-  sortRecordingsBy(column: 'phrase' | 'dataset' | 'status'): void {
+  segmentSubdomainLabel(segment: AdminSegment): string {
+    return subdomainLabel(canonicalDomain(segment.domain), segment.subdomain) || 'Sans sous-thème';
+  }
+
+  sortRecordingsBy(column: 'phrase' | 'subdomain' | 'dataset' | 'status'): void {
     if (this.recordingSort === column) {
       this.recordingSortDirection = this.recordingSortDirection === 'asc' ? 'desc' : 'asc';
       return;
@@ -163,11 +244,11 @@ export class V2AdminComponent implements OnInit {
     this.recordingSortDirection = 'asc';
   }
 
-  recordingSortIndicator(column: 'phrase' | 'dataset' | 'status'): string {
+  recordingSortIndicator(column: 'phrase' | 'subdomain' | 'dataset' | 'status'): string {
     return this.recordingSort === column ? (this.recordingSortDirection === 'asc' ? '▲' : '▼') : '△';
   }
 
-  sortPhrasesBy(column: 'phrase' | 'author' | 'theme' | 'level' | 'source'): void {
+  sortPhrasesBy(column: 'phrase' | 'author' | 'theme' | 'subdomain' | 'level' | 'source'): void {
     if (this.phraseSort === column) {
       this.phraseSortDirection = this.phraseSortDirection === 'asc' ? 'desc' : 'asc';
       return;
@@ -234,6 +315,7 @@ export class V2AdminComponent implements OnInit {
       query: this.query,
       dataset: this.datasetFilter,
       status: this.statusFilter,
+      theme: this.recordingThemeFilter,
     }).subscribe({
       next: (segments) => {
         this.segments = segments;
@@ -316,7 +398,8 @@ export class V2AdminComponent implements OnInit {
   }
 
   editPhrase(phrase: Phrase): void {
-    this.selectedPhrase = { ...phrase };
+    const canonicalTheme = canonicalDomain(phrase.theme);
+    this.selectedPhrase = { ...phrase, theme: this.phraseThemes.includes(canonicalTheme) ? canonicalTheme : phrase.theme };
     this.selectedPhraseSourceChoice = this.phraseSources.some((source) => source.value === phrase.source)
       ? phrase.source || ''
       : phrase.source ? 'autre' : '';
@@ -329,19 +412,26 @@ export class V2AdminComponent implements OnInit {
     if (!this.selectedPhrase) return;
     if (value !== 'autre') this.selectedPhrase.source = value || null;
     else if (this.phraseSources.some((source) => source.value === this.selectedPhrase?.source)) this.selectedPhrase.source = '';
+    if (value !== 'internet') this.selectedPhrase.source_url = null;
   }
 
   saveSelectedPhrase(): void {
     const phrase = this.selectedPhrase;
     if (!phrase || this.saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau) return;
+    if (phrase.source === 'internet' && !isValidPhraseSourceUrl(phrase.source_url)) {
+      this.error = 'Saisissez une URL HTTP(S) valide de 2048 caractères maximum.';
+      return;
+    }
     this.saving = true;
     this.error = null;
     this.api.updatePhrase(phrase.id, {
       texte: phrase.texte.trim(),
       traduction_fr: phrase.traduction_fr?.trim() || null,
       theme: phrase.theme,
+      subdomain: phrase.subdomain || null,
       niveau: phrase.niveau,
       source: phrase.source?.trim() || null,
+      source_url: phrase.source === 'internet' ? phrase.source_url?.trim() || null : null,
       auteur: phrase.auteur?.trim() || null,
       langue: phrase.langue || 'br',
     }).subscribe({
@@ -431,6 +521,10 @@ export class V2AdminComponent implements OnInit {
 
   saveSelected(): void {
     if (!this.selectedSegment || this.saving) return;
+    if (this.selectedSegment.source === 'internet' && !isValidPhraseSourceUrl(this.selectedSegment.source_url)) {
+      this.error = 'Saisissez une URL HTTP(S) valide de 2048 caractères maximum.';
+      return;
+    }
     this.saving = true;
     this.error = null;
     this.success = null;

@@ -10,7 +10,7 @@
       </a>
 
       <nav class="kw-nav" aria-label="Navigation V2">
-        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/home-bibliotheque'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
         <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
         <a *ngIf="auth.user()?.role !== 'teacher'" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
         <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
@@ -64,7 +64,7 @@
               <div class="meta-head"><h2>{{ 'write.theme' | t }} *</h2><span>Choisissez un thème obligatoire</span></div>
               <div class="chip-grid">
                 <button type="button" *ngFor="let domain of domains" (click)="toggleDomain(domain.value)" [class.active]="isDomainSelected(domain.value)" [disabled]="submitting || (!isDomainSelected(domain.value) && selectedDomains.length >= maxDomains)">
-                  {{ domain.label }}
+                  {{ domain.labelKey | t }}
                 </button>
               </div>
             </section>
@@ -96,6 +96,7 @@
               <label class="custom-source" *ngIf="selectedSource === 'internet'">
                 <span>URL de la source *</span>
                 <input [(ngModel)]="sourceUrl" type="url" maxlength="2048" placeholder="https://…" [disabled]="submitting" required>
+                <small *ngIf="sourceUrl && !isValidPhraseSourceUrl(sourceUrl)">Saisissez une URL HTTP(S) valide de 2048 caractères maximum.</small>
               </label>
             </section>
           </div>
@@ -138,7 +139,7 @@
     <ng-template #writeForbidden>
       <section class="write-page">
         <div class="message error">Cette page est réservée aux professeurs et administrateurs.</div>
-        <a class="btn ghost" routerLink="/">Retour</a>
+        <a class="btn ghost" routerLink="/home-bibliotheque">Retour</a>
       </section>
     </ng-template>
   </main>

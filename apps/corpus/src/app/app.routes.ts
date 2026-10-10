@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { Router, Routes } from '@angular/router';
+import { inject } from '@angular/core';
 
 import { AccueilComponent } from './pages/accueil/accueil.component';
 import { EnregistrementComponent } from './pages/enregistrement/enregistrement.component';
@@ -17,21 +18,31 @@ import { V2MyClassComponent } from './pages-v2/my-class/v2-my-class.component';
 import { V2RecordComponent } from './pages-v2/record/v2-record.component';
 import { V2WriteComponent } from './pages-v2/write/v2-write.component';
 
+import { ResetPasswordComponent } from './pages-v2/account/reset-password.component';
+
 const redirectToPortal = () => {
   window.location.replace('/portal/index.html');
   return false;
 };
 
+const openKomzOnItsOwnDomain = () => {
+  const hostname = window.location.hostname;
+  if (hostname !== 'komz.keltiawave.com' && hostname !== 'komz.staging.keltiawave.com') return true;
+  const queryParams = Object.fromEntries(new URLSearchParams(window.location.search));
+  return inject(Router).createUrlTree(['/lire'], { queryParams });
+};
+
 export const routes: Routes = [
   { path: 'portal', canActivate: [redirectToPortal], children: [] },
-  { path: '', component: V2AudioHomeComponent, pathMatch: 'full' },
-  { path: 'home-bibliotheque', redirectTo: '', pathMatch: 'full' },
+  { path: '', component: V2AudioHomeComponent, canActivate: [openKomzOnItsOwnDomain], pathMatch: 'full' },
+  { path: 'home-bibliotheque', component: V2AudioHomeComponent },
   { path: 'lire', component: V2RecordComponent },
   { path: 'enregistrer', redirectTo: 'lire', pathMatch: 'full' },
   { path: 'evaluer', component: V2EvaluateComponent },
   { path: 'ecrire', component: V2WriteComponent },
   { path: 'ma-classe', component: V2MyClassComponent },
   { path: 'admin', component: V2AdminComponent },
+  { path: 'reinitialiser-mot-de-passe', component: ResetPasswordComponent },
   { path: 'compte', component: V2AccountComponent },
   { path: 'login', redirectTo: 'compte' },
   { path: 'profil', redirectTo: 'compte' },

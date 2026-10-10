@@ -10,7 +10,7 @@
       </a>
 
       <nav class="kw-nav" aria-label="Navigation V2">
-        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/home-bibliotheque'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
         <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
         <a *ngIf="auth.user()?.role !== 'teacher'" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
         <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
@@ -77,7 +77,10 @@
               <h1>{{ 'nav.adminAccounts' | t }}</h1>
               <p>Consultez les comptes, les roles et les rattachements de classe.</p>
             </div>
-            <button class="btn primary" type="button" (click)="load()" [disabled]="loading">{{ 'corpus.refresh' | t }}</button>
+            <div class="row-actions">
+              <button class="btn primary" type="button" (click)="openCreateUser()" [disabled]="creatingUser">Ajouter un compte</button>
+              <button class="btn ghost" type="button" (click)="load()" [disabled]="loading">{{ 'corpus.refresh' | t }}</button>
+            </div>
           </div>
 
           <div class="admin-head" *ngIf="isSection('phrases')">
@@ -110,12 +113,14 @@
 
           <section class="admin-panel" *ngIf="isSection('recordings')">
             <div class="filters recording-search">
-              <input [(ngModel)]="query" type="search" [placeholder]="'adminData.searchPlaceholder' | t" (keyup.enter)="loadSegments()">
+              <label><span class="sr-only">Rechercher un enregistrement</span><input [(ngModel)]="query" type="search" [placeholder]="'adminData.searchPlaceholder' | t" (keyup.enter)="loadSegments()"></label>
+              <label><span class="sr-only">Filtrer par thème</span><select [(ngModel)]="recordingThemeFilter" (ngModelChange)="loadSegments()" aria-label="Filtrer les enregistrements par thème"><option value="">Tous les thèmes</option><option *ngFor="let domain of phraseDomains" [value]="domain.value">{{ domain.label }}</option><option value="__unclassified__">À classer / autre domaine</option></select></label>
             </div>
 
             <div class="table-wrap">
               <div class="record-row header">
                 <button class="sortable-head" type="button" (click)="sortRecordingsBy('phrase')">{{ 'home.phrase' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'phrase'">{{ recordingSortIndicator('phrase') }}</span></button>
+                <button class="sortable-head" type="button" (click)="sortRecordingsBy('subdomain')">Sous-thème <span class="sort-arrows" [class.active]="recordingSort === 'subdomain'">{{ recordingSortIndicator('subdomain') }}</span></button>
                 <button class="sortable-head" type="button" (click)="sortRecordingsBy('dataset')">{{ 'adminData.dataset' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'dataset'">{{ recordingSortIndicator('dataset') }}</span></button>
                 <button class="sortable-head" type="button" (click)="sortRecordingsBy('status')">{{ 'adminData.status' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'status'">{{ recordingSortIndicator('status') }}</span></button>
                 <span>{{ 'adminData.audio' | t }}</span>
@@ -124,8 +129,9 @@
               <article class="record-row" *ngFor="let segment of displayedSegments" [class.selected]="selectedSegment?.id === segment.id">
                 <span class="identity">
                   <strong>{{ segment.texte }}</strong>
-                  <small>{{ segment.domain || ('adminData.noDomain' | t) }} · #{{ segment.id }}</small>
+                  <small>{{ phraseThemeLabel(segment.domain) }} · #{{ segment.id }}</small>
                 </span>
+                <span class="record-subdomain" [attr.title]="segmentSubdomainLabel(segment)">{{ segmentSubdomainLabel(segment) }}</span>
                 <span class="dataset-cell">{{ segment.dataset }}</span>
                 <span class="status" [class]="statusClass(segment.status)">{{ statusLabel(segment.status) }}</span>
                 <span class="admin-audio-preview">
@@ -156,7 +162,7 @@
                   </button>
                 </span>
               </article>
-              <div class="empty-state" *ngIf="!loading && !segments.length">{{ 'v2.noRecordings' | t }}</div>
+              <div class="empty-state" *ngIf="!loading && !displayedSegments.length">{{ 'v2.noRecordings' | t }}</div>
               <div class="empty-state" *ngIf="loading">{{ 'corpus.loading' | t }}</div>
             </div>
           </section>
@@ -170,7 +176,8 @@
 
           <section class="admin-panel" *ngIf="isSection('phrases')">
             <div class="filters phrase-filters">
-              <input [(ngModel)]="phraseQuery" type="search" placeholder="Rechercher une phrase, un auteur ou une source…">
+              <label><span class="sr-only">Rechercher une phrase</span><input [(ngModel)]="phraseQuery" type="search" placeholder="Rechercher une phrase, un auteur ou une source…"></label>
+              <label><span class="sr-only">Filtrer par thème</span><select [ngModel]="phraseThemeFilter" (ngModelChange)="changePhraseThemeFilter($event)" aria-label="Filtrer par thème"><option value="">Tous les thèmes</option><option *ngFor="let domain of phraseDomains" [value]="domain.value">{{ domain.label }}</option><option value="__unclassified__">À classer / autre domaine</option></select></label>
             </div>
             <div class="table-wrap">
               <div class="phrase-row header">
@@ -180,8 +187,11 @@
                 <button class="sortable-head" type="button" (click)="sortPhrasesBy('author')">
                   Auteur <span class="sort-arrows" [class.active]="phraseSort === 'author'">{{ phraseSort === 'author' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
                 </button>
-                <button class="sortable-head" type="button" (click)="sortPhrasesBy('theme')">
+                <button class="sortable-head" *ngIf="!phraseThemeFilter || phraseThemeFilter === '__unclassified__'" type="button" (click)="sortPhrasesBy('theme')">
                   Thème <span class="sort-arrows" [class.active]="phraseSort === 'theme'">{{ phraseSort === 'theme' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
+                </button>
+                <button class="sortable-head" *ngIf="phraseThemeFilter && phraseThemeFilter !== '__unclassified__'" type="button" (click)="sortPhrasesBy('subdomain')">
+                  Sous-thème <span class="sort-arrows" [class.active]="phraseSort === 'subdomain'">{{ phraseSort === 'subdomain' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
                 </button>
                 <button class="sortable-head" type="button" (click)="sortPhrasesBy('level')">
                   Niveau <span class="sort-arrows" [class.active]="phraseSort === 'level'">{{ phraseSort === 'level' ? (phraseSortDirection === 'asc' ? '▲' : '▼') : '△' }}</span>
@@ -192,11 +202,12 @@
                 <span>Actions</span>
               </div>
               <article class="phrase-row" *ngFor="let phrase of filteredPhrases">
-                <span class="identity"><strong>{{ phrase.texte }}</strong><small>#{{ phrase.id }} · {{ phrase.traduction_fr || 'Sans traduction' }}</small></span>
+                <span class="identity"><strong>{{ phrase.texte }}</strong><small>#{{ phrase.id }} · {{ phraseSourceLabel(phrase.source) }} · {{ phrase.traduction_fr || 'Sans traduction' }}</small></span>
                 <span>{{ phrase.auteur || 'Auteur non renseigné' }}</span>
-                <span class="status review">{{ phrase.theme || 'À classer' }}</span>
+                <span class="phrase-domain" *ngIf="!phraseThemeFilter || phraseThemeFilter === '__unclassified__'"><strong>{{ phraseThemeLabel(phrase.theme) }}</strong><small *ngIf="phraseSubdomainLabel(phrase) as subdomain">{{ subdomain }}</small></span>
+                <span class="phrase-domain" *ngIf="phraseThemeFilter && phraseThemeFilter !== '__unclassified__'"><strong>{{ phraseSubdomainLabel(phrase) || 'Sans sous-thème' }}</strong></span>
                 <span>{{ phrase.niveau || '—' }}</span>
-                <span>{{ phrase.source || '—' }}</span>
+                <span>{{ phraseSourceLabel(phrase.source) }}</span>
                 <span class="row-actions">
                   <button class="link-btn" type="button" (click)="editPhrase(phrase)">Modifier</button>
                   <button class="trash-btn" type="button" (click)="phraseDeletionCandidate = phrase" aria-label="Supprimer la phrase">
@@ -206,6 +217,30 @@
               </article>
               <div class="empty-state" *ngIf="!filteredPhrases.length">Aucune phrase ne correspond aux filtres.</div>
             </div>
+          </section>
+
+          <section class="admin-panel" *ngIf="isSection('accounts') && newUser">
+            <form class="edit-form" #createForm="ngForm" (ngSubmit)="createUser()">
+              <h2 class="full">Ajouter un compte</h2>
+              <label><span>Nom affiché</span><input name="newName" [(ngModel)]="newUser.display_name" required maxlength="120" autocomplete="off"></label>
+              <label><span>Email</span><input type="email" name="newEmail" [(ngModel)]="newUser.email" required email autocomplete="off"></label>
+              <div class="password-field">
+                <label for="new-user-password">Mot de passe initial (8 caractères minimum)</label>
+                <div class="password-controls">
+                  <input id="new-user-password" [type]="showNewUserPassword ? 'text' : 'password'" name="newPassword" [(ngModel)]="newUser.password" required minlength="8" maxlength="128" autocomplete="new-password">
+                  <button class="btn ghost" type="button" (click)="showNewUserPassword = !showNewUserPassword" [attr.aria-label]="showNewUserPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" [attr.aria-pressed]="showNewUserPassword" aria-controls="new-user-password">{{ showNewUserPassword ? 'Masquer' : 'Afficher' }}</button>
+                </div>
+              </div>
+              <label><span>Rôle</span><select name="newRole" [(ngModel)]="newUser.role"><option *ngFor="let role of roles" [value]="role">{{ role }}</option></select></label>
+              <label><span>Niveau breton</span><select name="newLevel" [(ngModel)]="newUser.breton_level"><option *ngFor="let level of bretonLevels" [value]="level">{{ level }}</option></select></label>
+              <label><span>Organisation</span><input name="newOrganization" [(ngModel)]="newUser.organization"></label>
+              <label class="check-row full"><input type="checkbox" name="newMustChange" [(ngModel)]="newUser.must_change_password"><span>Demander un changement de mot de passe à la première connexion</span></label>
+              <p class="full" role="alert" *ngIf="createUserError">{{ createUserError }}</p>
+              <div class="edit-actions full">
+                <button class="btn ghost" type="button" (click)="newUser = null" [disabled]="creatingUser">Annuler</button>
+                <button class="btn primary" type="submit" [disabled]="creatingUser || createForm.invalid">{{ creatingUser ? 'Création…' : 'Créer le compte' }}</button>
+              </div>
+            </form>
           </section>
 
           <section class="admin-panel" *ngIf="isSection('accounts')">
@@ -326,7 +361,7 @@
           </select>
         </label>
         <label *ngIf="selectedSegmentSourceChoice === 'autre'"><span>Autre source</span><input [(ngModel)]="selectedSegment.source" placeholder="Précisez la source"></label>
-        <label *ngIf="selectedSegmentSourceChoice === 'internet'"><span>URL de la source *</span><input [(ngModel)]="selectedSegment.source_url" type="url" placeholder="https://…"></label>
+        <label *ngIf="selectedSegmentSourceChoice === 'internet'"><span>URL de la source *</span><input [(ngModel)]="selectedSegment.source_url" type="url" maxlength="2048" placeholder="https://…"></label>
         <label *ngIf="selectedSegmentDomainChoice === 'autre'"><span>Autre domaine</span><input [(ngModel)]="selectedSegment.domain" placeholder="Précisez le domaine"></label>
         <label><span>Niveau de la phrase</span><select [(ngModel)]="selectedSegment.level"><option value="">Non renseigné</option><option *ngFor="let level of phraseLevels" [value]="level">{{ level }}</option></select></label>
         <label><span>Région du locuteur</span><select [ngModel]="selectedSegmentRegionChoice" (ngModelChange)="changeSegmentRegion($event)"><option value="">Non renseignée</option><option *ngFor="let region of speakerRegions" [value]="region">{{ region }}</option></select></label>
@@ -347,7 +382,7 @@
 
       <div class="edit-actions">
         <button class="btn danger" type="button" (click)="deleteSelected()" [disabled]="saving || deletingSegmentId !== null">{{ 'adminData.delete' | t }}</button>
-        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving || (selectedSegmentSourceChoice === 'internet' && !selectedSegment.source_url?.trim())">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
+        <button class="btn primary" type="button" (click)="saveSelected()" [disabled]="saving || (selectedSegmentSourceChoice === 'internet' && !isValidPhraseSourceUrl(selectedSegment.source_url))">{{ saving ? ('validation.saving' | t) : ('validation.save' | t) }}</button>
       </div>
     </aside>
   </div>
@@ -438,7 +473,8 @@
         <label class="full"><span>Phrase bretonne *</span><textarea [(ngModel)]="phrase.texte"></textarea></label>
         <label class="full"><span>Traduction française</span><textarea [(ngModel)]="phrase.traduction_fr"></textarea></label>
         <label><span>Auteur</span><input [(ngModel)]="phrase.auteur"></label>
-        <label><span>Thème *</span><select [(ngModel)]="phrase.theme"><option *ngFor="let theme of phraseThemes" [value]="theme">{{ theme }}</option></select></label>
+        <label><span>Domaine *</span><select [ngModel]="phrase.theme" (ngModelChange)="changeSelectedPhraseTheme($event)"><option value="">Choisir un domaine</option><option *ngFor="let domain of phraseDomains" [value]="domain.value">{{ domain.label }}</option><option *ngIf="phrase.theme && !phraseThemes.includes(phrase.theme)" [value]="phrase.theme">{{ phrase.theme }} (ancien domaine)</option></select></label>
+        <label><span>Sous-domaine</span><select [(ngModel)]="phrase.subdomain" [disabled]="!phrase.theme"><option [ngValue]="null">Sans sous-domaine</option><option *ngFor="let option of selectedPhraseSubdomains" [value]="option.value">{{ option.label }}</option><option *ngIf="hasUnknownSelectedPhraseSubdomain" [value]="phrase.subdomain">{{ phrase.subdomain }}</option></select></label>
         <label><span>Niveau *</span><select [(ngModel)]="phrase.niveau"><option *ngFor="let level of phraseLevels" [value]="level">{{ level }}</option></select></label>
         <label>
           <span>Source</span>
@@ -447,6 +483,11 @@
             <option *ngFor="let source of phraseSources" [value]="source.value">{{ source.label }}</option>
           </select>
         </label>
+        <label *ngIf="selectedPhraseSourceChoice === 'internet'">
+          <span>URL de la source *</span>
+          <input [(ngModel)]="phrase.source_url" type="url" maxlength="2048" placeholder="https://…" required>
+          <small *ngIf="!isValidPhraseSourceUrl(phrase.source_url)">Saisissez une URL HTTP(S) valide de 2048 caractères maximum.</small>
+        </label>
         <label *ngIf="selectedPhraseSourceChoice === 'autre'">
           <span>Autre source</span>
           <input [(ngModel)]="phrase.source" placeholder="Précisez la source">
@@ -454,7 +495,7 @@
       </div>
       <div class="edit-actions">
         <button class="btn danger" type="button" (click)="phraseDeletionCandidate = phrase">Supprimer</button>
-        <button class="btn primary" type="button" (click)="saveSelectedPhrase()" [disabled]="saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau">Enregistrer</button>
+        <button class="btn primary" type="button" (click)="saveSelectedPhrase()" [disabled]="saving || !phrase.texte.trim() || !phrase.theme || !phrase.niveau || (phrase.source === 'internet' && !isValidPhraseSourceUrl(phrase.source_url))">Enregistrer</button>
       </div>
     </aside>
   </div>

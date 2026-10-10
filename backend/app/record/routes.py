@@ -5,12 +5,14 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 
+from app.record.email import router as email_router
 from app.record.text_cleanup import clean_record_transcript, preserve_draft_prefix
 from app.core import vosk_available, whisper_available
 from app.transcribe.routes import _transcribe_whisper_metrics
 from app.vosk_utils import create_streaming_recognizer, stream_accept_audio, stream_finalize
 
 router = APIRouter(prefix="/api/record", tags=["record"])
+router.include_router(email_router)
 
 
 @router.get("/capabilities")

@@ -2,7 +2,6 @@
 import os
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from .db import Base, engine
 from .api.endpoints import phrases
 from .api.endpoints import enregistrements
@@ -77,6 +76,7 @@ ensure_dev_columns()
 def ensure_phrase_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("phrases")}
     wanted = {
+        "subdomain": "TEXT",
         "source": "TEXT",
         "source_url": "TEXT",
         "traduction_fr": "TEXT",
@@ -111,6 +111,9 @@ def ensure_user_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("users")}
     wanted = {
         "must_change_password": "BOOLEAN DEFAULT FALSE NOT NULL",
+        "auth_version": "INTEGER DEFAULT 0 NOT NULL",
+        "temporary_password_hash": "TEXT",
+        "temporary_password_expires_at": "TIMESTAMP",
         "profile_type": "TEXT DEFAULT 'contributor' NOT NULL",
         "breton_level": "TEXT DEFAULT 'undefined' NOT NULL",
         "organization": "TEXT",
@@ -424,24 +427,9 @@ disable_test_accounts()
 # Compat dev: expose les anciens fichiers locaux.
 app.mount("/static/audios", StaticFiles(directory=str(LOCAL_AUDIO_DIR)), name="audios")
 
-# CORS partagé par les cinq applications autonomes.
-default_origins = [
-    f"http://{host}:{port}"
-    for host in ("localhost", "127.0.0.1")
-    for port in (4200, 4300, 4400, 4500, 4600)
-]
-configured_origins = [
-    origin.strip()
-    for origin in os.getenv("CORS_ALLOW_ORIGINS", "").split(",")
-    if origin.strip()
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=configured_origins or default_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Shared CORS policy for web and Capacitor clients.
+from .cors import configure_cors
+configure_cors(app, os.getenv("CORS_ALLOW_ORIGINS", ""))
 
 # API
 app.include_router(phrases.router, prefix="/api/phrases", tags=["phrases"])

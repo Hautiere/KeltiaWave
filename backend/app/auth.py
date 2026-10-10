@@ -7,7 +7,7 @@ import secrets
 import time
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from .db import get_db
@@ -88,6 +88,7 @@ def user_to_payload(user: User) -> dict:
 def create_access_token(user: User) -> str:
     payload = {
         "sub": str(user.id),
+        "version": user.auth_version or 0,
         "exp": int(time.time()) + TOKEN_TTL_SECONDS,
     }
     body = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode().rstrip("=")
@@ -110,12 +111,15 @@ def decode_access_token(token: str) -> dict:
 
 
 def get_current_user(
+    request: Request = None,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ) -> User:
     user = get_optional_user(authorization=authorization, db=db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+    if user.must_change_password and (not request or request.url.path not in {"/api/auth/me", "/api/auth/change-password"} or request.method not in {"GET", "POST"}):
+        raise HTTPException(status_code=403, detail="password_change_required")
     return user
 
 
@@ -136,7 +140,10 @@ def get_optional_user(
         return None
     payload = decode_access_token(token)
     user_id = int(payload["sub"])
-    return db.query(User).filter(User.id == user_id, User.active == True).first()
+    user = db.query(User).filter(User.id == user_id, User.active == True).first()
+    if user and payload.get("version", 0) != (user.auth_version or 0):
+        raise HTTPException(status_code=401, detail="Session expired")
+    return user
 
 
 def _sign(body: str) -> str:

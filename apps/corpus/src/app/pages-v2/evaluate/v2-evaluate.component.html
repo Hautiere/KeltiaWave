@@ -10,7 +10,7 @@
       </a>
 
       <nav class="kw-nav" aria-label="Navigation V2">
-        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
+        <a [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/home-bibliotheque'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>
         <a *ngIf="auth.user()?.role === 'learner'" routerLink="/ma-classe"><span class="nav-ico">◔</span>{{ 'v2.progress' | t }}</a>
         <a *ngIf="auth.user()?.role !== 'teacher'" routerLink="/lire"><span class="nav-ico">▥</span>{{ 'nav.speak' | t }}</a>
         <a *ngIf="auth.user()?.role === 'teacher' || auth.user()?.role === 'admin'" class="active" routerLink="/evaluer"><span class="nav-ico">✓</span>{{ 'nav.listen' | t }}</a>
