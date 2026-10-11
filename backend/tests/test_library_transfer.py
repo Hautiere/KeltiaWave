@@ -250,6 +250,8 @@ def test_phrase_audio_url_remapped_and_external_url_not_fetched(libraries, tmp_p
 def test_legacy_formats_still_export_and_import(libraries, tmp_path, monkeypatch, format):
     from scripts import export_corpus_dataset as exporter, import_corpus_dataset as importer
     (a, sa), (b, sb) = libraries; seed(a, sa)
+    a.query(Phrase).filter_by(texte='Demat !').one().subdomain = 'saluer-et-prendre-conge'
+    a.commit()
     monkeypatch.setattr(exporter, 'SessionLocal', lambda: a)
     def copy(ref, dest):
         dest.parent.mkdir(parents=True, exist_ok=True); dest.write_bytes(sa.read(ref)); return True
@@ -264,6 +266,7 @@ def test_legacy_formats_still_export_and_import(libraries, tmp_path, monkeypatch
     result = importer.import_dataset(Namespace(dataset=str(folder/f'metadata.{format}'), audio_root=str(folder), name='legacy', langue='br', source='import', author='test', status='pending'))
     assert result['created_phrases'] == 1 and result['created_audios'] == 2
     assert b.query(Phrase).one().texte == 'Demat !'
+    assert b.query(Phrase).one().subdomain == 'saluer-et-prendre-conge'
 
 
 def test_s3_transfer_mock_uses_bucket_confinement_and_conditional_create():

@@ -775,6 +775,60 @@ body .kw-shell .brand-subtitle {
   white-space: nowrap;
 }
 
+body .kw-header .brand-lockup {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  min-width: 0;
+  gap: 18px;
+}
+
+body .kw-header .portal-home {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 9px;
+  color: #102c68;
+  text-decoration: none;
+}
+
+body .kw-header .portal-home-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 14px;
+  background: #e8f2ff;
+}
+
+body .kw-header .portal-home-icon img {
+  width: 28px;
+  height: 28px;
+}
+
+body .kw-header .portal-home-copy {
+  display: grid;
+  gap: 2px;
+  line-height: 1.05;
+}
+
+body .kw-header .portal-home-copy strong { font-size: 14px; font-weight: 850; }
+body .kw-header .portal-home-copy small { color: #526b99; font-size: 12px; font-weight: 700; }
+body .kw-header .portal-home:hover .portal-home-icon { background: #dbeaff; }
+body .kw-header .portal-home:focus-visible { outline: 3px solid #2563eb; outline-offset: 4px; border-radius: 10px; }
+
+@media (max-width: 1360px) {
+  body .kw-header .brand-lockup { gap: 10px; }
+  body .kw-header .portal-home-copy { display: none; }
+}
+
+@media (max-width: 700px) {
+  body .kw-header .brand-lockup { gap: 6px; }
+  body .kw-header .portal-home-icon { width: 36px; height: 36px; border-radius: 10px; }
+  body .kw-header .portal-home-icon img { width: 23px; height: 23px; }
+}
+
 body .kw-shell .kw-nav {
   justify-content: center;
   gap: clamp(20px, 2.6vw, 46px) !important;

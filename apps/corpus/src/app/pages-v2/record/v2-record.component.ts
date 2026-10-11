@@ -11,7 +11,7 @@ import { TranslatePipe } from '../../core/translate.pipe';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 import { DOMAIN_OPTIONS, canonicalDomain, type DomainOption } from '../../core/domains';
 import { audioFileUrl } from '../../core/constants';
-import { subdomainsFor, subdomainLabel } from '../../core/subdomains';
+import { canonicalSubdomain, subdomainsFor, subdomainLabel } from '../../core/subdomains';
 
 @Component({
   selector: 'app-v2-record',
@@ -129,7 +129,7 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   }
 
   subdomainCount(value: string): number {
-    return this.themePhrases.filter((phrase) => phrase.subdomain === value
+    return this.themePhrases.filter((phrase) => canonicalSubdomain(phrase.subdomain) === value
       && (!this.onlyWithAudio || this.hasReference(phrase))).length;
   }
 
@@ -150,7 +150,7 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   private matchesSubdomain(phrase: Phrase): boolean {
     if (!this.selectedSubdomain) return true;
     if (this.selectedSubdomain === this.unclassifiedSubdomain) return !phrase.subdomain;
-    return phrase.subdomain === this.selectedSubdomain;
+    return canonicalSubdomain(phrase.subdomain) === this.selectedSubdomain;
   }
 
   get themePhrases(): Phrase[] {

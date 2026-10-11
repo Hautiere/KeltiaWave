@@ -9,7 +9,7 @@ import { audioFileUrl } from '../../core/constants';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { TranslatePipe } from '../../core/translate.pipe';
 import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
-import { subdomainsFor, subdomainLabel, type SubdomainOption } from '../../core/subdomains';
+import { canonicalSubdomain, subdomainsFor, subdomainLabel, type SubdomainOption } from '../../core/subdomains';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
 
 interface AudioRow {
@@ -118,14 +118,14 @@ export class V2AudioHomeComponent implements OnInit {
         .some((value) => this.canonicalTheme(value) === this.selectedTheme));
   }
 
-  readonly libraryLevels = ['', 'A1', 'A2', 'B1', 'B2'];
+  readonly libraryLevels = ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
   levelCount(level: string): number {
     return this.domainRows.filter((row) => !level || row.phrase?.niveau?.toUpperCase() === level).length;
   }
 
   subdomainCount(value: string): number {
-    return this.domainRows.filter((row) => row.phrase?.subdomain === value).length;
+    return this.domainRows.filter((row) => canonicalSubdomain(row.phrase?.subdomain) === value).length;
   }
 
   get unclassifiedCount(): number {
@@ -135,7 +135,7 @@ export class V2AudioHomeComponent implements OnInit {
   private matchesSubdomain(row: AudioRow): boolean {
     if (!this.selectedSubdomain) return true;
     if (this.selectedSubdomain === this.unclassifiedSubdomain) return !row.phrase?.subdomain;
-    return row.phrase?.subdomain === this.selectedSubdomain;
+    return canonicalSubdomain(row.phrase?.subdomain) === this.selectedSubdomain;
   }
 
   get isDomainEmpty(): boolean {

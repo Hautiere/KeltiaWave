@@ -135,6 +135,7 @@ def import_dataset(args: argparse.Namespace) -> dict:
                 changed = False
                 changed |= set_if_changed(phrase, "traduction_fr", optional(row, "traduction_fr") or optional(row, "translation_fr"))
                 changed |= set_if_changed(phrase, "theme", optional(row, "theme") or optional(row, "domain"))
+                changed |= set_if_changed(phrase, "subdomain", optional(row, "subdomain"))
                 changed |= set_if_changed(phrase, "niveau", optional(row, "niveau") or optional(row, "level"))
                 changed |= set_if_changed(phrase, "source", optional(row, "source"))
                 changed |= set_if_changed(phrase, "auteur", optional(row, "auteur") or optional(row, "author"))
@@ -145,6 +146,7 @@ def import_dataset(args: argparse.Namespace) -> dict:
                     texte=phrase_text,
                     traduction_fr=optional(row, "traduction_fr") or optional(row, "translation_fr"),
                     theme=optional(row, "theme") or optional(row, "domain"),
+                    subdomain=optional(row, "subdomain"),
                     niveau=optional(row, "niveau") or optional(row, "level"),
                     source=optional(row, "source") or args.source,
                     langue=langue,

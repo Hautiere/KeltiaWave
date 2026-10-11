@@ -99,9 +99,17 @@ contrôles de santé :
 ./scripts/start-docker.sh
 ```
 
-Le script construit d'abord l'infrastructure et le backend, puis démarre les six
-interfaces après validation de l'API. Il ouvre ensuite la documentation backend
-sur <http://127.0.0.1:8100/docs> puis Portal sur <http://127.0.0.1:4100>, qui
+Lancez cette commande depuis **ce dépôt** (`/Users/gr4dl0nys29/projets/keltiawave/keltiawave`).
+Une ancienne copie a été mise à l'écart sous
+`projets/breizh_transcriptors/keltiawave-archive-2026-10-10`. Elle utilisait les
+mêmes ports Docker et pouvait remplacer les conteneurs récents. Le script affiche
+le chemin du dépôt utilisé et vérifie l'origine des conteneurs avant d'annoncer
+que tout fonctionne.
+
+Le script construit d'abord l'infrastructure et le backend, attend que l'API
+réponde, puis construit et démarre les six interfaces sans reconstruire le
+backend. Il ouvre la documentation backend avant les interfaces, puis Portal
+sur <http://127.0.0.1:4100>, qui
 donne accès à toutes les applications. Utilisez `--no-build` pour réutiliser les
 images existantes ou `--no-browser` pour ne pas ouvrir le navigateur.
 
@@ -114,6 +122,9 @@ compacts.
 Le portail présente les outils depuis une page d'accueil multilingue et
 transmet la langue choisie à Komz et Listen. En gallois, seuls Transcribe et
 Subtitles sont proposés ; en cornique, aucune application n'est affichée.
+Dans chaque application, le bouton « KeltiaWave Portal » à gauche ramène au
+portail ; le logo de l'application reste un repère visuel sans lien. En local,
+le bouton ouvre le portail local sur le port 4100.
 
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
 les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
@@ -146,8 +157,22 @@ traductions et niveaux automatiques restent à relire. Pour les thèmes et les
 résultats de vérification, voir `docs/komz-themes.md` et
 `docs/common-voice-1000.md`.
 
+Le lot de 50 phrases « Maison et vie quotidienne » avec MP3, traductions et
+sous-thèmes se trouve dans `../datasets/exports/common_voice_maison_50_2026-10-10.zip`.
+Après un démarrage local, `docker cp` permet de placer l'archive dans le
+conteneur backend ; `python -m scripts.import_common_voice_maison ARCHIVE`
+simule l'import et `--apply` l'effectue. L'import est idempotent et refuse
+les phrases déjà classées différemment. L'admin peut exporter un dataset en
+ZIP avec ses audios et métadonnées, y compris les sous-thèmes. Son import
+générique ne constitue pas encore une synchronisation sûre entre production
+et local : il peut créer des audios en double pour des phrases déjà présentes.
+
 Listen affiche les thèmes sous forme d'images, puis les phrases avec un audio
-approuvé. Niveau, sous-domaine et recherche se combinent. L'utilisateur écoute
+approuvé. Les niveaux sont regroupés sur une ligne, puis le sous-domaine et la
+recherche occupent une zone compacte. Les compteurs et filtres reconnaissent
+aussi les anciens imports qui enregistrent le libellé du sous-domaine plutôt
+que son identifiant normalisé, dans Listen comme dans Komz. Niveau,
+sous-domaine et recherche se combinent. L'utilisateur écoute
 d'abord la voix de référence ; le lien vers la pratique dans Komz devient alors
 disponible pour cette phrase. Dans Komz, il choisit un thème et une phrase,
 enregistre sa voix et obtient son score avant de pouvoir écouter la voix de
@@ -188,18 +213,23 @@ script archive cette révision et ne prend pas les modifications locales non
 commitées.
 
 ```bash
-# Mettre à jour le staging persistant
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_REF=komz-listen-admin-themes-2026-10-07 \
+# Copier les données de production vers le staging (avec sauvegarde du staging)
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
+  ./scripts/refresh-staging-data-from-production.sh --apply
+
+# Déployer le tag en staging
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_REF=TAG_EXPLICITE \
   ./scripts/deploy-staging-ovh.sh --apply
 
-# Construire une candidate production en clonant les données du staging
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
-  ./scripts/deploy-production-candidate-ovh.sh --apply
-
-# Vérifier la candidate et les DNS avant la promotion
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net PUBLIC_IPV4=51.178.38.152 \
-  ./scripts/promote-production-ovh.sh
+# Après vérification du staging et sauvegarde de la production, déployer le
+# même tag sur la pile production déjà reliée aux domaines publics.
+SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_SLOT=production \
+  DEPLOY_REF=TAG_EXPLICITE ./scripts/deploy-ovh.sh --apply
 ```
+
+Le script de promotion Caddy sert uniquement à la première bascule depuis
+l'ancienne pile OVH. Il n'est pas nécessaire quand Caddy route déjà vers
+`keltiawave-production-*`.
 
 La procédure, les prérequis et le retour arrière sont détaillés dans
 `deploy/ovh/README.md`. Les récapitulatifs de livraison sont disponibles dans

@@ -46,7 +46,9 @@ export class TranscribeAppComponent {
   private request?: Subscription;
   private transcriptionTimer?: ReturnType<typeof setInterval>;
 
-  readonly portalBase = window.location.hostname.endsWith('.staging.keltiawave.com')
+  readonly portalBase = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:4100/`
+    : window.location.hostname.endsWith('.staging.keltiawave.com')
     ? 'https://staging.keltiawave.com/'
     : 'https://keltiawave.com/';
 

@@ -26,7 +26,12 @@ export function subdomainsFor(domain: string): SubdomainOption[] {
 
 export function subdomainLabel(domain: string, value?: string | null): string | null {
   if (!value) return null;
-  return subdomainsFor(domain).find((option) => option.value === value)?.label || value;
+  return subdomainsFor(domain).find((option) => option.value === canonicalSubdomain(value))?.label || value;
+}
+
+/** Older imports stored the visible label; filters use its stable slug. */
+export function canonicalSubdomain(value?: string | null): string {
+  return value ? slug(value) : '';
 }
 
 function slug(value: string): string {

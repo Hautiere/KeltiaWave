@@ -101,3 +101,16 @@
 @media (min-width: 601px) {
   .brand strong { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 22px !important; font-weight: 850; line-height: 1; letter-spacing: -.045em; }
 }
+
+/* Separate portal navigation from the application identity. */
+.brand-lockup { display: flex; align-items: center; min-width: 0; gap: 18px; }
+.portal-home { display: inline-flex; align-items: center; flex: 0 0 auto; gap: 9px; color: #102c68; text-decoration: none; }
+.portal-home-icon { width: 48px; height: 48px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 14px; background: #e8f2ff; }
+.portal-home-icon img { width: 28px; height: 28px; }
+.portal-home-copy { display: grid; gap: 2px; line-height: 1.05; }
+.portal-home-copy strong { font-size: 14px; font-weight: 850; }
+.portal-home-copy small { color: #526b99; font-size: 12px; font-weight: 700; }
+.portal-home:hover .portal-home-icon { background: #dbeaff; }
+.portal-home:focus-visible { outline: 3px solid #2563eb; outline-offset: 4px; border-radius: 10px; }
+@media (max-width: 1360px) { .brand-lockup { gap: 10px; } .portal-home-copy { display: none; } }
+@media (max-width: 700px) { .brand-lockup { gap: 6px; } .portal-home-icon { width: 36px; height: 36px; border-radius: 10px; } .portal-home-icon img { width: 23px; height: 23px; } }

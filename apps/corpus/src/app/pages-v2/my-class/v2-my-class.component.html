@@ -1,13 +1,19 @@
 <div class="kw-shell">
   <header class="kw-header">
     <div class="kw-bar">
-      <a class="brand" href="https://keltiawave.com/" aria-label="Portail KeltiaWave">
+      <div class="brand-lockup">
+        <a class="portal-home" href="https://keltiawave.com/" aria-label="Portail KeltiaWave">
+          <span class="portal-home-icon"><img src="/assets/portal-home.svg" alt=""></span>
+          <span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span>
+        </a>
+        <div class="brand">
         <span class="brand-avatar"><img src="/assets/keltiawave-mascot.webp" alt=""></span>
         <span>
           <span class="brand-title"><span class="brand-product library-product">KeltiaWave</span> <span>Library</span></span>
           <span class="brand-subtitle">{{ 'v2.brandSubtitle' | t }}</span>
         </span>
-      </a>
+      </div>
+      </div>
 
       <nav class="kw-nav" aria-label="Navigation V2">
         <a [class.active]="isTeacherContext" [routerLink]="auth.user()?.role === 'teacher' ? '/ma-classe' : '/home-bibliotheque'"><span class="nav-ico">▦</span>{{ (auth.user()?.role === 'teacher' ? 'v2.myClass' : 'v2.library') | t }}</a>

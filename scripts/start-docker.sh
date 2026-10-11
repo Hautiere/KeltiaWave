@@ -134,6 +134,20 @@ resolve_model_dir WHISPER_WELSH_MODEL_HOST_DIR "backend/models/whisper-welsh-ct2
 
 compose=(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
+echo "Projet local : $PROJECT_DIR"
+echo "Configuration Docker : $COMPOSE_FILE"
+
+# L'ancien dépôt utilise les mêmes ports et le même nom de projet Compose.
+# Signaler clairement quand ses conteneurs seront remplacés par ceux-ci.
+existing_portal_id="$("${compose[@]}" ps -q portal 2>/dev/null || true)"
+if [[ -n "$existing_portal_id" ]]; then
+  existing_compose_file="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' "$existing_portal_id" 2>/dev/null || true)"
+  if [[ -n "$existing_compose_file" && "$existing_compose_file" != "$COMPOSE_FILE" ]]; then
+    echo "Une autre copie du projet fournit actuellement le portail local : $existing_compose_file"
+    echo "Ses conteneurs seront remplacés ; les volumes PostgreSQL et MinIO seront conservés."
+  fi
+fi
+
 echo "[1/5] Validation de la configuration Docker Compose"
 "${compose[@]}" config --quiet
 
@@ -172,12 +186,17 @@ if ! wait_for_url "Backend" "$BACKEND_HEALTH_URL"; then
   exit 1
 fi
 
-frontend_up_args=(up -d)
-$BUILD && frontend_up_args+=(--build)
-frontend_up_args+=(portal corpus learning record transcribe subtitles)
+if $OPEN_BROWSER; then
+  open_url "$BACKEND_URL"
+fi
+
+frontend_services=(portal corpus learning record transcribe subtitles)
 
 echo "[4/5] Construction et démarrage des six applications frontend"
-"${compose[@]}" "${frontend_up_args[@]}"
+if $BUILD; then
+  "${compose[@]}" build "${frontend_services[@]}"
+fi
+"${compose[@]}" up -d --no-deps "${frontend_services[@]}"
 
 echo "[5/5] Vérification des conteneurs et contrôles HTTP"
 expected_services=(backend portal corpus learning record transcribe subtitles postgres minio)
@@ -214,6 +233,17 @@ wait_for_url "Subtitles" "http://127.0.0.1:4600/" || failed=1
 "${compose[@]}" exec -T portal wget -q --spider http://127.0.0.1/about.html || failed=1
 "${compose[@]}" exec -T portal wget -q --spider http://127.0.0.1/feedback.html || failed=1
 
+# Les contrôles HTTP seuls ne détectent pas une autre copie du dépôt aux mêmes ports.
+for service in backend portal corpus learning record transcribe subtitles; do
+  container_id="$("${compose[@]}" ps -q "$service")"
+  [[ -n "$container_id" ]] || { failed=1; continue; }
+  actual_compose_file="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' "$container_id")"
+  if [[ "$actual_compose_file" != "$COMPOSE_FILE" ]]; then
+    echo "  ÉCHEC  $service provient de $actual_compose_file" >&2
+    failed=1
+  fi
+done
+
 if ((failed)); then
   echo >&2
   echo "Au moins un service ne répond pas. État des conteneurs :" >&2
@@ -227,8 +257,6 @@ echo "Tous les services et les pages du portail répondent."
 "${compose[@]}" ps
 
 if $OPEN_BROWSER; then
-  open_url "$BACKEND_URL"
-  sleep 2
   open_url "$PORTAL_URL"
 fi
 

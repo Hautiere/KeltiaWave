@@ -43,7 +43,9 @@ export class SubtitlesAppComponent implements AfterViewInit,OnDestroy {
   @ViewChild('player') player?: ElementRef<HTMLVideoElement>;
   @ViewChild('cueTable') cueTable?: ElementRef<HTMLElement>;
   @ViewChildren('cueRow') cueRows?: QueryList<ElementRef<HTMLElement>>;
-  readonly portalUrl = window.location.hostname.endsWith('.staging.keltiawave.com')
+  readonly portalUrl = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:4100/`
+    : window.location.hostname.endsWith('.staging.keltiawave.com')
     ? 'https://staging.keltiawave.com/'
     : 'https://keltiawave.com/';
   ui:UiLanguage=this.initialUi(); language:'br'|'cy'='br'; engine:'vosk'|'whisper'='vosk';
