@@ -63,6 +63,8 @@ def canonical_phrase_domain(value: str | None) -> str:
 class SegmentUpdate(BaseModel):
     texte: str | None = None
     traduction_fr: str | None = None
+    traduction_en: str | None = None
+    traduction_cy: str | None = None
     source: str | None = None
     source_url: str | None = None
     domain: str | None = None
@@ -128,6 +130,8 @@ def segment_payload(audio: Audio, phrase: Phrase | None) -> dict:
         "phrase_id": phrase.id if phrase else audio.phrase_id,
         "texte": phrase.texte if phrase else "Enregistrement sans texte associé",
         "traduction_fr": phrase.traduction_fr if phrase else None,
+        "traduction_en": phrase.traduction_en if phrase else None,
+        "traduction_cy": phrase.traduction_cy if phrase else None,
         "dataset": dataset_name(phrase, audio) if phrase else (audio.phrase_source or "sans-source"),
         "source": phrase.source if phrase else audio.phrase_source,
         "source_url": phrase.source_url if phrase else None,
@@ -522,6 +526,10 @@ def update_segment(
         phrase.texte = text
     if "traduction_fr" in patch:
         phrase.traduction_fr = (patch["traduction_fr"] or "").strip() or None
+    if "traduction_en" in patch:
+        phrase.traduction_en = (patch["traduction_en"] or "").strip() or None
+    if "traduction_cy" in patch:
+        phrase.traduction_cy = (patch["traduction_cy"] or "").strip() or None
     if "source" in patch:
         phrase.source = (patch["source"] or "").strip() or None
     if "source_url" in patch:

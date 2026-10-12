@@ -8,6 +8,8 @@ export interface Phrase {
   id: number;
   texte: string;
   traduction_fr?: string | null;
+  traduction_en?: string | null;
+  traduction_cy?: string | null;
   theme: string | null;
   subdomain?: string | null;
   niveau: string | null;

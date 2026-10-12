@@ -110,7 +110,7 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   }
 
   get subdomainOptions() {
-    return subdomainsFor(this.selectedTheme);
+    return subdomainsFor(this.selectedTheme, this.i18n.language());
   }
 
   get subdomainCopy() {
@@ -139,7 +139,13 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   }
 
   phraseSubdomain(phrase: Phrase): string | null {
-    return subdomainLabel(this.selectedTheme, phrase.subdomain);
+    return subdomainLabel(this.selectedTheme, phrase.subdomain, this.i18n.language());
+  }
+
+  phraseTranslation(phrase: Phrase): string | null {
+    if (this.i18n.language() === 'cy') return phrase.traduction_cy || null;
+    if (this.i18n.language() === 'en') return phrase.traduction_en || null;
+    return phrase.traduction_fr || null;
   }
 
   resetPhraseFilters(): void {

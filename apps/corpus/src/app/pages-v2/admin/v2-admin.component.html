@@ -351,6 +351,14 @@
           <span>Traduction française</span>
           <textarea [(ngModel)]="selectedSegment.traduction_fr" placeholder="Optionnel"></textarea>
         </label>
+        <label class="full">
+          <span>Traduction anglaise</span>
+          <textarea [(ngModel)]="selectedSegment.traduction_en" placeholder="Optionnel"></textarea>
+        </label>
+        <label class="full">
+          <span>Traduction galloise</span>
+          <textarea [(ngModel)]="selectedSegment.traduction_cy" placeholder="Optionnel"></textarea>
+        </label>
         <label>
           <span>{{ 'adminData.source' | t }}</span>
           <select [ngModel]="selectedSegmentSourceChoice" (ngModelChange)="changeSegmentSource($event)">
@@ -478,6 +486,8 @@
       <div class="edit-form">
         <label class="full"><span>Phrase bretonne *</span><textarea [(ngModel)]="phrase.texte"></textarea></label>
         <label class="full"><span>Traduction française</span><textarea [(ngModel)]="phrase.traduction_fr"></textarea></label>
+        <label class="full"><span>Traduction anglaise</span><textarea [(ngModel)]="phrase.traduction_en"></textarea></label>
+        <label class="full"><span>Traduction galloise</span><textarea [(ngModel)]="phrase.traduction_cy"></textarea></label>
         <label><span>Auteur</span><input [(ngModel)]="phrase.auteur"></label>
         <label><span>Domaine *</span><select [ngModel]="phrase.theme" (ngModelChange)="changeSelectedPhraseTheme($event)"><option value="">Choisir un domaine</option><option *ngFor="let domain of phraseDomains" [value]="domain.value">{{ domain.label }}</option><option *ngIf="phrase.theme && !phraseThemes.includes(phrase.theme)" [value]="phrase.theme">{{ phrase.theme }} (ancien domaine)</option></select></label>
         <label><span>Sous-domaine</span><select [(ngModel)]="phrase.subdomain" [disabled]="!phrase.theme"><option [ngValue]="null">Sans sous-domaine</option><option *ngFor="let option of selectedPhraseSubdomains" [value]="option.value">{{ option.label }}</option><option *ngIf="hasUnknownSelectedPhraseSubdomain" [value]="phrase.subdomain">{{ phrase.subdomain }}</option></select></label>

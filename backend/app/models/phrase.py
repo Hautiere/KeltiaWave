@@ -9,6 +9,8 @@ class Phrase(Base):
     id = Column(Integer, primary_key=True, index=True)
     texte = Column(String, nullable=False)
     traduction_fr = Column(String, nullable=True)
+    traduction_en = Column(String, nullable=True)
+    traduction_cy = Column(String, nullable=True)
     theme = Column(String, nullable=True)     # ex: "général"
     subdomain = Column(String, nullable=True)  # sous-domaine éditorial facultatif
     niveau = Column(String, nullable=True)    # ex: "A1"

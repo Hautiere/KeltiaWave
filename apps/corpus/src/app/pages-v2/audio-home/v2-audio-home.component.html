@@ -95,7 +95,7 @@
         <ul class="library-phrase-list" *ngIf="!loading && !error && corpusRows.length">
           <li class="library-phrase-row" *ngFor="let row of corpusRows">
             <button class="play-btn" type="button" [attr.aria-label]="('nav.listen' | t) + ' : ' + phraseText(row)" [class.playing]="isRowPlaying(row)" (click)="toggleAudio(row)">{{ isRowPlaying(row) ? 'Ⅱ' : '▶' }}</button>
-            <div class="library-phrase-text"><strong>{{ phraseText(row) }}</strong><small *ngIf="row.phrase?.traduction_fr">{{ row.phrase?.traduction_fr }}</small></div>
+            <div class="library-phrase-text"><strong>{{ phraseText(row) }}</strong><small *ngIf="phraseTranslation(row) as translation">{{ translation }}</small></div>
             <span class="library-phrase-meta">{{ row.phrase?.niveau || '—' }}<ng-container *ngIf="rowSubdomain(row) as subdomain"> · {{ subdomain }}</ng-container></span>
             <a class="practice-link" *ngIf="row.phrase && listenedAudioIds.has(row.audio.id)" routerLink="/lire" [queryParams]="{ phraseId: row.phrase.id }" [attr.aria-label]="journeyCopy.practice + ' : ' + phraseText(row)">{{ journeyCopy.practice }}</a>
             <span class="practice-prompt" *ngIf="row.phrase && !listenedAudioIds.has(row.audio.id)">{{ journeyCopy.listenFirst }}</span>

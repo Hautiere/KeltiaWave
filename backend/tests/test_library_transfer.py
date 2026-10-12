@@ -117,6 +117,17 @@ def test_round_trip_two_bases_two_storages_and_second_import(libraries, archive)
     assert snapshot(b, sb) == before and sorted(sb.root.iterdir()) == original_files
 
 
+@pytest.mark.parametrize('missing_fields', [('traduction_cy',), ('traduction_en', 'traduction_cy')])
+def test_previous_library_archives_still_import(libraries, archive, tmp_path, missing_fields):
+    (a, sa), (b, sb) = libraries
+    old = rewrite(archive, tmp_path / 'previous-library.zip',
+                  edit=lambda manifest: [row.pop(field) for row in manifest['phrases'] for field in missing_fields])
+    report = import_library(b, sb, old, apply=True)
+    assert report['mode'] == 'applied'
+    assert b.query(Phrase).count() == 2
+    assert all(phrase.traduction_cy is None for phrase in b.query(Phrase))
+
+
 @pytest.mark.parametrize('kind', ['phrase', 'audio', 'validation'])
 def test_corrections_are_conflicts_without_overwrite(libraries, archive, kind):
     b, sb = libraries[1]

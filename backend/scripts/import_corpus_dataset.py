@@ -134,6 +134,10 @@ def import_dataset(args: argparse.Namespace) -> dict:
                 reused_phrases += 1
                 changed = False
                 changed |= set_if_changed(phrase, "traduction_fr", optional(row, "traduction_fr") or optional(row, "translation_fr"))
+                if "traduction_en" in row or "translation_en" in row:
+                    changed |= set_if_changed(phrase, "traduction_en", optional(row, "traduction_en") or optional(row, "translation_en"))
+                if "traduction_cy" in row or "translation_cy" in row:
+                    changed |= set_if_changed(phrase, "traduction_cy", optional(row, "traduction_cy") or optional(row, "translation_cy"))
                 changed |= set_if_changed(phrase, "theme", optional(row, "theme") or optional(row, "domain"))
                 changed |= set_if_changed(phrase, "subdomain", optional(row, "subdomain"))
                 changed |= set_if_changed(phrase, "niveau", optional(row, "niveau") or optional(row, "level"))
@@ -145,6 +149,8 @@ def import_dataset(args: argparse.Namespace) -> dict:
                 phrase = Phrase(
                     texte=phrase_text,
                     traduction_fr=optional(row, "traduction_fr") or optional(row, "translation_fr"),
+                    traduction_en=optional(row, "traduction_en") or optional(row, "translation_en"),
+                    traduction_cy=optional(row, "traduction_cy") or optional(row, "translation_cy"),
                     theme=optional(row, "theme") or optional(row, "domain"),
                     subdomain=optional(row, "subdomain"),
                     niveau=optional(row, "niveau") or optional(row, "level"),

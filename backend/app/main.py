@@ -80,6 +80,8 @@ def ensure_phrase_columns() -> None:
         "source": "TEXT",
         "source_url": "TEXT",
         "traduction_fr": "TEXT",
+        "traduction_en": "TEXT",
+        "traduction_cy": "TEXT",
     }
     missing = [(name, ddl) for name, ddl in wanted.items() if name not in existing]
     if not missing:

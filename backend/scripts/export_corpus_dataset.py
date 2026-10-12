@@ -17,6 +17,8 @@ from app.storage import LOCAL_AUDIO_DIR, _s3_client
 EXPORT_FIELDS = [
     "texte",
     "traduction_fr",
+    "traduction_en",
+    "traduction_cy",
     "audio_path",
     "origin",
     "status",
@@ -84,6 +86,8 @@ def audio_row(audio: Audio, phrase: Phrase, audio_path: str) -> dict[str, Any]:
     return {
         "texte": phrase.texte,
         "traduction_fr": phrase.traduction_fr,
+        "traduction_en": phrase.traduction_en,
+        "traduction_cy": phrase.traduction_cy,
         "audio_path": audio_path,
         "origin": audio.origin,
         "status": status_value(audio.status),

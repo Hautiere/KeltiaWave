@@ -108,7 +108,7 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   get subdomainOptions(): SubdomainOption[] {
-    return subdomainsFor(this.selectedTheme);
+    return subdomainsFor(this.selectedTheme, this.i18n.language());
   }
 
   get domainRows(): AudioRow[] {
@@ -148,7 +148,14 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   rowSubdomain(row: AudioRow): string | null {
-    return subdomainLabel(this.selectedTheme, row.phrase?.subdomain);
+    return subdomainLabel(this.selectedTheme, row.phrase?.subdomain, this.i18n.language());
+  }
+
+  phraseTranslation(row: AudioRow): string | null {
+    const phrase = this.resolvePhrase(row);
+    if (this.i18n.language() === 'cy') return phrase?.traduction_cy || null;
+    if (this.i18n.language() === 'en') return phrase?.traduction_en || null;
+    return phrase?.traduction_fr || null;
   }
 
   get selectedThemeInfo(): ThemeFilter | undefined {

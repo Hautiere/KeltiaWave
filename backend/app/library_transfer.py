@@ -15,7 +15,8 @@ from .library_storage import MAX_AUDIO_BYTES
 
 FORMAT = 'keltiawave-library'
 VERSION = 1
-PHRASE_FIELDS = ('texte', 'traduction_fr', 'theme', 'niveau', 'source', 'source_url', 'langue', 'auteur', 'url_audio', 'created_at')
+PHRASE_FIELDS = ('texte', 'traduction_fr', 'traduction_en', 'traduction_cy', 'theme', 'niveau', 'source', 'source_url', 'langue', 'auteur', 'url_audio', 'created_at')
+LEGACY_PHRASE_FIELDS = tuple(field for field in PHRASE_FIELDS if field not in {'traduction_en', 'traduction_cy'})
 AUDIO_FIELDS = ('origin', 'status', 'phrase_source', 'domain', 'speaker_region', 'speaker_city', 'speaker_accent', 'speaker_level', 'created_at', 'validated_at', 'validated_by', 'validator_role', 'validation_weight', 'validation_comment', 'contributor_name', 'contributor_email', 'contributor_school', 'contributor_school_level')
 VALIDATION_FIELDS = ('decision', 'validator', 'validator_role', 'validation_weight', 'pronunciation_level', 'pronunciation_region', 'comment', 'created_at')
 FILE_PATTERN = re.compile(r'audios/([0-9a-f]{64})\.[a-z0-9]{1,10}\Z')
@@ -143,10 +144,16 @@ def validate_manifest(manifest):
         require(isinstance(rows, list), f'{name} must be an array')
         ids[name] = set()
         for row in rows:
-            require(isinstance(row, dict) and set(row) == set(fields) | extra | {'id'}, f'Invalid {name} fields')
+            allowed_fields = [fields]
+            if name == 'phrases':
+                allowed_fields.append(LEGACY_PHRASE_FIELDS)
+                allowed_fields.append(tuple(field for field in PHRASE_FIELDS if field != 'traduction_cy'))
+            require(isinstance(row, dict) and any(set(row) == set(candidate) | extra | {'id'} for candidate in allowed_fields), f'Invalid {name} fields')
             require(type(row['id']) is int and row['id'] > 0 and row['id'] not in ids[name], f'Duplicate/invalid {name} id')
             ids[name].add(row['id'])
             for field in fields:
+                if field in {'traduction_en', 'traduction_cy'} and field not in row:
+                    continue
                 value = row[field]
                 require(value is None or isinstance(value, str), f'{name}.{field} must be string or null')
                 if field.endswith('_at') and value is not None:
@@ -225,7 +232,7 @@ class Package:
 
 
 def decoded(row, fields):
-    result = {field: row[field] for field in fields}
+    result = {field: row.get(field) if field in {'traduction_en', 'traduction_cy'} else row[field] for field in fields}
     for field in fields:
         if field.endswith('_at') and result[field] is not None:
             result[field] = datetime.fromisoformat(result[field])
@@ -243,7 +250,8 @@ def plan_import(db, store, package):
     used = set()
     for row in manifest['phrases']:
         candidates = by_key[(row['texte'], row['langue'])]
-        fields = tuple(f for f in PHRASE_FIELDS if f != 'url_audio' or row['url_audio_audio_id'] is None)
+        fields = tuple(f for f in PHRASE_FIELDS if (f != 'url_audio' or row['url_audio_audio_id'] is None)
+                       and (f not in {'traduction_en', 'traduction_cy'} or f in row))
         expected = values(Phrase(**decoded(row, PHRASE_FIELDS)), fields)
         exact = [p for p in candidates if values(p, fields) == expected and p.id not in used]
         if candidates and len(exact) != 1:

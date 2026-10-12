@@ -182,6 +182,23 @@ expérimentales. Le détail des thèmes et sous-domaines figure dans
 `docs/komz-themes.md` ; l'API d'analyse du rythme est décrite dans
 `backend/README.md`.
 
+La langue d'interface choisie détermine la traduction affichée sous la phrase
+bretonne dans Listen et Komz : français, anglais ou gallois. En gallois, le
+libellé des sous-domaines est également traduit et la traduction apparaît sans
+préfixe. Les champs `traduction_en` et `traduction_cy` peuvent être corrigés
+dans l'administration et sont conservés par les exports et imports du corpus.
+Les archives Bibliothèque créées avant ces champs restent importables.
+
+Les lots de traduction sont dans `backend/translations/`. Les scripts
+`backend/scripts/import_english_translations.py` et
+`backend/scripts/import_welsh_translations.py` vérifient l'identifiant et le
+texte breton de chaque phrase, simulent l'import par défaut et préservent les
+traductions déjà présentes. L'option `--apply` écrit les nouvelles valeurs ;
+`--replace` permet une correction explicite. Exécuter ensuite
+`seed_english_translations.py` et `seed_welsh_corrections.py` pour les phrases
+courantes corrigées manuellement. Les autres traductions du CSV sont des
+propositions automatiques qui demandent une relecture linguistique.
+
 Dans **Admin > Phrases proposées**, la recherche et le filtre par thème se
 combinent. Quand un thème est sélectionné, le tableau affiche le sous-thème à
 la place du thème et permet de trier cette colonne. Le formulaire de création

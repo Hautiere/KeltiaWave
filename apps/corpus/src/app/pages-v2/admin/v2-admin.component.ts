@@ -427,6 +427,8 @@ export class V2AdminComponent implements OnInit {
     this.api.updatePhrase(phrase.id, {
       texte: phrase.texte.trim(),
       traduction_fr: phrase.traduction_fr?.trim() || null,
+      traduction_en: phrase.traduction_en?.trim() || null,
+      traduction_cy: phrase.traduction_cy?.trim() || null,
       theme: phrase.theme,
       subdomain: phrase.subdomain || null,
       niveau: phrase.niveau,
@@ -533,6 +535,8 @@ export class V2AdminComponent implements OnInit {
     this.adminData.updateSegment(segment.id, {
       texte: segment.texte,
       traduction_fr: segment.traduction_fr,
+      traduction_en: segment.traduction_en,
+      traduction_cy: segment.traduction_cy,
       source: segment.source,
       source_url: segment.source_url,
       domain: segment.domain,

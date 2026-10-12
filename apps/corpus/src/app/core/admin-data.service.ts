@@ -40,6 +40,8 @@ export interface AdminSegment {
   phrase_id: number;
   texte: string;
   traduction_fr?: string | null;
+  traduction_en?: string | null;
+  traduction_cy?: string | null;
   dataset: string;
   source?: string | null;
   source_url?: string | null;
@@ -124,7 +126,7 @@ export class AdminDataService {
     });
   }
 
-  updateSegment(id: number, payload: Pick<AdminSegment, 'texte' | 'traduction_fr' | 'source' | 'source_url' | 'domain' | 'level' | 'speaker_region' | 'speaker_city' | 'speaker_accent' | 'speaker_level' | 'contributor_name' | 'status'>) {
+  updateSegment(id: number, payload: Pick<AdminSegment, 'texte' | 'traduction_fr' | 'traduction_en' | 'traduction_cy' | 'source' | 'source_url' | 'domain' | 'level' | 'speaker_region' | 'speaker_city' | 'speaker_accent' | 'speaker_level' | 'contributor_name' | 'status'>) {
     return this.http.patch<AdminSegment>(`${this.baseUrl}/segments/${id}`, payload, { headers: this.auth.authHeaders });
   }
 

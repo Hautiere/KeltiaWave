@@ -62,7 +62,7 @@
       <label class="audio-availability"><input type="checkbox" [checked]="!onlyWithAudio" (change)="onlyWithAudio = !$any($event.target).checked">{{ copy.showWithoutAudio }}</label>
       <div class="phrase-list" *ngIf="filteredPhrases.length; else emptyLevel">
         <article class="phrase-row" *ngFor="let phrase of filteredPhrases">
-          <div><strong>{{ phrase.texte }}</strong><small>{{ phrase.traduction_fr }}</small></div>
+          <div><strong>{{ phrase.texte }}</strong><small *ngIf="phraseTranslation(phrase) as translation">{{ translation }}</small></div>
           <span class="row-level">{{ phrase.niveau || '—' }}<ng-container *ngIf="phraseSubdomain(phrase) as subdomain"> · {{ subdomain }}</ng-container></span>
           <button type="button" class="row-practice" (click)="selectPhrase(phrase)">{{ copy.practice }}</button>
         </article>
@@ -76,7 +76,7 @@
         <div class="practice-pager"><strong>{{ phrasePosition }}</strong><button type="button" (click)="previousPhrase()" [disabled]="filteredPhrases.length < 2 || isRecording || submitting" [attr.aria-label]="'v2.previous' | t">‹</button><button type="button" (click)="nextPhrase()" [disabled]="filteredPhrases.length < 2 || isRecording || submitting" [attr.aria-label]="'v2.next' | t">›</button></div>
       </div>
       <div class="practice-phrase-card">
-        <div><span class="practice-overline">KOMZ · {{ selectedDomain?.labelKey || 'v2.theme' | t }}</span><h1>{{ currentPhrase.texte }}</h1><p>{{ currentPhrase.traduction_fr }}</p></div>
+        <div><span class="practice-overline">KOMZ · {{ selectedDomain?.labelKey || 'v2.theme' | t }}</span><h1>{{ currentPhrase.texte }}</h1><p *ngIf="phraseTranslation(currentPhrase) as translation">{{ translation }}</p></div>
         <span class="row-level">{{ currentPhrase.niveau || '—' }}</span>
       </div>
       <div class="practice-grid">
