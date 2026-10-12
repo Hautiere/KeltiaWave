@@ -596,6 +596,28 @@ button, input, select, textarea { font: inherit; }
   font-weight: 850;
 }
 
+.password-form > .btn {
+  align-self: end;
+  min-height: 38px;
+}
+
+.password-form > .message {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.recovery-section {
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  justify-self: center;
+  padding: 24px;
+  gap: 20px;
+}
+.recovery-section > p { margin: 0; line-height: 1.5; }
+.recovery-section .profile-form { grid-template-columns: 1fr; padding: 0; }
+.recovery-section > a { color: #155ee8; font-weight: 700; }
+
 .profile-form label.full {
   grid-column: 1 / -1;
 }

@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { defer, finalize, forkJoin, timeout } from 'rxjs';
 import { ApiService, AudioRead, Phrase } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
@@ -25,6 +26,8 @@ interface LibraryStat {
   styleUrls: ['./v2-account.component.scss'],
 })
 export class V2AccountComponent implements OnInit {
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   readonly levels = LEVEL_OPTIONS;
   readonly avatarChoices = Array.from(
     { length: 32 },
@@ -34,6 +37,49 @@ export class V2AccountComponent implements OnInit {
   mode: 'login' | 'register' = 'login';
   email = '';
   password = '';
+  forgotPasswordOpen = false;
+  recoveryEmail = '';
+  sendingRecovery = false;
+  recoveryMessage = '';
+  recoveryError = '';
+
+  openPasswordRecovery(): void {
+    this.recoveryEmail = this.displayEmail;
+    this.forgotPasswordOpen = true;
+    this.recoveryMessage = this.recoveryError = '';
+    this.password = '';
+    this.error = this.success = null;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { auth: 'forgot' }, replaceUrl: true });
+  }
+
+  returnToLogin(): void {
+    this.forgotPasswordOpen = false;
+    this.showLogin();
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { auth: 'login' }, replaceUrl: true });
+  }
+
+  sendPasswordRecovery(): void {
+    if (this.sendingRecovery || !this.recoveryEmail.trim()) return;
+    this.sendingRecovery = true;
+    this.recoveryMessage = this.recoveryError = '';
+    this.auth.forgotPassword(this.recoveryEmail.trim()).pipe(
+      timeout(25000),
+      finalize(() => { this.sendingRecovery = false; this.changeDetector.markForCheck(); }),
+    ).subscribe({
+      next: () => { this.recoveryMessage = 'Si un compte actif correspond à cette adresse, un lien pour choisir votre nouveau mot de passe vous sera envoyé. Vérifiez aussi les courriers indésirables.'; },
+      error: (err) => {
+        this.recoveryError = err?.status === 503
+          ? 'L’envoi d’emails n’est pas encore configuré. Contactez l’administrateur.'
+          : err?.status === 429 ? 'Veuillez patienter avant de refaire une demande.'
+          : 'La demande n’a pas pu aboutir. Réessayez dans quelques instants.';
+      },
+    });
+  }
+  newPassword = '';
+  confirmPassword = '';
+  changingPassword = false;
+  passwordError: string | null = null;
+  passwordSuccess: string | null = null;
   busy = false;
   profileSaving = false;
   showAuthForm = false;
@@ -59,6 +105,16 @@ export class V2AccountComponent implements OnInit {
   ngOnInit(): void {
     this.resetProfileDraft();
     this.loadMetrics();
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      if (params.get('auth') === 'forgot' && !this.auth.user()) {
+        this.forgotPasswordOpen = true;
+        this.recoveryEmail = this.recoveryEmail || this.displayEmail;
+        this.password = '';
+      } else if (params.get('auth') === 'login' && !this.auth.user()) {
+        this.forgotPasswordOpen = false;
+        this.showLogin();
+      }
+    });
     if (this.route.snapshot.queryParamMap.get('auth') === 'login' && !this.auth.user()) {
       if (this.route.snapshot.queryParamMap.get('account') === 'admin') {
         this.email = 'contact@keltiawave.com';
@@ -197,6 +253,42 @@ export class V2AccountComponent implements OnInit {
     };
     reader.readAsDataURL(file);
     if (input) input.value = '';
+  }
+
+  changePassword(): void {
+    if (this.changingPassword || !this.auth.user()) return;
+    this.passwordError = null;
+    this.passwordSuccess = null;
+    if (this.newPassword !== this.confirmPassword) {
+      this.passwordError = this.i18n.translate('account.passwordMismatch');
+      return;
+    }
+    if (this.newPassword.length < 8) {
+      this.passwordError = this.i18n.translate('account.passwordTooShort');
+      return;
+    }
+    this.changingPassword = true;
+    defer(() => this.auth.changePassword({ new_password: this.newPassword })).pipe(
+      timeout(15000),
+      finalize(() => {
+        this.changingPassword = false;
+        this.changeDetector.markForCheck();
+      }),
+    ).subscribe({
+      next: () => {
+        this.newPassword = this.confirmPassword = '';
+        this.passwordSuccess = this.i18n.translate('account.passwordChanged');
+      },
+      error: (err) => {
+        this.passwordError = err?.error?.detail === 'Invalid current password'
+          ? this.i18n.translate('account.badCurrentPassword')
+          : err?.name === 'TimeoutError'
+            ? 'Le serveur ne répond pas. Reconnectez-vous pour vérifier si le changement a été enregistré avant de réessayer.'
+            : err?.status === 401
+              ? 'Votre session a expiré. Reconnectez-vous puis réessayez.'
+              : 'Impossible de changer le mot de passe. Réessayez.';
+      },
+    });
   }
 
   saveProfile(): void {
@@ -419,7 +511,7 @@ export class V2AccountComponent implements OnInit {
         this.password = '';
         this.busy = false;
         this.success = 'Connexion reussie.';
-        if (returnHome) void this.router.navigate([this.landingRoute()]);
+        if (returnHome && !this.auth.user()?.must_change_password) void this.router.navigate([this.landingRoute()]);
       },
       error: (err) => {
         const detail = err?.error?.detail;

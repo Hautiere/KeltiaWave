@@ -1,8 +1,8 @@
 <header class="topbar">
-  <a class="brand" [href]="portalUrl" aria-label="Portail KeltiaWave">
+  <div class="brand-lockup"><a class="portal-home" [href]="portalUrl" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><img src="/assets/portal-home.svg" alt=""></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><div class="brand">
     <img class="brand-mascot" src="/assets/keltiawave-mascot.webp" alt="">
     <span><b><i>KeltiaWave</i> Play</b><small>Test your listening skills</small></span>
-  </a>
+  </div></div>
   <nav aria-label="Navigation principale">
     <button type="button" [class.active]="mode === 'learn' && screen !== 'progression'" (click)="navigate('learn')">{{ t('lessons') }}</button>
     <button type="button" *ngIf="api.user()?.role === 'admin'" [class.active]="mode === 'admin'" (click)="navigate('admin')">{{ t('admin') }}</button>

@@ -17,10 +17,13 @@ from app.storage import LOCAL_AUDIO_DIR, _s3_client
 EXPORT_FIELDS = [
     "texte",
     "traduction_fr",
+    "traduction_en",
+    "traduction_cy",
     "audio_path",
     "origin",
     "status",
     "theme",
+    "subdomain",
     "niveau",
     "source",
     "langue",
@@ -83,10 +86,13 @@ def audio_row(audio: Audio, phrase: Phrase, audio_path: str) -> dict[str, Any]:
     return {
         "texte": phrase.texte,
         "traduction_fr": phrase.traduction_fr,
+        "traduction_en": phrase.traduction_en,
+        "traduction_cy": phrase.traduction_cy,
         "audio_path": audio_path,
         "origin": audio.origin,
         "status": status_value(audio.status),
         "theme": phrase.theme,
+        "subdomain": phrase.subdomain,
         "niveau": phrase.niveau,
         "source": phrase.source,
         "langue": phrase.langue,
@@ -114,6 +120,18 @@ def audio_row(audio: Audio, phrase: Phrase, audio_path: str) -> dict[str, Any]:
 
 
 def export_dataset(args: argparse.Namespace) -> None:
+    if args.format == "library":
+        from app.library_storage import TransferStorage
+        from app.library_transfer import export_library
+        if args.dataset or args.status or args.limit or args.skip_missing:
+            raise SystemExit("Library v1 exports the complete library; filters and skip-missing are not supported.")
+        try:
+            with SessionLocal() as db:
+                result = export_library(db, TransferStorage.configured(), args.output)
+        except Exception as exc:
+            raise SystemExit(f"ERROR library export: {exc}") from None
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return
     output_dir = Path(args.output).expanduser().resolve()
     audio_dir = output_dir / "audios"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -171,7 +189,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Exporte un jeu de donnees audios + metadonnees depuis le corpus."
     )
-    parser.add_argument("--output", required=True, help="Dossier de sortie.")
+    parser.add_argument("--output", required=True, help="Dossier CSV/JSON ou fichier ZIP pour --format library.")
     parser.add_argument("--dataset", help="Filtrer par source/dataset.")
     parser.add_argument(
         "--status",
@@ -179,7 +197,7 @@ def parse_args() -> argparse.Namespace:
         help="Filtrer par statut audio.",
     )
     parser.add_argument("--limit", type=int, help="Limiter le nombre d'audios exportes.")
-    parser.add_argument("--format", choices=["csv", "json"], default="csv", help="Format des metadonnees.")
+    parser.add_argument("--format", choices=["csv", "json", "library"], default="csv", help="Format des metadonnees.")
     parser.add_argument("--skip-missing", action="store_true", help="Ignorer les fichiers audio introuvables.")
     return parser.parse_args()
 
