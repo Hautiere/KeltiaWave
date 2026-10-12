@@ -198,6 +198,12 @@ traductions déjà présentes. L'option `--apply` écrit les nouvelles valeurs ;
 `seed_english_translations.py` et `seed_welsh_corrections.py` pour les phrases
 courantes corrigées manuellement. Les autres traductions du CSV sont des
 propositions automatiques qui demandent une relecture linguistique.
+Pour livrer ces lots sur une base dont les identifiants diffèrent de la base
+locale, `backend/scripts/import_phrase_translations_by_text.py` apparie le
+texte breton exact, applique les corrections EN/CY et simule par défaut. Il
+refuse les doublons et les phrases absentes ; `--allow-missing` permet de
+laisser de côté les absences identifiées, puis `--apply` valide l'import en une
+transaction. Les traductions déjà présentes sont préservées.
 
 Dans **Admin > Phrases proposées**, la recherche et le filtre par thème se
 combinent. Quand un thème est sélectionné, le tableau affiche le sous-thème à
