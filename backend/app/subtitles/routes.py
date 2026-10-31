@@ -5,9 +5,10 @@ from typing import Any, Literal
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.transcribe.routes import (
-    _transcribe_whisper_metrics,
     transcribe_vosk_bre_metrics_v2,
 )
+
+from app.transcribe.service import transcribe_whisper_metrics
 
 router = APIRouter(prefix="/api/subtitles", tags=["subtitles"])
 
@@ -23,7 +24,7 @@ async def transcribe_for_subtitles(
         raise HTTPException(status_code=400, detail="Vosk is not available for Welsh subtitles.")
 
     if engine == "whisper":
-        return await _transcribe_whisper_metrics(
+        return await transcribe_whisper_metrics(
             audio_file,
             lang=language,
             tmp_prefix=f"keltia_subtitles_{language}_",

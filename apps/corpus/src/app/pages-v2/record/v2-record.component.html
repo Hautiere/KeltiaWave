@@ -88,7 +88,7 @@
       </div>
       <section class="compare-card" *ngIf="blobUrl">
         <h2>{{ copy.compare }}</h2>
-        <div class="compare-row"><button class="compare-play own-voice" type="button" (click)="playRecorded()" [attr.aria-label]="copy.record">▶</button><audio #recordedPreview [src]="blobUrl" controls preload="metadata" (error)="onRecordedAudioError()"></audio><strong>{{ copy.record }}</strong></div>
+        <div class="compare-row"><button class="compare-play own-voice" type="button" (click)="playRecorded()" [attr.aria-label]="copy.record">▶</button><audio #recordedPreview [src]="blobUrl" controls preload="metadata" (error)="onRecordedAudioError()"></audio><strong>{{ auth.user()?.display_name?.trim() || 'Inconnu' }}</strong></div>
         <p class="panel-note" *ngIf="referenceAudio && !rhythmAssessment">{{ copy.referenceAfterScore }}</p>
         <p class="panel-note" *ngIf="!referenceAudio">{{ copy.noAudio }}</p>
         <div class="assessment-actions" *ngIf="referenceAudio"><button type="button" (click)="assessPronunciation()" [disabled]="assessing || submitting">{{ assessing ? copy.assessing : copy.assess }}</button><p>{{ copy.scoreHelp }}</p></div>
@@ -108,7 +108,7 @@
         <section class="reference-card" *ngIf="rhythmAssessment && referenceAudio as reference" aria-labelledby="reference-title">
           <div class="reference-heading">
             <span class="reference-icon" aria-hidden="true">♫</span>
-            <div><h3 id="reference-title">{{ copy.listen }}</h3><p>{{ copy.referenceHelp }}</p></div>
+            <div><h3 id="reference-title">{{ copy.listen }}</h3><p>{{ copy.referenceHelp }}</p><span class="voice-origin">{{ 'v2.voiceOrigin' | t }} : {{ audioAttribution(reference, currentPhrase.source) }}</span></div>
           </div>
           <audio [src]="'/api/audios/' + reference.id + '/file'" controls preload="none" [attr.aria-label]="copy.listen"></audio>
         </section>

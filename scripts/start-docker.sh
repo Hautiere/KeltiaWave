@@ -7,13 +7,15 @@ COMPOSE_FILE="$PROJECT_DIR/deploy/docker-compose.yml"
 BACKEND_HEALTH_URL="http://127.0.0.1:8100/"
 BACKEND_URL="http://127.0.0.1:8100/docs"
 PORTAL_URL="http://127.0.0.1:4100/"
+SIMPLE_PORTAL_URL="http://127.0.0.1:4100/portal-simple.html"
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/start-docker.sh [--no-build] [--no-browser]
+Usage: ./start-docker.sh [--no-build] [--no-browser]
+       ./scripts/start-docker.sh [--no-build] [--no-browser]
 
 Construit et lance toute la pile Docker locale : infrastructure et backend,
-puis les six applications frontend. Le script attend les services, exécute les
+puis les sept applications frontend. Le script attend les services, exécute les
 contrôles HTTP, puis ouvre le backend et le portail donnant accès aux apps.
 
 Options:
@@ -190,16 +192,16 @@ if $OPEN_BROWSER; then
   open_url "$BACKEND_URL"
 fi
 
-frontend_services=(portal corpus learning record transcribe subtitles)
+frontend_services=(portal corpus learning record transcribe subtitles live)
 
-echo "[4/5] Construction et démarrage des six applications frontend"
+echo "[4/5] Construction et démarrage des sept applications frontend"
 if $BUILD; then
   "${compose[@]}" build "${frontend_services[@]}"
 fi
 "${compose[@]}" up -d --no-deps "${frontend_services[@]}"
 
 echo "[5/5] Vérification des conteneurs et contrôles HTTP"
-expected_services=(backend portal corpus learning record transcribe subtitles postgres minio)
+expected_services=(backend portal corpus learning record transcribe subtitles live postgres minio)
 running_services="$("${compose[@]}" ps --services --status running)"
 containers_failed=0
 for service in "${expected_services[@]}"; do
@@ -220,6 +222,7 @@ fi
 failed=0
 wait_for_url "Backend" "$BACKEND_HEALTH_URL" || failed=1
 wait_for_url "Portal" "$PORTAL_URL" || failed=1
+wait_for_url "Portal simple" "$SIMPLE_PORTAL_URL" || failed=1
 wait_for_url "À propos" "http://127.0.0.1:4100/about.html" || failed=1
 wait_for_url "Feedback" "http://127.0.0.1:4100/feedback.html" || failed=1
 wait_for_url "Corpus" "http://127.0.0.1:4200/" || failed=1
@@ -227,14 +230,16 @@ wait_for_url "Learning" "http://127.0.0.1:4300/" || failed=1
 wait_for_url "Record" "http://127.0.0.1:4400/" || failed=1
 wait_for_url "Transcribe" "http://127.0.0.1:4500/" || failed=1
 wait_for_url "Subtitles" "http://127.0.0.1:4600/" || failed=1
+wait_for_url "Live" "http://127.0.0.1:4800/" || failed=1
 
 # Vérifie le contenu du vrai conteneur Portal, même si un ancien serveur local
 # occupe déjà le port 4100 du Mac.
 "${compose[@]}" exec -T portal wget -q --spider http://127.0.0.1/about.html || failed=1
 "${compose[@]}" exec -T portal wget -q --spider http://127.0.0.1/feedback.html || failed=1
+"${compose[@]}" exec -T portal wget -q --spider http://127.0.0.1/portal-simple.html || failed=1
 
 # Les contrôles HTTP seuls ne détectent pas une autre copie du dépôt aux mêmes ports.
-for service in backend portal corpus learning record transcribe subtitles; do
+for service in backend portal corpus learning record transcribe subtitles live; do
   container_id="$("${compose[@]}" ps -q "$service")"
   [[ -n "$container_id" ]] || { failed=1; continue; }
   actual_compose_file="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' "$container_id")"
@@ -264,6 +269,7 @@ cat <<EOF
 
 Backend : $BACKEND_URL
 Portail et accès aux six applications : $PORTAL_URL
+Portail simplifié : $SIMPLE_PORTAL_URL
 
 Pour arrêter la pile sans supprimer les données :
   docker compose --env-file '$ENV_FILE' -f '$COMPOSE_FILE' down

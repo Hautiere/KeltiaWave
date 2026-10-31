@@ -50,6 +50,7 @@
 
     <p class="message" [class.error]="error">{{ error || message }}</p>
     <section class="downloads" *ngIf="audioFile">
+      <button type="button" [disabled]="!draft.trim() && !improved.trim()" (click)="shareEmail()">{{ t('Send by email') }}</button>
       <button type="button" (click)="saveAudio()">{{ t('Download audio') }}</button>
       <button *ngIf="!improved" type="button" [disabled]="!draft.trim()" (click)="saveText()">{{ t('Download text') }}</button>
       <button *ngIf="improved" type="button" [disabled]="!draft.trim()" (click)="saveVoskText()">{{ t('Save Vosk') }}</button>

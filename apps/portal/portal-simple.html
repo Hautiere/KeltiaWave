@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="KeltiaWave : écouter, pratiquer et partager le breton avec des outils audio simples.">
+  <title>KeltiaWave — Écouter, pratiquer et partager</title>
+  <style>
+    :root { --navy: #09234b; --blue: #315985; --coral: #fa705c; --paper: #fff; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--navy); background: var(--paper); font-family: Arial, Helvetica, sans-serif; }
+    a { color: inherit; }
+    .page { min-height: 100vh; }
+    .topbar {
+      position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+      gap: 28px; min-height: 76px; padding: 10px max(4vw, calc((100vw - 1480px) / 2));
+      background: rgba(255,255,255,.93); box-shadow: 0 2px 14px rgba(9,35,75,.07);
+    }
+    .brand { display: inline-flex; flex: 0 0 auto; align-items: center; width: min(245px, 32vw); }
+    .brand img { width: 100%; max-height: 53px; object-fit: contain; }
+    .nav { display: flex; align-items: center; gap: clamp(18px, 3vw, 50px); margin-right: auto; margin-left: 4vw; }
+    .nav a { text-decoration: none; font-size: 17px; font-weight: 650; white-space: nowrap; }
+    .nav a:hover, .nav a:focus-visible { color: #1765b4; }
+    .language { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .language svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .language select { border: 0; padding: 8px 22px 8px 2px; color: var(--navy); background: transparent; font: inherit; font-size: 15px; cursor: pointer; }
+    .hero {
+      position: relative; isolation: isolate; min-height: 665px; overflow: hidden;
+      background: url("assets/portal-simple-coast.png") center 45% / cover no-repeat;
+    }
+    .hero::before { position: absolute; z-index: -1; inset: 0; content: ""; background: linear-gradient(90deg,rgba(255,255,255,.91) 0%,rgba(255,255,255,.74) 31%,rgba(255,255,255,.22) 68%,rgba(255,255,255,.08) 100%); }
+    .hero::after { position: absolute; right: -5%; bottom: -57px; left: -5%; height: 105px; border-radius: 50% 50% 0 0 / 75% 75% 0 0; background: #fff; content: ""; }
+    .hero-inner { width: min(100% - 8vw, 1480px); margin: 0 auto; padding: 60px 0 94px; }
+    h1 { max-width: 840px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(48px, 5.1vw, 82px); line-height: .98; letter-spacing: -.035em; }
+    .subtitle { margin: 27px 0 34px; color: #46617e; font-size: clamp(20px, 2vw, 27px); line-height: 1.3; }
+    .actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; max-width: 1390px; }
+    .action {
+      display: flex; flex-direction: column; justify-content: space-between; gap: 25px; min-height: 214px;
+      border: 1px solid rgba(230,237,245,.95); border-radius: 16px; padding: 24px;
+      background: rgba(255,255,255,.96); box-shadow: 0 14px 32px rgba(9,35,75,.13);
+      text-decoration: none; transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .action:hover { transform: translateY(-5px); box-shadow: 0 22px 38px rgba(9,35,75,.18); }
+    [hidden] { display: none !important; }
+    .action:focus-visible, .nav a:focus-visible, .more:focus-visible, .brand:focus-visible, .language select:focus-visible { outline: 3px solid #0a65df; outline-offset: 3px; }
+    .icon { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; background: #e8f3fa; }
+    .icon svg { width: 41px; height: 41px; fill: none; stroke: #0c315b; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .action:nth-child(2) .icon, .action:nth-child(3) .icon { background: #fff0ee; }
+    .action:nth-child(2) .icon svg, .action:nth-child(3) .icon svg { stroke: #e96355; }
+    .action:nth-child(5) .icon { background: #fff5e8; }
+    .action-title { display: flex; align-items: end; justify-content: space-between; gap: 6px; font-size: clamp(16px, 1.6vw, 23px); font-weight: 730; line-height: 1.16; }
+    .arrow { display: grid; flex: 0 0 31px; place-items: center; width: 31px; height: 31px; border-radius: 50%; color: #fff; background: var(--coral); font-size: 21px; font-weight: 400; line-height: 1; }
+    .more { display: inline-block; margin-top: 30px; border-bottom: 2px solid var(--coral); padding-bottom: 3px; text-decoration: none; font-size: 18px; }
+    .values { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; width: min(100% - 8vw, 1420px); margin: 0 auto; padding: 32px 0 45px; }
+    .value { display: grid; grid-template-columns: 66px 1fr; align-items: start; gap: 18px; padding: 0 26px; }
+    .value + .value { border-left: 1px solid #dbe4ee; }
+    .value-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; color: var(--navy); background: #e8f3fa; }
+    .value-icon svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .value h2 { margin: 0 0 5px; font-size: 21px; }
+    .value p { max-width: 300px; margin: 0; color: #536a88; font-size: 16px; line-height: 1.4; }
+    @media (max-width: 1100px) {
+      .hero { min-height: 0; }
+      .actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .action { min-height: 175px; }
+      .values { gap: 0; }
+      .value { grid-template-columns: 1fr; gap: 10px; padding: 0 16px; }
+    }
+    @media (max-width: 700px) {
+      .topbar { flex-wrap: wrap; min-height: 0; gap: 6px 12px; padding: 10px 18px; }
+      .brand { width: 185px; }
+      .nav { order: 3; justify-content: space-between; width: 100%; margin: 0; padding: 6px 0 2px; }
+      .nav a { font-size: 14px; }
+      .language { margin-left: auto; }
+      .hero { background-position: 65% center; }
+      .hero::before { background: linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.78) 56%,rgba(255,255,255,.28)); }
+      .hero-inner { width: calc(100% - 32px); padding: 42px 0 86px; }
+      h1 { font-size: clamp(40px, 11vw, 58px); }
+      .subtitle { margin: 20px 0 25px; font-size: 18px; }
+      .actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .action { min-height: 145px; gap: 15px; padding: 16px; }
+      .icon { width: 52px; height: 52px; }
+      .icon svg { width: 30px; height: 30px; }
+      .action-title { font-size: 16px; }
+      .arrow { flex-basis: 27px; width: 27px; height: 27px; font-size: 18px; }
+      .more { margin-top: 22px; font-size: 16px; }
+      .values { grid-template-columns: 1fr; gap: 24px; width: calc(100% - 32px); padding: 28px 0 42px; }
+      .value { grid-template-columns: 55px 1fr; padding: 0; }
+      .value + .value { border-left: 0; }
+      .value-icon { width: 50px; height: 50px; }
+      .value h2 { font-size: 18px; }
+      .value p { font-size: 14px; }
+    }
+    @media (max-width: 360px) { .actions { grid-template-columns: 1fr; } .action { min-height: 105px; flex-direction: row; align-items: center; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .action { transition: none; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="portal-simple.html" aria-label="KeltiaWave, accueil"><img src="assets/keltiawave-wave-logo.svg" alt="KeltiaWave"></a>
+      <nav class="nav" aria-label="Navigation principale">
+        <a href="#valeurs" data-i18n="discover">Découvrir</a>
+        <a href="https://learning.keltiawave.com/" data-app="play" data-i18n="learn">Apprendre</a>
+        <a href="#actions" data-i18n="tools">Outils</a>
+      </nav>
+      <label class="language">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-3 3-4 6-4 9s1 6 4 9m0-18c3 3 4 6 4 9s-1 6-4 9"/></svg>
+        <select id="language" aria-label="Langue de l'interface">
+          <option value="fr">FR</option><option value="en">EN</option><option value="br">BR</option><option value="cy">CY</option>
+        </select>
+      </label>
+    </header>
+    <main>
+      <section class="hero" id="actions" aria-labelledby="hero-title">
+        <div class="hero-inner">
+          <h1 id="hero-title" data-i18n="title">Le breton, à écouter,<br>pratiquer et partager</h1>
+          <p class="subtitle" data-i18n="subtitle">Choisissez ce que vous voulez faire aujourd’hui.</p>
+          <div class="actions">
+            <a class="action" href="https://transcribe.keltiawave.com/" data-app="transcribe"><span class="icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M9 3h21l9 9v33H9zM30 3v10h9M15 28v-5m6 10V18m6 18V16m6 15v-7"/></svg></span><span class="action-title"><span data-i18n="transcribe">Transcrire<br>un fichier</span><span class="arrow" aria-hidden="true">→</span></span></a>
+            <a class="action" href="https://record.keltiawave.com/" data-app="record"><span class="icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="18" y="4" width="12" height="27" rx="6"/><path d="M13 24a11 11 0 0 0 22 0M24 35v8m-8 0h16"/><circle cx="38" cy="37" r="4" fill="currentColor" stroke="none"/></svg></span><span class="action-title"><span data-i18n="record">M’enregistrer</span><span class="arrow" aria-hidden="true">→</span></span></a>
+            <a class="action" href="https://komz.keltiawave.com/lire" data-app="komz"><span class="icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="18" y="4" width="12" height="27" rx="6"/><path d="M13 24a11 11 0 0 0 22 0M24 35v8m-8 0h16"/></svg></span><span class="action-title"><span data-i18n="practise">Pratiquer ma<br>prononciation</span><span class="arrow" aria-hidden="true">→</span></span></a>
+            <a class="action" href="https://learning.keltiawave.com/" data-app="play"><span class="icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="29" rx="3"/><path d="m20 16 12 7-12 7zM17 42h14"/></svg></span><span class="action-title"><span data-i18n="video">Apprendre<br>avec une vidéo</span><span class="arrow" aria-hidden="true">→</span></span></a>
+            <a class="action" href="https://subtitles.keltiawave.com/" data-app="subtitles"><span class="icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="30" rx="4"/><path d="M11 20h11m4 0h10M11 28h17m4 0h5"/></svg></span><span class="action-title"><span data-i18n="subtitles">Créer des<br>sous-titres</span><span class="arrow" aria-hidden="true">→</span></span></a>
+          </div>
+          <a class="more" href="index.html" data-i18n="allTools">Explorer tous les outils&nbsp; →</a>
+        </div>
+      </section>
+      <section class="values" id="valeurs" aria-label="KeltiaWave">
+        <div class="value"><span class="value-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M21 34c-1-5 4-7 4-13a7 7 0 0 0-14 0m5 5c0-4 4-4 4-8a3 3 0 0 0-6 0m-5 9c1 6 4 9 9 9m11-22a11 11 0 0 0-19-7"/></svg></span><div><h2 data-i18n="listenTitle">Écouter</h2><p data-i18n="listenText">Des contenus authentiques pour vous immerger dans le breton.</p></div></div>
+        <div class="value"><span class="value-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="12" r="4"/><path d="M12 31c0-6 3-10 8-10s8 4 8 10M7 15a3 3 0 1 0 0-6m1 12c-4 0-6 4-6 8m31-14a3 3 0 1 1 0-6m-1 12c4 0 6 4 6 8"/></svg></span><div><h2 data-i18n="learnTitle">Apprendre</h2><p data-i18n="learnText">Des outils simples et efficaces à votre rythme.</p></div></div>
+        <div class="value"><span class="value-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M20 34 6 21a8 8 0 0 1 11-12l3 3 3-3a8 8 0 0 1 11 12z"/></svg></span><div><h2 data-i18n="shareTitle">Partager</h2><p data-i18n="shareText">Une langue vivante, une communauté ouverte à toutes et tous.</p></div></div>
+      </section>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const translations = {
+        fr: { discover:"Découvrir", learn:"Apprendre", tools:"Outils", title:"Le breton, à écouter,<br>pratiquer et partager", subtitle:"Choisissez ce que vous voulez faire aujourd’hui.", transcribe:"Transcrire<br>un fichier", record:"M’enregistrer", practise:"Pratiquer ma<br>prononciation", video:"Apprendre<br>avec une vidéo", subtitles:"Créer des<br>sous-titres", allTools:"Explorer tous les outils  →", listenTitle:"Écouter", listenText:"Des contenus authentiques pour vous immerger dans le breton.", learnTitle:"Apprendre", learnText:"Des outils simples et efficaces à votre rythme.", shareTitle:"Partager", shareText:"Une langue vivante, une communauté ouverte à toutes et tous." },
+        en: { discover:"Discover", learn:"Learn", tools:"Tools", title:"Breton, to listen to,<br>practise and share", subtitle:"Choose what you would like to do today.", transcribe:"Transcribe<br>a file", record:"Record my voice", practise:"Practise my<br>pronunciation", video:"Learn with<br>a video", subtitles:"Create<br>subtitles", allTools:"Explore all tools  →", listenTitle:"Listen", listenText:"Authentic content to immerse yourself in Breton.", learnTitle:"Learn", learnText:"Simple, effective tools at your own pace.", shareTitle:"Share", shareText:"A living language and a community open to everyone." },
+        br: { discover:"Dizoleiñ", learn:"Deskiñ", tools:"Ostilhoù", title:"Ar brezhoneg da selaou,<br>da bleustriñ ha da rannañ", subtitle:"Dibabit ar pezh a fell deoc’h ober hiziv.", transcribe:"Treuzskrivañ<br>ur restr", record:"Enrollañ ma mouezh", practise:"Pleustriñ war<br>ma distagadur", video:"Deskiñ gant<br>ur video", subtitles:"Krouiñ<br>istitloù", allTools:"Dizoleiñ an holl ostilhoù  →", listenTitle:"Selaou", listenText:"Danvez gwirion evit en em soubañ er brezhoneg.", learnTitle:"Deskiñ", learnText:"Ostilhoù aes hag efedus diouzh ho lusk.", shareTitle:"Rannañ", shareText:"Ur yezh vev hag ur gumuniezh digor d’an holl." },
+        cy: { discover:"Darganfod", learn:"Dysgu", tools:"Offer", title:"Y Gymraeg i’w chlywed,<br>ei hymarfer a’i rhannu", subtitle:"Dewiswch beth hoffech chi ei wneud heddiw.", transcribe:"Trawsgrifio<br>ffeil", record:"Recordio fy llais", practise:"Ymarfer fy<br>ynganiad", video:"Dysgu gyda<br>fideo", subtitles:"Creu<br>isdeitlau", allTools:"Archwilio’r holl offer  →", listenTitle:"Gwrando", listenText:"Cynnwys dilys i ymgolli yn yr iaith.", learnTitle:"Dysgu", learnText:"Offer syml ac effeithiol ar eich cyflymder eich hun.", shareTitle:"Rhannu", shareText:"Iaith fyw a chymuned sy’n agored i bawb." }
+      };
+      const languageSelect = document.querySelector("#language");
+      const appLinks = document.querySelectorAll("[data-app]");
+      const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+      const staging = location.hostname === "staging.keltiawave.com";
+      const destinations = {
+        transcribe: ["http://127.0.0.1:4500/", "https://transcribe.staging.keltiawave.com/", "https://transcribe.keltiawave.com/"],
+        record: ["http://127.0.0.1:4400/", "https://record.staging.keltiawave.com/", "https://record.keltiawave.com/"],
+        komz: ["http://127.0.0.1:4200/lire", "https://komz.staging.keltiawave.com/lire", "https://komz.keltiawave.com/lire"],
+        play: ["http://127.0.0.1:4300/", "https://play.staging.keltiawave.com/", "https://learning.keltiawave.com/"],
+        subtitles: ["http://127.0.0.1:4600/", "https://subtitles.staging.keltiawave.com/", "https://subtitles.keltiawave.com/"]
+      };
+      function setLanguage(language) {
+        const code = translations[language] ? language : "fr";
+        document.documentElement.lang = code;
+        languageSelect.value = code;
+        document.querySelectorAll("[data-i18n]").forEach(node => { node.innerHTML = translations[code][node.dataset.i18n]; });
+        appLinks.forEach(link => {
+          link.hidden = code === "cy" && !["transcribe", "subtitles"].includes(link.dataset.app);
+          const url = new URL(destinations[link.dataset.app][local ? 0 : staging ? 1 : 2]);
+          url.searchParams.set("lang", code);
+          link.href = url.toString();
+        });
+        try { localStorage.setItem("keltiawave-simple-language", code); } catch { /* Optional preference. */ }
+      }
+      languageSelect.addEventListener("change", () => setLanguage(languageSelect.value));
+      const query = new URLSearchParams(location.search).get("lang");
+      let saved;
+      try { saved = localStorage.getItem("keltiawave-simple-language"); } catch { /* Storage may be unavailable. */ }
+      setLanguage(query || saved || "fr");
+    })();
+  </script>
+</body>
+</html>

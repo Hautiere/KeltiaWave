@@ -26,6 +26,7 @@ DOMAINS=(
   transcribe.keltiawave.com
   record.keltiawave.com
   subtitles.keltiawave.com
+  live.keltiawave.com
   transcription.keltiawave.com
 )
 

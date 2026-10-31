@@ -22,6 +22,7 @@ export interface Phrase {
 }
 
 export interface AudioRead {
+  origin?: string;
   id: number;
   phrase_id: number;
   filename: string;
@@ -55,6 +56,8 @@ export interface AudioRead {
     created_at: string;
   }>;
 }
+
+export interface MyAudioRead extends AudioRead { phrase_text: string; }
 
 export interface AudioUploadMetadata {
   phraseSource?: 'suggested' | 'custom';
@@ -122,6 +125,10 @@ export class ApiService {
     return this.http.post<AudioRead>(`${this.baseUrl}/audios/`, form, {
       headers: this.auth.authHeaders,
     });
+  }
+
+  myAudios() {
+    return this.http.get<MyAudioRead[]>(`${this.baseUrl}/audios/mine`, { headers: this.auth.authHeaders });
   }
 
   listAudios(status: 'pending' | 'approved' | 'rejected') {

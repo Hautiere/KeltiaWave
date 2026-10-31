@@ -1,0 +1,85 @@
+<header class="site-header">
+  <div class="brand-lockup"><a class="portal-home" [href]="portalHref" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><img src="assets/portal-home.svg" alt=""></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><div class="brand"><img src="assets/keltiawave-mascot.webp" alt="Mascotte KeltiaWave"><span><strong><b>KeltiaWave</b> Live</strong><small>Le texte de ce que vous écoutez, en direct.</small></span></div></div>
+  <a class="portal-link" [href]="portalHref"><span aria-hidden="true">▦</span> Autres outils</a>
+</header>
+<main>
+  <section class="intro">
+    <div><span class="eyebrow">ÉCOUTER & COMPRENDRE</span><h1>Live<span class="title-dot">.</span></h1><p class="subtitle">Le texte de ce que vous écoutez, en direct.</p></div>
+    <span class="beta">Première version</span>
+  </section>
+  <div class="badges"><span>◎ &nbsp; Breton</span><span>✦ &nbsp; Vosk</span><span>↗ &nbsp; Transcription sur serveur</span></div>
+
+  @if (!audio.supported) {
+    <section class="alert" role="status"><strong>Le partage audio n’est pas disponible dans ce navigateur.</strong><p>Essayez Live sur ordinateur, en HTTPS ou sur localhost, avec un navigateur qui permet de partager le son d’un onglet. L’audio des autres applications du téléphone n’est pas accessible depuis cette version web.</p></section>
+  }
+  @if (available === false && !error) {
+    <section class="alert" role="status">Le modèle Vosk breton n’est pas disponible sur le serveur. <button class="text-button" (click)="checkServer()">Réessayer</button></section>
+  }
+  @if (error) {
+    <section class="alert error" role="alert">{{ error }} @if (!busy && available === false) { <button class="text-button" (click)="checkServer()">Réessayer</button> }</section>
+  }
+
+  <div class="workspace">
+    <section class="listening-panel" aria-label="État de l’écoute">
+      <div class="session-head"><span class="status" [class.active]="state === 'listening'"><i></i>{{ status }}</span><time>{{ elapsed }}</time></div>
+      <div class="waveform" aria-hidden="true">@for (bar of bars; track bar) { <span [style.height.px]="state === 'listening' ? 5 + level * (20 + (bar * 17 % 65)) * 100 : 5 + (bar * 13 % 16)" [class.moving]="state === 'listening'"></span> }</div>
+      @if (state === 'idle') {
+        <button class="primary start" (click)="start()" [disabled]="busy || !audio.supported || !available"><span aria-hidden="true">◉</span> {{ text ? 'Nouvelle écoute' : 'Démarrer Live' }}</button>
+        @if (text) { <p class="small-note">Une nouvelle écoute remplacera le texte affiché. Pensez à l’enregistrer.</p> }
+      } @else {
+        <div class="controls"><button class="primary" (click)="pause()" [disabled]="state !== 'listening' && state !== 'paused'">{{ state === 'paused' ? '▶ Reprendre' : 'Ⅱ Pause' }}</button><button class="stop" (click)="stop()" [disabled]="state === 'stopping'">■ Arrêter</button></div>
+      }
+      <div class="source-note"><span aria-hidden="true">▣</span><div><strong>Audio partagé de l’ordinateur</strong><span>Aucun microphone utilisé</span></div></div>
+      <p class="privacy">L’audio est transcrit sur le serveur et gardé dans cette page pour Whisper. Il est effacé au rechargement ou à la prochaine écoute.</p>
+    </section>
+
+    <section class="transcript-panel" aria-label="Transcription">
+      <div class="transcript-head"><h2><span aria-hidden="true">▤</span> {{ version === 'whisper' ? 'Transcription Whisper' : 'Transcription en direct' }}</h2><span class="language-tag">BR</span></div>
+      @if (whisperText !== null) {
+        <div class="versions" role="group" aria-label="Version de la transcription">
+          <button [attr.aria-pressed]="version === 'vosk'" (click)="version = 'vosk'">Vosk · direct</button>
+          <button [attr.aria-pressed]="version === 'whisper'" (click)="version = 'whisper'">Whisper · seconde version</button>
+        </div>
+      }
+      <div #transcript class="transcript" tabindex="0" aria-label="Texte transcrit, défilement manuel possible" (scroll)="onScroll()">
+        @if (!text) {
+          <div class="empty"><span class="empty-icon" aria-hidden="true">≋</span><h3>Écoutez. Suivez. Comprenez.</h3><p>Les paroles du podcast apparaîtront ici,<br>au rythme de l’écoute.</p></div>
+        }
+        @if (version === 'whisper') { <p>{{ whisperText }}</p> }
+        @else {
+          @for (segment of segments; track $index) { <p>{{ segment }}</p> }
+          @if (partial) { <p class="partial">{{ partial }}</p> }
+        }
+      </div>
+      @if (!follow && busy) { <button class="follow" (click)="returnToLive()">Revenir au direct ↓</button> }
+      <div class="exports"><button (click)="improve()" [disabled]="busy || !whisperAvailable || !audio.whisperAudio">{{ improving ? 'Traitement Whisper…' : '✦ Whisper' }}</button><button (click)="save()" [disabled]="!text">↓ &nbsp; Enregistrer</button><button (click)="share()" [disabled]="!text">↗ &nbsp; Partager</button></div>
+      @if (improving) {
+        <section class="whisper-progress" aria-label="Progression Whisper">
+          <div class="progress-row" [class.indeterminate]="whisperUpload === null">
+            <span>Chargement du fichier</span><strong>{{ whisperUpload === null ? 'Envoi en cours…' : whisperUpload + ' %' }}</strong>
+            <div class="progress-track" role="progressbar" aria-label="Chargement du fichier" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="whisperUpload"><i [style.width.%]="whisperUpload"></i></div>
+          </div>
+          <div class="progress-row" [class.indeterminate]="whisperProcessing && whisperIndeterminate">
+            <span>Transcription · Whisper</span>
+            <strong>@if (!whisperProcessing) { En attente } @else if (whisperIndeterminate) { Temps écoulé {{ whisperElapsedTime }} } @else { {{ whisperProgress }} % · ~{{ whisperRemainingTime }} }</strong>
+            <div class="progress-track" role="progressbar" aria-label="Transcription Whisper estimée" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="whisperProcessing && whisperIndeterminate ? null : whisperProgress"><i [style.width.%]="whisperProcessing && whisperIndeterminate ? null : whisperProgress"></i></div>
+          </div>
+          <p role="status">Progression estimée — la fin est confirmée à la réception du résultat. Vous pouvez continuer à lire et exporter Vosk.</p>
+        </section>
+      }
+      @if (state === 'idle' && (audio.whisperAudio || audio.whisperAudioMessage)) {
+        <section class="whisper-panel" aria-label="Seconde transcription">
+          <h2>Améliorer la lisibilité avec Whisper</h2>
+          <p>En option, Whisper propose une version ponctuée et plus cohérente des phrases. Le texte Vosk reste disponible.</p>
+          @if (!whisperAvailable) { <p>Le modèle Whisper breton n’est pas disponible sur le serveur.</p> }
+          @if (audio.whisperAudioMessage) { <p>{{ audio.whisperAudioMessage }}</p> }
+          @if (whisperError) { <p role="alert" class="whisper-error">{{ whisperError }}</p> }
+        </section>
+      }
+      <p class="export-status" role="status">{{ notice }}</p>
+    </section>
+  </div>
+
+  <section class="how-to"><h2>Votre podcast, plus facile à suivre.</h2><ol><li><span>1</span><div><strong>Ouvrez votre podcast</strong><p>Dans un onglet ou une application de votre ordinateur.</p></div></li><li><span>2</span><div><strong>Démarrez Live</strong><p>Choisissez la source proposée et activez le partage audio.</p></div></li><li><span>3</span><div><strong>Suivez le texte ici</strong><p>Lancez la lecture et revenez sur Live.</p></div></li></ol><p class="browser-note">Le son système est proposé si le navigateur le permet. Sinon, partagez l’onglet du podcast avec son audio. Le choix de la source et l’autorisation sont obligatoires à chaque démarrage. Le navigateur demande aussi un partage visuel : Live n’utilise et ne transmet que l’audio. Une connexion Internet est nécessaire. Les transcriptions automatiques peuvent contenir des erreurs.</p></section>
+</main>
+<footer><a [href]="portalHref">KeltiaWave</a><span>Des outils pour les langues vivantes.</span></footer>

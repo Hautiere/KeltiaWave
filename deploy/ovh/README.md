@@ -131,7 +131,7 @@ La zone DNS OVH peut utiliser un wildcard A vers l'IPv4 du VPS :
 *.keltiawave.com -> 51.178.38.152
 ```
 
-Il couvre les domaines Learning, Komz, Voices, Transcribe, Record et Subtitles.
+Il couvre les domaines Learning, Komz, Voices, Transcribe, Record, Subtitles et Live.
 Le wildcard distinct `*.staging.keltiawave.com` reste plus spécifique et ne
 conflite pas avec la production. Les domaines racines sont déclarés séparément.
 
@@ -280,3 +280,20 @@ authentication. A debug device remains accessible to its authorized adb operator
 ### Lien de récupération du compte
 
 Configurer `PASSWORD_RESET_URL=https://komz.staging.keltiawave.com/reinitialiser-mot-de-passe` dans `shared/.env.staging`. Le backend envoie désormais un lien à usage unique et la page demande de choisir le nouveau mot de passe. Le déploiement ajoute `auth_version` aux comptes pour invalider les sessions après réinitialisation. Voir [le parcours de récupération](../../docs/password-recovery.md).
+
+
+## Live et suivi des contributions (31 octobre 2026)
+
+Le service Live utilise `LIVE_CANDIDATE_PORT` (14800 par défaut). Vérifier que ce
+port n’est pas occupé par un autre slot et que le staging conserve ses volumes.
+Le domaine `live.staging.keltiawave.com` doit pointer sur le VPS et passer par la
+même authentification staging que les autres applications. Le script de livraison
+ne recharge pas Caddy : si la route Live manque dans le fichier actif, ajouter
+uniquement cette route staging après sauvegarde et validation du fichier actif.
+Ne pas remplacer la configuration de production par le fichier du dépôt.
+
+Contrôles après livraison : `/api/live/capabilities`, connexion WebSocket via
+l’origine frontend, pages Portal/Komz/Listen/Record, et refus 401 de
+`/api/audios/mine` sans session. Vérifier les comptes et les volumes avant/après.
+La réception d’un audio approuvé doit le conserver dans le compte personnel et
+l’inclure dans le corpus approuvé.

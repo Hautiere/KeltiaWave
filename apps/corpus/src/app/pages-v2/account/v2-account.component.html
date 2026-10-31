@@ -123,6 +123,22 @@
     <div class="message error" *ngIf="error && !forgotPasswordOpen">{{ error }}</div>
     <div class="message success" *ngIf="success && !forgotPasswordOpen">{{ success }}</div>
 
+    <section class="profile-section recordings-section" *ngIf="auth.user() && !forgotPasswordOpen" aria-labelledby="recordings-heading">
+      <header class="section-head compact"><div><h2 id="recordings-heading">Mes enregistrements</h2><p>Retrouvez vos audios envoyés et suivez leur validation. Les audios approuvés rejoignent le corpus validé de Listen et Komz.</p></div><button class="btn ghost" type="button" (click)="loadMyRecordings()" [disabled]="recordingsLoading">Actualiser</button></header>
+      <label class="recordings-filter">Statut <select [(ngModel)]="recordingStatusFilter"><option value="">Tous</option><option value="pending">En attente</option><option value="approved">Approuvés</option><option value="rejected">À revoir</option></select></label>
+      <p *ngIf="recordingsLoading" role="status">Chargement de vos enregistrements…</p>
+      <p *ngIf="recordingsError" role="alert">{{ recordingsError }}</p>
+      <p *ngIf="!recordingsLoading && !recordingsError && !myRecordings.length">Vous n’avez pas encore envoyé d’audio. <a routerLink="/lire">Enregistrer dans Komz →</a></p>
+      <p *ngIf="!recordingsLoading && myRecordings.length && !visibleRecordings.length">Aucun enregistrement pour ce statut.</p>
+      <ul class="my-recordings" *ngIf="!recordingsLoading && !recordingsError">
+        <li *ngFor="let audio of visibleRecordings">
+          <div class="recording-description"><strong>{{ audio.phrase_text }}</strong><small>Envoyé le {{ audio.created_at | date:'dd/MM/yyyy à HH:mm' }}</small><span class="recording-status" [class.approved]="audio.status === 'approved'" [class.rejected]="audio.status === 'rejected'">{{ recordingStatus(audio) }}</span><small *ngIf="audio.validated_at">Décision du {{ audio.validated_at | date:'dd/MM/yyyy' }}</small><p *ngIf="audio.validation_comment">{{ audio.validation_comment }}</p></div>
+          <audio [src]="'/api/audios/' + audio.id + '/file'" controls preload="none" [attr.aria-label]="'Mon enregistrement : ' + audio.phrase_text"></audio>
+          <a *ngIf="audio.status === 'approved'" routerLink="/home-bibliotheque">Écouter dans Listen →</a>
+        </li>
+      </ul>
+    </section>
+
     <section class="profile-section" *ngIf="auth.user() && !forgotPasswordOpen" aria-labelledby="password-heading">
       <header class="section-head compact">
         <div>

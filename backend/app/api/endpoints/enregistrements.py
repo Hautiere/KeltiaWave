@@ -6,7 +6,8 @@ from sqlalchemy.sql import func
 from ...db import get_db
 from ...auth import get_current_user, get_optional_user, validation_weight_for
 from ...models.audio import Audio, AudioStatus, AudioValidation
-from ...schemas.audio import AudioRead
+from ...schemas.audio import AudioRead, MyAudioRead
+from ...models.phrase import Phrase
 from ...storage import audio_response, save_audio_upload
 
 router = APIRouter()
@@ -43,7 +44,7 @@ async def upload_audio(
         speaker_city=speaker_city,
         speaker_accent=speaker_accent,
         speaker_level=speaker_level,
-        contributor_name=(current_user.display_name if current_user else None),
+        contributor_name=((current_user.display_name or "").strip() if current_user else "") or "Inconnu",
         contributor_email=(current_user.email if current_user else None),
         contributor_school=(current_user.organization if current_user else None),
         contributor_school_level=(current_user.school_level if current_user else None),
@@ -61,6 +62,21 @@ def list_audios(
     db: Session = Depends(get_db),
 ):
     return db.query(Audio).filter(Audio.status == status).all()
+
+
+@router.get("/mine", response_model=list[MyAudioRead])
+def my_audios(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    pairs = (
+        db.query(Audio, Phrase.texte)
+        .outerjoin(Phrase, Phrase.id == Audio.phrase_id)
+        .filter(Audio.origin == "user", func.lower(Audio.contributor_email) == current_user.email.strip().lower())
+        .order_by(Audio.created_at.desc(), Audio.id.desc())
+        .all()
+    )
+    return [
+        {**AudioRead.model_validate(audio).model_dump(), "phrase_text": text or "Phrase indisponible"}
+        for audio, text in pairs
+    ]
 
 
 @router.get("/{audio_id}/file")

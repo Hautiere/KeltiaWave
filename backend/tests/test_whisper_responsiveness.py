@@ -1,7 +1,7 @@
 import asyncio
 import threading
 import pytest
-from app.transcribe import routes
+from app.transcribe import service as routes
 
 @pytest.mark.parametrize('lang', ['br', 'cy'])
 def test_whisper_keeps_event_loop_responsive(monkeypatch, lang):
@@ -20,7 +20,7 @@ def test_whisper_keeps_event_loop_responsive(monkeypatch, lang):
     monkeypatch.setattr(routes, 'record_observation', lambda *args: None)
     async def scenario():
         monkeypatch.setattr(routes, '_whisper_slot', asyncio.Semaphore(1))
-        task = asyncio.create_task(routes._transcribe_whisper_metrics(None, lang=lang, tmp_prefix='test_whisper_'))
+        task = asyncio.create_task(routes.transcribe_whisper_metrics(None, lang=lang, tmp_prefix='test_whisper_'))
         try:
             for _ in range(100):
                 if started.is_set(): break

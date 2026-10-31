@@ -6,7 +6,7 @@ MOBILE_ORIGINS = ("http://localhost", "https://localhost", "capacitor://localhos
 DEFAULT_ORIGINS = [
     f"http://{host}:{port}"
     for host in ("localhost", "127.0.0.1")
-    for port in (4200, 4300, 4400, 4500, 4600)
+    for port in (4200, 4300, 4400, 4500, 4600, 4800)
 ] + list(MOBILE_ORIGINS)
 
 

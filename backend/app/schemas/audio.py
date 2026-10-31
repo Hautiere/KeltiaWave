@@ -46,3 +46,7 @@ class AudioRead(BaseModel):
 
     class Config:
         from_attributes = True  # permet de créer un schéma à partir d'un objet SQLAlchemy
+
+
+class MyAudioRead(AudioRead):
+    phrase_text: str

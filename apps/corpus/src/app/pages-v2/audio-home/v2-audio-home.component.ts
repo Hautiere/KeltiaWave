@@ -1,3 +1,5 @@
+import { selectReferenceAudios } from '../../core/reference-audios';
+import { audioAttribution } from '../../core/audio-attribution';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -38,6 +40,7 @@ interface LibraryFilterOption {
   styleUrls: ['./v2-audio-home.component.scss'],
 })
 export class V2AudioHomeComponent implements OnInit {
+  readonly audioAttribution = audioAttribution;
   @ViewChild('libraryPlayer') private libraryPlayer?: ElementRef<HTMLAudioElement>;
 
   phrases: Phrase[] = [];
@@ -219,14 +222,7 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   private approvedRows(): AudioRow[] {
-    const byPhrase = new Map<number, AudioRow>();
-    for (const row of this.toRows(this.approvedAudios)) {
-      if (!row.phrase || byPhrase.has(row.phrase.id)) continue;
-      if (this.teacherDecision(row.audio) === 'approved' || this.isOwnerApprovedBatch(row.audio)) {
-        byPhrase.set(row.phrase.id, row);
-      }
-    }
-    return [...byPhrase.values()];
+    return this.toRows(selectReferenceAudios(this.approvedAudios)).filter(row => !!row.phrase);
   }
 
   isOwnerApprovedBatch(audio: AudioRead): boolean {
@@ -431,10 +427,11 @@ export class V2AudioHomeComponent implements OnInit {
   }
 
   sourceUrl(row: AudioRow): string | null {
-    return row.phrase?.source_url || null;
+    return row.audio.origin === 'dataset' ? row.phrase?.source_url || null : null;
   }
 
   sourceLabel(row: AudioRow): string {
+    if (row.audio.origin !== 'dataset') return audioAttribution(row.audio);
     const sourceUrl = this.sourceUrl(row);
     if (!sourceUrl) return row.phrase?.source === 'common-voice' ? 'Common Voice' : '—';
     try {

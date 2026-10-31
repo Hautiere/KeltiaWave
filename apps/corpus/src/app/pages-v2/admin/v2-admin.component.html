@@ -127,7 +127,7 @@
               <div class="record-row header">
                 <button class="sortable-head" type="button" (click)="sortRecordingsBy('phrase')">{{ 'home.phrase' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'phrase'">{{ recordingSortIndicator('phrase') }}</span></button>
                 <button class="sortable-head" type="button" (click)="sortRecordingsBy('subdomain')">Sous-thème <span class="sort-arrows" [class.active]="recordingSort === 'subdomain'">{{ recordingSortIndicator('subdomain') }}</span></button>
-                <button class="sortable-head" type="button" (click)="sortRecordingsBy('dataset')">{{ 'adminData.dataset' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'dataset'">{{ recordingSortIndicator('dataset') }}</span></button>
+                <button class="sortable-head" type="button" (click)="sortRecordingsBy('dataset')">Source audio <span class="sort-arrows" [class.active]="recordingSort === 'dataset'">{{ recordingSortIndicator('dataset') }}</span></button>
                 <button class="sortable-head" type="button" (click)="sortRecordingsBy('status')">{{ 'adminData.status' | t }} <span class="sort-arrows" [class.active]="recordingSort === 'status'">{{ recordingSortIndicator('status') }}</span></button>
                 <span>{{ 'adminData.audio' | t }}</span>
                 <span>{{ 'adminData.actions' | t }}</span>
@@ -138,7 +138,7 @@
                   <small>{{ phraseThemeLabel(segment.domain) }} · #{{ segment.id }}</small>
                 </span>
                 <span class="record-subdomain" [attr.title]="segmentSubdomainLabel(segment)">{{ segmentSubdomainLabel(segment) }}</span>
-                <span class="dataset-cell">{{ segment.dataset }}</span>
+                <span class="dataset-cell">{{ audioAttribution(segment, segment.dataset) }}</span>
                 <span class="status" [class]="statusClass(segment.status)">{{ statusLabel(segment.status) }}</span>
                 <span class="admin-audio-preview">
                   <button class="play-btn" type="button" [class.playing]="isSegmentPlaying(segment)" (click)="toggleSegmentAudio(segment)" [attr.aria-label]="isSegmentPlaying(segment) ? 'Pause' : 'Lire'">
@@ -550,7 +550,7 @@
         <p id="delete-dialog-description">Cette action supprimera définitivement l’audio du corpus.</p>
         <div class="confirm-target">
           <strong>{{ segment.texte }}</strong>
-          <span>#{{ segment.id }} · {{ segment.dataset }}</span>
+          <span>#{{ segment.id }} · {{ audioAttribution(segment, segment.dataset) }}</span>
         </div>
       </div>
       <div class="confirm-actions">

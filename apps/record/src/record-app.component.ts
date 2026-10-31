@@ -52,6 +52,7 @@ export class RecordAppComponent implements OnInit, OnDestroy {
 
   t(source: string): string {
     const special: Record<string, Record<InterfaceLanguage, string>> = {
+      'Send by email': { en:'Send by email', fr:'Envoyer par email', br:'Kas dre bostel', cy:'Anfon drwy e-bost' },
       'Generate text with Whisper': { en:'Generate text with Whisper', fr:'Générer le texte avec Whisper', br:'Krouiñ an destenn gant Whisper', cy:'Creu testun gyda Whisper' },
       'Improve with Whisper': { en:'Improve with Whisper', fr:'Améliorer avec Whisper', br:'Gwellaat gant Whisper', cy:'Gwella gyda Whisper' },
       'Estimated progress — completion is confirmed only when the result is received.': { en:'Estimated progress — completion is confirmed only when the result is received.', fr:'Progression estimée — la fin est confirmée uniquement à la réception du résultat.', br:'Araokadenn priziet — kadarnaet eo an dibenn pa vez resevet an disoc’h hepken.', cy:'Cynnydd amcangyfrifedig — cadarnheir ei fod wedi gorffen pan dderbynnir y canlyniad.' },
@@ -114,6 +115,11 @@ export class RecordAppComponent implements OnInit, OnDestroy {
   }
 
   reset(): void { this.cleanup(); this.whisperProgress = 0; this.draft = ''; this.improved = ''; this.audioFile = null; if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = ''; this.elapsed = '00:00'; this.message = 'Prêt pour un nouvel enregistrement.'; }
+  shareEmail(): void {
+    const body = [this.draft.trim() ? `Vosk\n${this.draft.trim()}` : '', this.improved.trim() ? `Whisper\n${this.improved.trim()}` : ''].filter(Boolean).join('\n\n');
+    if (!body) return;
+    window.location.href = `mailto:?subject=${encodeURIComponent('Transcription KeltiaWave Record')}&body=${encodeURIComponent(body)}`;
+  }
   saveAudio(): void { if (this.audioFile) this.download(this.audioFile, this.audioFile.name); }
   saveText(): void { const text = this.transcript.trim(); if (text) this.download(new Blob([`${text}\n`], { type: 'text/plain;charset=utf-8' }), 'keltiawave-record.txt'); }
   saveVoskText(): void { this.saveVersion(this.draft, 'keltiawave-record-vosk.txt'); }

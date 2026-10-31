@@ -59,6 +59,12 @@ subtitles.keltiawave.com {
 	reverse_proxy keltiawave-production-subtitles:80
 }
 
+live.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-live:80
+}
+
 # Keep historical portal links and bookmarks working during the transition.
 transcription.keltiawave.com {
 	import keltiawave_security
@@ -161,4 +167,10 @@ subtitles.staging.keltiawave.com {
 	import keltiawave_staging_security
 	import keltiawave_staging_auth
 	reverse_proxy keltiawave-staging-subtitles:80
+}
+
+live.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-live:80
 }

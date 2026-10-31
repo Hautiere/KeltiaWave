@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [corpus, learning, record, transcribe, subtitles]
+        app: [corpus, learning, record, transcribe, subtitles, live]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -64,6 +64,16 @@ jobs:
       - name: Build
         working-directory: apps/${{ matrix.app }}
         run: npm run build
+
+      - name: Test corpus attribution and reference selection
+        if: matrix.app == 'corpus'
+        working-directory: apps/corpus
+        run: node --test tests/*.test.mjs
+
+      - name: Test Live audio capture lifecycle
+        if: matrix.app == 'live'
+        working-directory: apps/live
+        run: npm test
 
   portal-build:
     name: Validate portal
@@ -115,6 +125,9 @@ jobs:
         run: docker compose --env-file /tmp/keltiawave-ci.env -f deploy/ovh/docker-compose.candidate.yml config --quiet
 
       - name: Verify deployment remains a dry run by default
+        env:
+          SSH_TARGET: ubuntu@ci-dry-run.invalid
+          DEPLOY_REF: HEAD
         run: |
           output="$(./scripts/deploy-ovh.sh)"
           grep -q "DRY RUN" <<<"$output"

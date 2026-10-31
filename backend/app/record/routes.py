@@ -8,7 +8,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket,
 from app.record.email import router as email_router
 from app.record.text_cleanup import clean_record_transcript, preserve_draft_prefix
 from app.core import vosk_available, whisper_available
-from app.transcribe.routes import _transcribe_whisper_metrics
+from app.transcribe.service import transcribe_whisper_metrics
 from app.vosk_utils import create_streaming_recognizer, stream_accept_audio, stream_finalize
 
 router = APIRouter(prefix="/api/record", tags=["record"])
@@ -27,7 +27,7 @@ def record_capabilities() -> dict[str, Any]:
 
 
 async def _whisper_recording(audio_file: UploadFile, language: Literal["br", "cy"], draft_text: str) -> dict[str, Any]:
-    payload = await _transcribe_whisper_metrics(
+    payload = await transcribe_whisper_metrics(
         audio_file,
         lang=language,
         tmp_prefix=f"keltia_record_{language}_",

@@ -1,3 +1,5 @@
+import { selectReferenceAudios } from '../../core/reference-audios';
+import { audioAttribution } from '../../core/audio-attribution';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +23,7 @@ import { canonicalSubdomain, subdomainsFor, subdomainLabel } from '../../core/su
   styleUrls: ['./v2-record.component.scss'],
 })
 export class V2RecordComponent implements OnInit, OnDestroy {
+  readonly audioAttribution = audioAttribution;
   @ViewChild('recordedPreview') private recordedPreview?: ElementRef<HTMLAudioElement>;
   phrases: Phrase[] = [];
   currentPhrase: Phrase | null = null;
@@ -523,7 +526,7 @@ export class V2RecordComponent implements OnInit, OnDestroy {
       }
 
       this.phrases = this.uniquePhrases(phrases);
-      this.approvedAudios = audios.filter((audio) => audio.status === 'approved');
+      this.approvedAudios = selectReferenceAudios(audios);
       this.completedPhraseIds.clear();
       audios
         .filter((audio) => audio.contributor_email?.trim().toLowerCase() === userEmail)

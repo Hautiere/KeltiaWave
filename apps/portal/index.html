@@ -1233,6 +1233,8 @@
     .tool-card[data-tool="play"] { background: linear-gradient(135deg, #f2f7ff, #e3eeff) !important; }
     .tool-card[data-tool="komz"] { background: linear-gradient(135deg, #f1fff8, #def9eb) !important; }
     .tool-card[data-tool="library"] { background: linear-gradient(135deg, #fffaf0, #fff0d6) !important; }
+    .tool-card[data-tool="live"] { background: linear-gradient(135deg, #fff1f5, #fce0e9) !important; }
+    .tool-card[data-tool="live"] .tool-icon { color: #b43867; }
     .tool-copy { grid-column: 1; grid-row: 1; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 20px; padding: 24px 28px; }
     .tool-card h2 { margin: 0 0 10px; font-size: clamp(23px, 2.2vw, 30px); }
     .tool-card p { max-width: 240px; min-height: 45px; margin: 0 0 17px; font-size: 16px; line-height: 1.38; }
@@ -1436,6 +1438,13 @@
           <img class="tool-photo studio" src="assets/service-photo-studio.png" alt="Subtitle editing interface">
         </article>
 
+        <article class="tool-card" data-tool="live">
+          <div class="tool-copy">
+            <span class="tool-icon blue" aria-hidden="true"><svg viewBox="0 0 96 96"><path d="M12 40v16m12-28v40m12-49v58m12-42v26m12-37v48m12-30v12m12-18v24"/></svg></span>
+            <div><h2>Live</h2><p data-i18n="toolLiveText">Follow Breton audio in real time</p><a class="blue-link" data-language-link href="https://live.keltiawave.com/" data-i18n="openLive">Open Live →</a></div>
+          </div>
+        </article>
+
       </section>
 
       <section class="language-panel" id="about" aria-label="Languages">
@@ -1484,13 +1493,14 @@
       const stagingPortal = window.location.hostname === "staging.keltiawave.com";
       links.forEach((link) => { link.dataset.productionHref = link.href; });
       const availability = {
-        br: new Set(["play", "komz", "library", "transcribe", "record", "subtitles"]),
+        br: new Set(["play", "komz", "library", "transcribe", "record", "subtitles", "live"]),
         cy: new Set(["transcribe", "subtitles"]),
         kw: new Set()
       };
       let selectedAppLanguage = "br";
       const translations = {
         en: {
+          toolLiveText: "Follow Breton audio in real time", openLive: "Open Live →",
           brandSubtitle: "Tools for Brittonic languages",
           navHome: "Home",
           navTranscribe: "Transcribe",
@@ -1537,6 +1547,7 @@
           badgeSoon: "Coming soon"
         },
         cy: {
+          toolLiveText: "Dilyn sain Llydaweg yn fyw", openLive: "Agor Live →",
           brandSubtitle: "Offer ar gyfer ieithoedd Brythonaidd",
           navHome: "Hafan",
           navTranscribe: "Trawsgrifio",
@@ -1583,6 +1594,7 @@
           badgeSoon: "Yn dod yn fuan"
         },
         br: {
+          toolLiveText: "Heuliañ un enrolladenn vrezhonek war-eeun", openLive: "Digeriñ Live →",
           brandSubtitle: "Ostilhoù evit ar yezhoù predenek",
           navHome: "Degemer",
           navTranscribe: "Treuzskrivañ",
@@ -1653,6 +1665,7 @@
       function appHref(link) {
         const productionUrl = new URL(link.dataset.productionHref, window.location.href);
         if (stagingPortal) {
+          if (productionUrl.hostname === "live.keltiawave.com") return "https://live.staging.keltiawave.com/";
           if (productionUrl.hostname === "learning.keltiawave.com") return "https://play.staging.keltiawave.com/";
           if (productionUrl.hostname === "komz.keltiawave.com") return "https://komz.staging.keltiawave.com/lire";
           if (productionUrl.hostname === "voices.keltiawave.com") return "https://library.staging.keltiawave.com/";
@@ -1665,6 +1678,7 @@
           return productionUrl.toString();
         }
 
+        if (productionUrl.hostname === "live.keltiawave.com") return "http://127.0.0.1:4800/";
         if (productionUrl.hostname === "learning.keltiawave.com") return "http://127.0.0.1:4300/";
         if (productionUrl.hostname === "komz.keltiawave.com") return "http://127.0.0.1:4200/lire";
         if (productionUrl.hostname === "voices.keltiawave.com") return "http://127.0.0.1:4200/";

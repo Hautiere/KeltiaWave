@@ -1,3 +1,4 @@
+import { audioAttribution } from '../../core/audio-attribution';
 import { isValidPhraseSourceUrl } from '../../core/phrase-provenance';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
@@ -29,6 +30,7 @@ type AdminSection = 'recordings' | 'phrases' | 'accounts' | 'data';
   styleUrls: ['./v2-admin.component.scss'],
 })
 export class V2AdminComponent implements OnInit {
+  readonly audioAttribution = audioAttribution;
   readonly isValidPhraseSourceUrl = isValidPhraseSourceUrl;
   newUser: { email: string; password: string; display_name: string; role: AuthUser['role']; breton_level: AuthUser['breton_level']; organization: string; must_change_password: boolean } | null = null;
   creatingUser = false;
@@ -224,8 +226,8 @@ export class V2AdminComponent implements OnInit {
 
   get displayedSegments(): AdminSegment[] {
     return [...this.segments].sort((a, b) => {
-      const left = this.recordingSort === 'phrase' ? a.texte : this.recordingSort === 'subdomain' ? this.segmentSubdomainLabel(a) : this.recordingSort === 'dataset' ? a.dataset : a.status;
-      const right = this.recordingSort === 'phrase' ? b.texte : this.recordingSort === 'subdomain' ? this.segmentSubdomainLabel(b) : this.recordingSort === 'dataset' ? b.dataset : b.status;
+      const left = this.recordingSort === 'phrase' ? a.texte : this.recordingSort === 'subdomain' ? this.segmentSubdomainLabel(a) : this.recordingSort === 'dataset' ? audioAttribution(a, a.dataset) : a.status;
+      const right = this.recordingSort === 'phrase' ? b.texte : this.recordingSort === 'subdomain' ? this.segmentSubdomainLabel(b) : this.recordingSort === 'dataset' ? audioAttribution(b, b.dataset) : b.status;
       const comparison = (left || '').localeCompare(right || '', 'fr');
       return this.recordingSortDirection === 'asc' ? comparison : -comparison;
     });

@@ -1,6 +1,6 @@
 # KeltiaWave
 
-Socle commun regroupant un backend unique et six applications web autonomes :
+Socle commun regroupant un backend unique et sept applications web autonomes :
 
 - **Portal** (`4100`) : page d'accueil et accès à tous les outils ;
 - **Corpus** (`4200`) : collecte, validation et administration des voix ;
@@ -8,6 +8,7 @@ Socle commun regroupant un backend unique et six applications web autonomes :
 - **Record** (`4400`) : enregistrement et comparaison Vosk/Whisper ;
 - **Transcribe** (`4500`) : transcription de fichiers audio et vidéo ;
 - **Subtitles** (`4600`) : génération, calage et export de sous-titres.
+- **Live** (`4800`) : transcription en direct de l’audio d’un onglet partagé, sans microphone.
 
 Les projets sources `portal-standalone`, `corpus-collaboratif` et
 `breizh-transcriptor-whisper` restent indépendants et ne sont pas modifiés par
@@ -15,7 +16,7 @@ cette intégration.
 
 ## Architecture
 
-Les six fronts sont déployables séparément. Les cinq outils métier utilisent le
+Les sept fronts sont déployables séparément. Les six outils métier utilisent le
 même backend FastAPI (`8100`) ; Portal reste une page statique sans API :
 
 - API vocales spécialisées pour Record, Transcribe et Subtitles ;
@@ -46,6 +47,7 @@ apps/
   record/
   transcribe/
   subtitles/
+  live/
 backend/
   alembic/             migrations de la base Learning
   app/api/endpoints/   Corpus, comptes et administration
@@ -53,6 +55,7 @@ backend/
   app/record/          API Record
   app/transcribe/      API Transcribe
   app/subtitles/       API Subtitles
+  app/live/            API Live (capacités et flux WebSocket Vosk)
   models/              modèles vocaux locaux non versionnés
 deploy/
 scripts/
@@ -75,6 +78,7 @@ Prérequis : Python 3.11+, Node.js 20+, npm et FFmpeg.
 ./scripts/start-record.sh       # http://127.0.0.1:4400
 ./scripts/start-transcribe.sh   # http://127.0.0.1:4500
 ./scripts/start-subtitles.sh    # http://127.0.0.1:4600
+./scripts/start-live.sh         # http://127.0.0.1:4800
 ```
 
 En local, SQLite et le stockage de fichiers local suffisent. Les migrations
@@ -96,8 +100,13 @@ Copiez `.env.example` vers `.env`, remplacez impérativement `SECRET_KEY`,
 contrôles de santé :
 
 ```bash
-./scripts/start-docker.sh
+./start-docker.sh
 ```
+
+Ce lanceur à la racine réutilise `scripts/start-docker.sh` : il construit et
+démarre le backend et les sept fronts, vérifie leurs URL, puis ouvre la
+documentation API et le portail dans le navigateur. `--no-build` réutilise les
+images existantes et `--no-browser` désactive l'ouverture des pages.
 
 Lancez cette commande depuis **ce dépôt** (`/Users/gr4dl0nys29/projets/keltiawave/keltiawave`).
 Une ancienne copie a été mise à l'écart sous
@@ -107,11 +116,17 @@ le chemin du dépôt utilisé et vérifie l'origine des conteneurs avant d'annon
 que tout fonctionne.
 
 Le script construit d'abord l'infrastructure et le backend, attend que l'API
-réponde, puis construit et démarre les six interfaces sans reconstruire le
+réponde, puis construit et démarre les sept interfaces sans reconstruire le
 backend. Il ouvre la documentation backend avant les interfaces, puis Portal
 sur <http://127.0.0.1:4100>, qui
 donne accès à toutes les applications. Utilisez `--no-build` pour réutiliser les
 images existantes ou `--no-browser` pour ne pas ouvrir le navigateur.
+
+Le portail initial reste disponible sur <http://127.0.0.1:4100/index.html>.
+Une proposition simplifiée, avec cinq actions principales sans répéter les
+cartes d'applications, se teste sur
+<http://127.0.0.1:4100/portal-simple.html>. Le lien « Explorer tous les outils »
+de cette page ouvre le portail initial.
 
 Sur mobile, le portail propose un lanceur compact dans l'ordre Transcribe,
 Record, Subtitles, Play, Komz et Library. L'atelier Subtitles place le choix du
@@ -127,7 +142,7 @@ portail ; le logo de l'application reste un repère visuel sans lien. En local,
 le bouton ouvre le portail local sur le port 4100.
 
 PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
-les six fronts publient des ports. Les volumes `postgres_data`, `minio_data`
+les sept fronts publient des ports. Les volumes `postgres_data`, `minio_data`
 et `backend_data` conservent les données entre les redémarrages.
 
 ## Lot Common Voice dans Komz
@@ -258,3 +273,41 @@ La procédure, les prérequis et le retour arrière sont détaillés dans
 `deploy/ovh/README.md`. Les récapitulatifs de livraison sont disponibles dans
 le dossier `docs/`, notamment `docs/CHANGES-2026-09-03.md` pour les interfaces
 mobiles Portal et Subtitles.
+
+## Live : suivre un podcast en direct
+
+Live est un front indépendant (`apps/live`) qui utilise les routes dédiées
+`GET /api/live/capabilities` et `WS /api/live/stream` du backend commun.
+Le son partagé est transmis au serveur Vosk. Un audio compressé reste temporairement
+dans la page pour l’action facultative « Améliorer avec Whisper » après l’écoute.
+Whisper utilise un fichier temporaire supprimé après traitement et conserve Vosk
+comme version distincte.
+Cette version web nécessite Internet et un navigateur permettant le partage audio
+d’un onglet ; elle n’utilise jamais le microphone. La capture des autres apps
+du téléphone reste un sujet mobile distinct. Voir `apps/live/README.md`.
+
+
+## Contributions Komz et Listen
+
+Les audios envoyés sont attribués au nom du compte connecté, ou à « Inconnu »
+pour un envoi anonyme. L’origine de la voix est indépendante de la source du texte :
+un utilisateur qui lit une phrase Common Voice reste l’auteur de sa voix.
+Listen et Komz affichent cette origine explicitement et partagent la même sélection
+d’une référence approuvée par phrase (la plus récente par date d’enregistrement,
+puis par identifiant). L’approbation enseignant/admin ou l’approbation en lot
+Common Voice existante est requise. Une nouvelle référence plus récente peut
+remplacer celle affichée ; les autres audios restent conservés.
+
+Dans **Mon compte → Mes enregistrements**, chaque utilisateur retrouve ses envois,
+peut les réécouter et filtrer les statuts : en attente, approuvé ou à revoir. Le
+commentaire et la date de décision sont affichés. Le bouton Actualiser recharge
+les décisions. L’API authentifiée `GET /api/audios/mine` retourne uniquement les
+contributions personnelles associées à l’adresse du compte ; les envois anonymes
+ne sont pas rattachés automatiquement après inscription. Un audio approuvé reste
+dans le compte et rejoint aussi la liste des audios approuvés.
+
+Record propose aussi l’ouverture d’un email contenant les textes Vosk et Whisper.
+L’utilisateur choisit le destinataire et envoie lui-même le message dans son
+application email.
+
+Voir [les changements du 31 octobre 2026](docs/CHANGES-2026-10-31.md).

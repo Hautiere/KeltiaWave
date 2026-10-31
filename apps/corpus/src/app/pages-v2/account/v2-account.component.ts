@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, effect, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { defer, finalize, forkJoin, timeout } from 'rxjs';
-import { ApiService, AudioRead, Phrase } from '../../core/api.service';
+import { defer, finalize, forkJoin, timeout, Subscription } from 'rxjs';
+import { ApiService, AudioRead, MyAudioRead, Phrase } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { I18nService, type AppLanguage } from '../../core/i18n.service';
 import { LEVEL_OPTIONS, ProfileService, SessionProfile } from '../../core/profile.service';
@@ -92,6 +92,30 @@ export class V2AccountComponent implements OnInit {
   approvedAudios: AudioRead[] = [];
   rejectedAudios: AudioRead[] = [];
   metricsLoading = true;
+  myRecordings: MyAudioRead[] = [];
+  recordingsLoading = false;
+  recordingsError = '';
+  recordingStatusFilter = '';
+  private recordingsRequest?: Subscription;
+  get visibleRecordings(): MyAudioRead[] {
+    return this.myRecordings.filter(audio => !this.recordingStatusFilter || audio.status === this.recordingStatusFilter);
+  }
+  recordingStatus(audio: AudioRead): string {
+    return audio.status === 'approved' ? 'Approuvé' : audio.status === 'rejected' ? 'À revoir' : 'En attente de validation';
+  }
+  loadMyRecordings(): void {
+    this.recordingsRequest?.unsubscribe();
+    this.myRecordings = []; this.recordingsError = '';
+    if (!this.auth.user() || !this.auth.token()) { this.recordingsLoading = false; return; }
+    this.recordingsLoading = true;
+    this.recordingsRequest = this.api.myAudios().pipe(
+      timeout(15000), takeUntilDestroyed(this.destroyRef),
+      finalize(() => { this.recordingsLoading = false; this.changeDetector.markForCheck(); }),
+    ).subscribe({
+      next: audios => { this.myRecordings = audios; },
+      error: () => { this.recordingsError = 'Impossible de charger vos enregistrements. Réessayez.'; },
+    });
+  }
 
   constructor(
     readonly auth: AuthService,
@@ -100,7 +124,13 @@ export class V2AccountComponent implements OnInit {
     private readonly api: ApiService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
-  ) {}
+  ) {
+    effect(onCleanup => {
+      this.auth.user(); this.auth.token();
+      this.loadMyRecordings();
+      onCleanup(() => this.recordingsRequest?.unsubscribe());
+    });
+  }
 
   ngOnInit(): void {
     this.resetProfileDraft();
