@@ -113,3 +113,14 @@ def test_device_auth_is_staging_only(monkeypatch):
         with pytest.raises(email.HTTPException): email.email_identity(req, db=None)
     monkeypatch.setenv('DEPLOY_SLOT','production')
     with pytest.raises(email.HTTPException): email.email_identity(request(), db=None)
+
+
+def test_multiple_staging_devices_preserve_existing_access(monkeypatch):
+    from starlette.requests import Request
+    first = 'test-first-' + 'a' * 40
+    second = 'test-second-' + 'b' * 40
+    monkeypatch.setenv('DEPLOY_SLOT', 'staging')
+    monkeypatch.setenv('STAGING_RECORD_DEVICE_SHA256', ','.join(email.hashlib.sha256(token.encode()).hexdigest() for token in [first, second]))
+    for token in [first, second]:
+        request = Request({'type':'http', 'scheme':'https', 'method':'POST', 'path':'/api/record/email', 'query_string':b'', 'headers':[(b'host', b'record.staging.keltiawave.com'), (b'authorization', ('Bearer ' + token).encode())]})
+        assert email.email_identity(request, db=None).id == -1

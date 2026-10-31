@@ -103,6 +103,14 @@ class AuthTests(unittest.TestCase):
         with patch.dict(os.environ, {'STAGING_RECORD_DEVICE_SHA256':''}):
             self.assertEqual(self.request(headers=headers)['status'], 401)
 
+    def test_multiple_devices_keep_their_scoped_access(self):
+        credentials = ['device-first-' + 'a' * 40, 'device-second-' + 'b' * 40]
+        digests = ','.join(hashlib.sha256(value.encode()).hexdigest() for value in credentials)
+        with patch.dict(os.environ, {'STAGING_RECORD_DEVICE_SHA256': digests}):
+            for value in credentials:
+                self.assertEqual(self.request(headers={**self.headers, 'Authorization':'Bearer ' + value})['status'], 200)
+                self.assertEqual(self.request(headers={**self.headers, 'Authorization':'Bearer ' + value, 'X-Forwarded-Uri':'/api/record/email'})['status'], 401)
+
     def test_existing_browser_session(self):
         token = auth.encode_token(int(time.time()) + 3600)
         headers = {**self.headers, 'Authorization': '', 'Cookie': f'{auth.COOKIE_NAME}={token}'}

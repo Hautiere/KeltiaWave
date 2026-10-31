@@ -124,13 +124,12 @@ def deliver(message: EmailMessage, settings: tuple[str, int, str, str, str]) -> 
 
 def email_identity(request: Request, db=Depends(get_db)):
     authorization = request.headers.get("authorization", "")
-    digest = os.getenv("STAGING_RECORD_DEVICE_SHA256", "")
+    digests = [value.strip() for value in os.getenv("STAGING_RECORD_DEVICE_SHA256", "").split(",") if len(value.strip()) == 64]
     if (os.getenv("DEPLOY_SLOT") == "staging"
             and request.url.hostname == "record.staging.keltiawave.com"
             and request.url.path == "/api/record/email"
             and authorization.startswith("Bearer ") and 39 <= len(authorization) <= 256
-            and len(digest) == 64
-            and hmac.compare_digest(hashlib.sha256(authorization[7:].encode()).hexdigest(), digest)):
+            and any(hmac.compare_digest(hashlib.sha256(authorization[7:].encode()).hexdigest(), digest) for digest in digests)):
         return SimpleNamespace(id=-1)
     return get_current_user(authorization=authorization, db=db)
 
