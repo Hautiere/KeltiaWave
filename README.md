@@ -311,3 +311,8 @@ L’utilisateur choisit le destinataire et envoie lui-même le message dans son
 application email.
 
 Voir [les changements du 31 octobre 2026](docs/CHANGES-2026-10-31.md).
+
+
+## Application Android native
+
+Le code et l’état actuel sont dans [KeltiaWave-Mobile](https://github.com/Hautiere/KeltiaWave-Mobile). Pour une intervention locale, commencer par `../keltiawave-mobile/AGENTS.md` ; ne pas charger les deux documentations complètes. Le mode Vosk Android est local, contrairement au traitement web sur serveur.
