@@ -128,6 +128,37 @@ record.staging.keltiawave.com {
 		path /api/record/transcribe /api/record/improve /api/record/email
 		header Access-Control-Request-Method POST
 	}
+	@mobile_preflight {
+		method OPTIONS
+		path /api/live/capabilities /api/live/improve /api/mobile/live-ticket /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics
+		header_regexp Access-Control-Request-Method "^(GET|POST)$"
+	}
+	handle @mobile_preflight {
+		reverse_proxy keltiawave-staging-record:80
+	}
+	@mobile_ticket {
+		method POST
+		path /api/mobile/live-ticket
+	}
+	handle @mobile_ticket {
+		request_header X-Forwarded-Host record.staging.keltiawave.com
+		request_header X-Forwarded-Method POST
+		request_header X-Forwarded-Uri /api/mobile/live-ticket
+		reverse_proxy keltiawave-staging-auth:8080
+	}
+	@mobile_api path /api/live/capabilities /api/live/stream /api/live/improve /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics
+	handle @mobile_api {
+		forward_auth keltiawave-staging-auth:8080 {
+			uri /verify-mobile
+		}
+		# Only the negotiated public protocol reaches the backend; the one-use
+		# ticket is consumed by staging auth and never appears in a URL.
+		reverse_proxy keltiawave-staging-record:80 {
+			header_up -Authorization
+			header_up Sec-WebSocket-Protocol keltiawave-live
+		}
+	}
+
 	@record_post {
 		method POST
 		path /api/record/transcribe /api/record/improve

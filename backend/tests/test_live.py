@@ -128,3 +128,13 @@ def test_whisper_unavailable_is_not_a_false_success(live_client, monkeypatch):
     monkeypatch.setattr(routes, 'transcribe_whisper_metrics', unavailable)
     response = live_client.post('/api/live/improve', files={'audio_file': ('live.webm', b'audio', 'audio/webm')})
     assert response.status_code == 503
+
+
+def test_native_live_negotiates_only_the_public_protocol(live_client):
+    with live_client.websocket_connect('/api/live/stream', subprotocols=['keltiawave-live']) as socket:
+        assert socket.accepted_subprotocol == 'keltiawave-live'
+        socket.send_json({'type':'start', 'sample_rate':16000, 'language':'br'})
+        assert socket.receive_json()['type'] == 'ready'
+        socket.send_json({'type':'stop'})
+        assert socket.receive_json()['type'] == 'final'
+        assert socket.receive_json()['type'] == 'done'

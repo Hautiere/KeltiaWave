@@ -52,7 +52,8 @@ async def live_stream(websocket: WebSocket):
     if origin and origin not in allowed and not same_origin:
         await websocket.close(code=1008)
         return
-    await websocket.accept()
+    protocols = websocket.scope.get("subprotocols", [])
+    await websocket.accept(subprotocol="keltiawave-live" if "keltiawave-live" in protocols else None)
     if _active_sessions >= MAX_SESSIONS:
         await websocket.send_json({"type": "error", "message": "Live est occupé. Réessayez dans un instant."})
         await websocket.close(code=1013)

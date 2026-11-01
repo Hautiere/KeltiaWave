@@ -3,6 +3,9 @@ import hashlib
 import hmac
 import html
 import os
+import json
+import secrets
+import threading
 import time
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -54,6 +57,77 @@ def valid_record_access(headers) -> bool:
         return False
     token = authorization[7:]
     return bool(token) and hmac.compare_digest(hashlib.sha256(token.encode()).hexdigest(), digest)
+
+
+# Native test access stays separate from browser sessions and legacy Record tokens.
+MOBILE_POST_PATHS = {
+    '/api/live/improve', '/api/mobile/live-ticket',
+    '/api/transcribe/transcribe_whisper_bre_metrics',
+    '/api/transcribe/transcribe_whisper_wel_metrics',
+}
+_TICKETS: dict[str, float] = {}
+_TICKET_LOCK = threading.Lock()
+
+
+def device_authorized(headers) -> bool:
+    value = headers.get('Authorization', '')
+    if not value.startswith('Bearer ') or not 32 <= len(value[7:]) <= 128:
+        return False
+    actual = hashlib.sha256(value[7:].encode()).hexdigest()
+    return any(len(digest.strip()) == 64 and hmac.compare_digest(actual, digest.strip())
+               for digest in os.getenv('STAGING_RECORD_DEVICE_SHA256', '').split(','))
+
+
+def mobile_scope(headers) -> bool:
+    if (os.getenv('DEPLOY_SLOT') != 'staging' or headers.get('X-Forwarded-Host') != RECORD_HOST
+            or headers.get('Origin') not in MOBILE_ORIGINS):
+        return False
+    uri = headers.get('X-Forwarded-Uri', '')
+    method = headers.get('X-Forwarded-Method')
+    if method == 'POST' and uri in MOBILE_POST_PATHS:
+        return True
+    if method == 'POST' and uri == '/api/transcribe/transcribe_vosk_bre_metrics_v2?clean=false&include_words=false':
+        return True
+    if method == 'GET' and uri in {'/api/live/capabilities', '/api/live/stream'}:
+        return True
+    if method == 'GET' and uri.startswith('/api/transcribe/estimate?'):
+        query = parse_qs(urlparse(uri).query, keep_blank_values=True)
+        try:
+            return (set(query) == {'lang', 'mode', 'duration_seconds'}
+                    and all(len(values) == 1 for values in query.values())
+                    and query['lang'][0] in {'br', 'cy'} and query['mode'][0] in {'fast', 'quality'}
+                    and 0 < float(query['duration_seconds'][0]) <= 86400)
+        except (ValueError, KeyError):
+            return False
+    return False
+
+
+def issue_ticket() -> str:
+    with _TICKET_LOCK:
+        now = time.monotonic()
+        for value in list(_TICKETS):
+            if _TICKETS[value] <= now:
+                del _TICKETS[value]
+        if len(_TICKETS) >= 64:
+            raise ValueError('too many tickets')
+        ticket = secrets.token_urlsafe(32)
+        _TICKETS[ticket] = now + 20
+        return ticket
+
+
+def mobile_authorized(headers) -> bool:
+    if not mobile_scope(headers):
+        return False
+    if headers.get('X-Forwarded-Uri') == '/api/live/stream':
+        if headers.get('Upgrade', '').lower() != 'websocket':
+            return False
+        protocols = [value.strip() for value in headers.get('Sec-WebSocket-Protocol', '').split(',')]
+        tickets = [value.removeprefix('kw-ticket.') for value in protocols if value.startswith('kw-ticket.')]
+        if 'keltiawave-live' not in protocols or len(tickets) != 1:
+            return False
+        with _TICKET_LOCK:
+            return _TICKETS.pop(tickets[0], 0) > time.monotonic()
+    return device_authorized(headers)
 
 
 def encode_token(expires: int) -> str:
@@ -124,6 +198,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(b"ok")
             return
+        if parsed.path == '/verify-mobile':
+            self.mobile_response(200 if mobile_authorized(self.headers) else 401)
+            return
         if parsed.path == "/verify-record":
             try:
                 session = cookies.SimpleCookie(self.headers.get("Cookie", "")).get(COOKIE_NAME)
@@ -173,7 +250,29 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_error(404)
 
+    def mobile_response(self, status: int, payload=None):
+        body = json.dumps(payload or ({'status': 'ok'} if status == 200 else {'detail': 'Mobile staging access required or expired.'})).encode()
+        self.send_response(status)
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(body)))
+        origin = self.headers.get('Origin')
+        if origin in MOBILE_ORIGINS:
+            self.send_header('Access-Control-Allow-Origin', origin)
+            self.send_header('Vary', 'Origin')
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_POST(self) -> None:
+        if urlparse(self.path).path == '/api/mobile/live-ticket':
+            if not mobile_scope(self.headers) or not device_authorized(self.headers):
+                self.mobile_response(401)
+                return
+            try:
+                self.mobile_response(200, {'ticket': issue_ticket()})
+            except ValueError:
+                self.mobile_response(429)
+            return
         if urlparse(self.path).path != "/staging-login":
             self.send_error(404)
             return

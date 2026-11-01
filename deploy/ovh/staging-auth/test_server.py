@@ -111,6 +111,43 @@ class AuthTests(unittest.TestCase):
                 self.assertEqual(self.request(headers={**self.headers, 'Authorization':'Bearer ' + value})['status'], 200)
                 self.assertEqual(self.request(headers={**self.headers, 'Authorization':'Bearer ' + value, 'X-Forwarded-Uri':'/api/record/email'})['status'], 401)
 
+    def test_native_media_scope_and_one_use_websocket_ticket(self):
+        credential = 'media-device-' + 'm' * 40
+        headers = {**self.headers, 'Authorization':'Bearer ' + credential}
+        digest = hashlib.sha256(credential.encode()).hexdigest()
+        with patch.dict(os.environ, {'STAGING_RECORD_DEVICE_SHA256':digest}):
+            for method, path in [('GET','/api/live/capabilities'), ('POST','/api/live/improve'), ('GET','/api/transcribe/estimate?lang=br&mode=fast&duration_seconds=60'), ('POST','/api/transcribe/transcribe_vosk_bre_metrics_v2?clean=false&include_words=false')]:
+                self.assertEqual(self.request('/verify-mobile', {**headers,'X-Forwarded-Method':method,'X-Forwarded-Uri':path})['status'],200)
+            for overrides in [{'X-Forwarded-Host':'record.keltiawave.com'}, {'Origin':'https://evil.test'}, {'X-Forwarded-Uri':'/api/audios/mine'}, {'X-Forwarded-Uri':'/api/live/improve?x=1'}, {'Authorization':'Bearer wrong'}]:
+                self.assertEqual(self.request('/verify-mobile',{**headers,'X-Forwarded-Uri':'/api/live/improve',**overrides})['status'],401)
+            ticket = auth.issue_ticket()
+            socket = {**headers,'X-Forwarded-Method':'GET','X-Forwarded-Uri':'/api/live/stream','Upgrade':'websocket','Sec-WebSocket-Protocol':'keltiawave-live, kw-ticket.'+ticket}
+            self.assertEqual(self.request('/verify-mobile',socket)['status'],200)
+            self.assertEqual(self.request('/verify-mobile',socket)['status'],401)
+            expired = auth.issue_ticket()
+            auth._TICKETS[expired] = time.monotonic() - 1
+            self.assertEqual(self.request('/verify-mobile',{**socket,'Sec-WebSocket-Protocol':'keltiawave-live, kw-ticket.'+expired})['status'],401)
+        with patch.dict(os.environ,{'DEPLOY_SLOT':'production'}):
+            self.assertFalse(auth.mobile_scope({**headers,'X-Forwarded-Method':'GET','X-Forwarded-Uri':'/api/live/capabilities'}))
+
+    def test_ticket_is_issued_only_to_an_authorized_native_device(self):
+        credential = 'ticket-device-' + 't' * 40
+        headers = {**self.headers,'Authorization':'Bearer ' + credential,'X-Forwarded-Uri':'/api/mobile/live-ticket'}
+        with patch.dict(os.environ, {'STAGING_RECORD_DEVICE_SHA256':hashlib.sha256(credential.encode()).hexdigest()}):
+            handler = object.__new__(auth.Handler)
+            handler.path='/api/mobile/live-ticket'; handler.headers=headers; handler.wfile=io.BytesIO()
+            response={'headers':{}}
+            handler.send_response=lambda status: response.update(status=status)
+            handler.send_header=lambda key,value:response['headers'].update({key:value})
+            handler.end_headers=lambda:None
+            handler.do_POST()
+            import json
+            ticket=json.loads(handler.wfile.getvalue())['ticket']
+            self.assertEqual(response['status'],200)
+            self.assertIn(ticket,auth._TICKETS)
+            handler.headers={**headers,'Authorization':'Bearer wrong'};handler.wfile=io.BytesIO()
+            handler.do_POST();self.assertEqual(response['status'],401)
+
     def test_existing_browser_session(self):
         token = auth.encode_token(int(time.time()) + 3600)
         headers = {**self.headers, 'Authorization': '', 'Cookie': f'{auth.COOKIE_NAME}={token}'}
