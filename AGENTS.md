@@ -21,4 +21,4 @@
 - Browser HTTP/WebSocket must use frontend origin through Nginx (`Host $http_host`) or `apps/live/proxy.conf.json`, not direct port 8100.
 - Finish with `git diff --check` and review changed lines. Docs-only edits need no rebuild.
 
-- Private classroom audio hand-in: `backend/app/api/endpoints/practice.py`, `models/practice.py`, `practice_schema.py`, `backend/README-practice.md`; web account `pages-v2/account/practice/`. Shares web authentication; private work never enters the public catalogue.
+- Private classroom audio hand-in: `backend/app/api/endpoints/practice.py`, `models/practice.py`, `practice_schema.py`, `web_formations.py` (existing web teacher groups), `backend/README-practice.md`; web account `pages-v2/account/practice/`. Shares web authentication; private work never enters the public catalogue.

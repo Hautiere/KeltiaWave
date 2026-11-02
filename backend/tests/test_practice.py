@@ -135,3 +135,21 @@ def test_practice_schema_upgrade_keeps_old_data_and_is_idempotent():
     with engine.connect() as conn:
         assert conn.execute(text('SELECT feedback_seen_revision FROM practice_submissions')).scalar()==1
     engine.dispose()
+
+
+def test_import_reuses_web_teachers_and_schools_without_accounts_or_memberships(db_session):
+    from app.web_formations import sync_web_formations
+    from app.models.practice import PracticeClass, PracticeMembership
+    person = User(email='web-prof@example.test',display_name='Professeur web',password_hash='unused',role='teacher',active=True,
+                  school='ti-ar-vretonned',organization='ti-ar-vretonned',school_level='niveau-3')
+    inactive = User(email='inactive@example.test',display_name='Inactive',password_hash='unused',role='teacher',active=False,school='skol-an-emsav')
+    db_session.add_all([person,inactive]);db_session.commit()
+    sync_web_formations(db_session);sync_web_formations(db_session)
+    assert db_session.query(User).count()==2
+    assert db_session.query(PracticeMembership).count()==0
+    row=db_session.query(PracticeClass).one()
+    assert (row.school,row.name,row.teacher_id)==('Ti ar vretonned','Niveau 3',person.id)
+    row.name='Nom ajusté par le professeur';db_session.commit()
+    sync_web_formations(db_session)
+    assert db_session.query(PracticeClass).count()==1
+    assert db_session.query(PracticeClass).one().name=='Nom ajusté par le professeur'

@@ -2,6 +2,8 @@
 
 `/api/practice/*` utilise l’authentification web existante. Les tables additives `practice_classes`, `practice_memberships`, `practice_submissions` sont créées au démarrage avec les tables Corpus. `practice_schema.py` ajoute de façon idempotente l’école et les révisions de retour aux bases existantes, sans changer les comptes.
 
+`web_formations.py` reprend au démarrage les écoles et niveaux des comptes professeurs web actifs, sans créer de comptes ni rattacher automatiquement les élèves. `practice_web_class_imports` évite les doublons et conserve les modifications manuelles ultérieures.
+
 - `GET/POST /classes` : formation actuelle et formations du correcteur ; création professeur/admin avec `school` et `name`. `PATCH /classes/{id}` : modification par propriétaire/admin.
 - `GET /classes/available` : catalogue authentifié école/formation/professeur actif, sans codes ni emails.
 - `POST/DELETE /classes/join` : rejoindre par `class_id` / choisir « Non inscrit à une formation ». Les anciens clients par code restent compatibles. Une classe courante ; les anciens envois conservent leur destination.

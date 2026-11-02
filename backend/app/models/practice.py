@@ -34,3 +34,12 @@ class PracticeSubmission(Base):
     reviewed_at = Column(DateTime, nullable=True)
     feedback_revision = Column(Integer, nullable=False, default=0)
     feedback_seen_revision = Column(Integer, nullable=False, default=0)
+
+
+class PracticeWebClassImport(Base):
+    """Track imported web profile groups without overwriting later manual edits."""
+    __tablename__ = 'practice_web_class_imports'
+    teacher_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    school_key = Column(String(64), primary_key=True)
+    level_key = Column(String(64), primary_key=True)
+    class_id = Column(Integer, ForeignKey('practice_classes.id'), nullable=False)

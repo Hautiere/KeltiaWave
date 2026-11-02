@@ -429,6 +429,12 @@ def disable_test_accounts() -> None:
 
 disable_test_accounts()
 
+# Same school/level groups and teachers as the historical web class screen.
+from .db import SessionLocal
+from .web_formations import sync_web_formations
+with SessionLocal() as practice_db:
+    sync_web_formations(practice_db)
+
 # Compat dev: expose les anciens fichiers locaux.
 app.mount("/static/audios", StaticFiles(directory=str(LOCAL_AUDIO_DIR)), name="audios")
 
