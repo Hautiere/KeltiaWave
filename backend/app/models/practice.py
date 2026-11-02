@@ -8,6 +8,7 @@ class PracticeClass(Base):
     __tablename__ = 'practice_classes'
     id = Column(Integer, primary_key=True)
     name = Column(String(120), nullable=False)
+    school = Column(String(160), nullable=False, default='')
     code = Column(String(32), unique=True, nullable=False)
     teacher_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
@@ -31,3 +32,5 @@ class PracticeSubmission(Base):
     reviewer_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     reviewed_at = Column(DateTime, nullable=True)
+    feedback_revision = Column(Integer, nullable=False, default=0)
+    feedback_seen_revision = Column(Integer, nullable=False, default=0)

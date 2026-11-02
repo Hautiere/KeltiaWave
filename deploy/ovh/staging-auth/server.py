@@ -92,6 +92,8 @@ def account_scope(headers) -> bool:
         return method == 'GET'
     paths = {
         '/api/practice/classes': {'GET', 'POST'},
+        '/api/practice/classes/available': {'GET'},
+        '/api/practice/notifications': {'GET'},
         '/api/practice/classes/join': {'POST', 'DELETE'},
         '/api/practice/submissions': {'GET', 'POST'},
         '/api/practice/reviews': {'GET'},
@@ -100,7 +102,8 @@ def account_scope(headers) -> bool:
         return True
     import re
     return bool((method == 'GET' and re.fullmatch(r'/api/practice/submissions/[1-9][0-9]*/file', uri))
-                or (method == 'POST' and re.fullmatch(r'/api/practice/submissions/[1-9][0-9]*/review', uri)))
+                or (method == 'POST' and re.fullmatch(r'/api/practice/submissions/[1-9][0-9]*/(review|read)', uri))
+                or (method == 'PATCH' and re.fullmatch(r'/api/practice/classes/[1-9][0-9]*', uri)))
 
 
 def mobile_scope(headers) -> bool:

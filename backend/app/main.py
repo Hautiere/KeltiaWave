@@ -3,6 +3,7 @@ import os
 
 from fastapi import FastAPI
 from .db import Base, engine
+from .practice_schema import ensure_practice_columns
 from .api.endpoints import practice
 from .api.endpoints import phrases
 from .api.endpoints import enregistrements
@@ -41,6 +42,7 @@ corpus_tables = [
     if not table.name.startswith("learning_")
 ]
 Base.metadata.create_all(bind=engine, tables=corpus_tables)
+ensure_practice_columns(engine)
 
 def ensure_dev_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("audios")}

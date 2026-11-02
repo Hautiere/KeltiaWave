@@ -4,7 +4,7 @@ import secrets
 from pathlib import Path
 from uuid import uuid4
 from ... import storage
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from ...auth import get_current_user
@@ -13,12 +13,22 @@ from ...models.user import User
 from ...models.practice import PracticeClass, PracticeMembership, PracticeSubmission
 from ...storage import audio_response
 
-router = APIRouter()
+def private_response(response: Response):
+    response.headers['Cache-Control'] = 'private, no-store'
+
+
+router = APIRouter(dependencies=[Depends(private_response)])
 MAX_AUDIO = 50 * 1024 * 1024
 
 
-def class_payload(cls):
-    return {'id': cls.id, 'name': cls.name, 'code': cls.code}
+def class_payload(cls, db, include_code=True):
+    teacher = db.get(User, cls.teacher_id)
+    result = dict(id=cls.id, name=cls.name,
+                  school=cls.school or (teacher.organization or teacher.school if teacher else '') or 'École non renseignée',
+                  teacher=teacher.display_name if teacher else 'Professeur indisponible')
+    if include_code:
+        result['code'] = cls.code
+    return result
 
 
 def may_review(user, row, db):
@@ -36,7 +46,9 @@ def payload(row, db):
                 feedback=row.feedback, created_at=row.created_at, reviewed_at=row.reviewed_at,
                 author=owner.display_name if owner else 'Compte supprimé',
                 reviewer=reviewer.display_name if reviewer else None,
-                destination=cls.name if cls else 'Administration')
+                destination=cls.name if cls else 'Administration',
+                feedback_revision=row.feedback_revision,
+                unread_feedback=row.feedback_revision > row.feedback_seen_revision)
 
 
 @router.get('/classes')
@@ -44,11 +56,12 @@ def classes(user=Depends(get_current_user), db: Session = Depends(get_db)):
     membership = db.get(PracticeMembership, user.id)
     joined = db.get(PracticeClass, membership.class_id) if membership else None
     owned = db.query(PracticeClass).filter(PracticeClass.teacher_id == user.id).all()
-    return {'joined': class_payload(joined) if joined else None, 'owned': [class_payload(c) for c in owned]}
+    return {'joined': class_payload(joined, db) if joined else None, 'owned': [class_payload(c, db) for c in owned]}
 
 
 class ClassCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
+    school: str = Field(default='', max_length=160)
 
 
 @router.post('/classes', status_code=201)
@@ -58,30 +71,56 @@ def create_class(body: ClassCreate, user=Depends(get_current_user), db: Session 
     name = body.name.strip()
     if not name:
         raise HTTPException(400, 'Nom de classe requis')
-    cls = PracticeClass(name=name, code=secrets.token_hex(6).upper(), teacher_id=user.id)
+    cls = PracticeClass(name=name, school=body.school.strip() or user.organization or user.school or '', code=secrets.token_hex(6).upper(), teacher_id=user.id)
     db.add(cls); db.commit(); db.refresh(cls)
-    return class_payload(cls)
+    return class_payload(cls, db)
+
+
+@router.get('/classes/available')
+def available_classes(user=Depends(get_current_user), db: Session = Depends(get_db)):
+    rows = (db.query(PracticeClass).join(User, PracticeClass.teacher_id == User.id)
+            .filter(User.active == True, User.role.in_(['teacher', 'admin']))
+            .order_by(PracticeClass.school, PracticeClass.name, PracticeClass.id).all())
+    return [class_payload(row, db, include_code=False) for row in rows]
+
+
+@router.patch('/classes/{class_id}')
+def update_class(class_id: int, body: ClassCreate, user=Depends(get_current_user), db: Session = Depends(get_db)):
+    cls = db.get(PracticeClass, class_id)
+    if not cls or user.role not in {'teacher', 'admin'} or (user.role != 'admin' and cls.teacher_id != user.id):
+        raise HTTPException(404, 'Formation introuvable')
+    if not body.name.strip() or not body.school.strip():
+        raise HTTPException(400, 'École et formation requises')
+    cls.name = body.name.strip()
+    cls.school = body.school.strip()
+    db.commit(); db.refresh(cls)
+    return class_payload(cls, db)
 
 
 class JoinClass(BaseModel):
-    code: str = Field(min_length=1, max_length=32)
+    class_id: int | None = Field(default=None, gt=0)
+    # Compatibility with already installed versions; new clients use the list.
+    code: str | None = Field(default=None, min_length=1, max_length=32)
 
 
 @router.post('/classes/join')
 def join_class(body: JoinClass, user=Depends(get_current_user), db: Session = Depends(get_db)):
-    cls = db.query(PracticeClass).filter(PracticeClass.code == body.code.strip().upper()).first()
+    if (body.class_id is None) == (body.code is None):
+        raise HTTPException(400, 'Choisissez une formation')
+    cls = (db.get(PracticeClass, body.class_id) if body.class_id is not None else
+           db.query(PracticeClass).filter(PracticeClass.code == body.code.strip().upper()).first())
     if not cls:
-        raise HTTPException(404, 'Code de classe inconnu')
+        raise HTTPException(404, 'Formation introuvable')
     teacher = db.get(User, cls.teacher_id)
     if not teacher or not teacher.active or teacher.role not in {'teacher', 'admin'}:
-        raise HTTPException(409, 'Classe indisponible')
+        raise HTTPException(409, 'Formation indisponible')
     membership = db.get(PracticeMembership, user.id)
     if membership:
         membership.class_id = cls.id
     else:
         db.add(PracticeMembership(user_id=user.id, class_id=cls.id))
     db.commit()
-    return class_payload(cls)
+    return class_payload(cls, db)
 
 
 @router.delete('/classes/join', status_code=204)
@@ -162,12 +201,40 @@ class Review(BaseModel):
 
 @router.post('/submissions/{submission_id}/review')
 def review(submission_id: int, body: Review, user=Depends(get_current_user), db: Session = Depends(get_db)):
-    row = db.get(PracticeSubmission, submission_id)
+    row = db.query(PracticeSubmission).filter(PracticeSubmission.id == submission_id).with_for_update().first()
     if not row or not may_review(user, row, db):
         raise HTTPException(404, 'Audio introuvable')
     if not body.feedback.strip():
         raise HTTPException(400, 'Retour requis')
+    row.feedback_revision += 1
     row.status = body.status; row.feedback = body.feedback.strip()
     row.reviewer_id = user.id; row.reviewed_at = datetime.utcnow()
+    db.commit(); db.refresh(row)
+    return payload(row, db)
+
+
+@router.get('/notifications')
+def notifications(user=Depends(get_current_user), db: Session = Depends(get_db)):
+    count = db.query(PracticeSubmission).filter(
+        PracticeSubmission.user_id == user.id,
+        PracticeSubmission.feedback_revision > PracticeSubmission.feedback_seen_revision,
+    ).count()
+    return {'unread_count': count}
+
+
+class FeedbackRead(BaseModel):
+    revision: int = Field(ge=0)
+
+
+@router.post('/submissions/{submission_id}/read')
+def read_feedback(submission_id: int, body: FeedbackRead, user=Depends(get_current_user), db: Session = Depends(get_db)):
+    row = (db.query(PracticeSubmission).filter(PracticeSubmission.id == submission_id,
+           PracticeSubmission.user_id == user.id).with_for_update().first())
+    if not row:
+        raise HTTPException(404, 'Audio introuvable')
+    if body.revision > row.feedback_revision:
+        raise HTTPException(409, 'Retour modifié. Actualisez la liste.')
+    # A delayed acknowledgement must never hide a newer teacher response.
+    row.feedback_seen_revision = max(row.feedback_seen_revision, body.revision)
     db.commit(); db.refresh(row)
     return payload(row, db)
