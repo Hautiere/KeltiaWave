@@ -1,0 +1,13 @@
+<section *ngIf="auth.user()" class="practice">
+  <header><h2>Mes audios et retours pédagogiques</h2><button type="button" (click)="refresh()" [disabled]="busy">Actualiser</button></header>
+  <p>Les audios envoyés depuis l’application mobile restent privés. Retrouvez ici les mêmes retours.</p>
+  <p role="alert" *ngIf="error">{{error}}</p><p role="status" *ngIf="notice">{{notice}}</p>
+  <h3>Ma classe</h3><p>{{joined ? joined.name : 'Sans classe : vos audios sont transmis à l’administration.'}}</p>
+  <form (ngSubmit)="join()"><label>Code du professeur<input name="code" [(ngModel)]="code" required maxlength="32"></label><button [disabled]="busy">Rejoindre</button><button type="button" *ngIf="joined" (click)="leave()" [disabled]="busy">Quitter la classe</button></form>
+  <p>Les changements de classe concernent les prochains envois.</p>
+  <p *ngIf="!mine.length">Aucun envoi pédagogique pour le moment.</p>
+  <article *ngFor="let row of mine"><h3>{{row.title}} · {{status(row.status)}}</h3><p>{{row.created_at | date:'dd/MM/yyyy HH:mm'}} · {{row.destination}}</p><button type="button" (click)="listen(row)" [disabled]="busy">Écouter mon audio</button><audio *ngIf="playingId===row.id" [src]="audioUrl" controls></audio><p class="feedback" *ngIf="row.feedback"><strong>{{row.reviewer}}</strong><br>{{row.feedback}}</p><p *ngIf="!row.feedback">Votre retour apparaîtra ici après correction.</p></article>
+  <ng-container *ngIf="reviewer"><h3>Mes classes</h3><form (ngSubmit)="create()"><label>Nom de la classe<input name="name" [(ngModel)]="name" required maxlength="120"></label><button [disabled]="busy">Créer une classe</button></form><p *ngFor="let cls of owned">{{cls.name}} · Code : <strong>{{cls.code}}</strong></p>
+    <h3>Audios à corriger</h3><p *ngIf="!reviews.length">Aucun audio pour le moment.</p><article *ngFor="let row of reviews"><h3>{{row.title}} · {{row.author}}</h3><p>{{row.destination}} · {{status(row.status)}}</p><button type="button" (click)="listen(row)" [disabled]="busy">Écouter</button><audio *ngIf="playingId===row.id" [src]="audioUrl" controls></audio><p class="transcript">{{row.transcript}}</p><p *ngIf="row.feedback">Dernier retour : {{row.feedback}}</p><form (ngSubmit)="review(row)"><label>Votre retour<textarea [name]="'feedback-'+row.id" [(ngModel)]="feedback[row.id]" required maxlength="5000" rows="3"></textarea></label><label>Décision<select [name]="'decision-'+row.id" [ngModel]="decisions[row.id] || 'approved'" (ngModelChange)="decisions[row.id]=$event"><option value="approved">Validé</option><option value="changes_requested">À retravailler</option></select></label><button [disabled]="busy">Envoyer le retour</button></form></article>
+  </ng-container>
+</section>

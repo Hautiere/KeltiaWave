@@ -1,3 +1,4 @@
+import { PracticeAccountComponent } from './practice/practice.component';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, effect, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -21,7 +22,7 @@ interface LibraryStat {
 @Component({
   selector: 'app-v2-account',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, V2SessionActionComponent],
+  imports: [PracticeAccountComponent, CommonModule, FormsModule, RouterLink, TranslatePipe, V2SessionActionComponent],
   templateUrl: './v2-account.component.html',
   styleUrls: ['./v2-account.component.scss'],
 })

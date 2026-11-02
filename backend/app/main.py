@@ -3,6 +3,7 @@ import os
 
 from fastapi import FastAPI
 from .db import Base, engine
+from .api.endpoints import practice
 from .api.endpoints import phrases
 from .api.endpoints import enregistrements
 from .api.endpoints import auth
@@ -436,6 +437,7 @@ configure_cors(app, os.getenv("CORS_ALLOW_ORIGINS", ""))
 # API
 app.include_router(phrases.router, prefix="/api/phrases", tags=["phrases"])
 app.include_router(enregistrements.router, prefix="/api/audios", tags=["audios"])
+app.include_router(practice.router, prefix="/api/practice", tags=["practice"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(admin_data.router, prefix="/api/admin-data", tags=["admin-data"])
 app.include_router(learning_routes.router, prefix="/api/learning", tags=["learning"])

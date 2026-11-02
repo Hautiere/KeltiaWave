@@ -28,6 +28,17 @@ class AuthTests(unittest.TestCase):
                         'X-Forwarded-Uri': '/api/record/transcribe',
                         'Authorization': 'Bearer test-only', 'Origin': 'https://localhost'}
 
+    def test_account_device_header_keeps_user_jwt_separate(self):
+        device = 'fixture-device-credential-with-32-characters'
+        with patch.dict(os.environ, STAGING_RECORD_DEVICE_SHA256=hashlib.sha256(device.encode()).hexdigest()):
+            headers = {**self.headers, 'X-Forwarded-Uri': '/api/practice/submissions',
+                       'Authorization': 'Bearer user-jwt', 'X-KeltiaWave-Device': f'Bearer {device}'}
+            self.assertTrue(auth.mobile_authorized(headers))
+            self.assertFalse(auth.mobile_authorized({**headers, 'X-KeltiaWave-Device': ''}))
+            for uri in ['/api/auth/users', '/api/practice/submissions?x=1', '/api/admin-data/', '/api/practice/submissions/../file']:
+                self.assertFalse(auth.mobile_authorized({**headers, 'X-Forwarded-Uri': uri}))
+            self.assertFalse(auth.mobile_authorized({**headers, 'Origin': 'https://other.example'}))
+
     def request(self, path='/verify-record', headers=None):
         handler = object.__new__(auth.Handler)
         handler.path = path

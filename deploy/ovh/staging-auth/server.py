@@ -70,7 +70,7 @@ _TICKET_LOCK = threading.Lock()
 
 
 def device_authorized(headers) -> bool:
-    value = headers.get('Authorization', '')
+    value = headers.get('X-KeltiaWave-Device', '') if account_scope(headers) else headers.get('Authorization', '')
     if not value.startswith('Bearer ') or not 32 <= len(value[7:]) <= 128:
         return False
     actual = hashlib.sha256(value[7:].encode()).hexdigest()
@@ -78,7 +78,34 @@ def device_authorized(headers) -> bool:
                for digest in os.getenv('STAGING_RECORD_DEVICE_SHA256', '').split(','))
 
 
+def account_scope(headers) -> bool:
+    if (os.getenv('DEPLOY_SLOT') != 'staging' or headers.get('X-Forwarded-Host') != RECORD_HOST
+            or headers.get('Origin') not in MOBILE_ORIGINS):
+        return False
+    uri = headers.get('X-Forwarded-Uri', '')
+    method = headers.get('X-Forwarded-Method')
+    if '?' in uri:
+        return False
+    if uri in {'/api/auth/login', '/api/auth/register', '/api/auth/change-password'}:
+        return method == 'POST'
+    if uri == '/api/auth/me':
+        return method == 'GET'
+    paths = {
+        '/api/practice/classes': {'GET', 'POST'},
+        '/api/practice/classes/join': {'POST', 'DELETE'},
+        '/api/practice/submissions': {'GET', 'POST'},
+        '/api/practice/reviews': {'GET'},
+    }
+    if method in paths.get(uri, set()):
+        return True
+    import re
+    return bool((method == 'GET' and re.fullmatch(r'/api/practice/submissions/[1-9][0-9]*/file', uri))
+                or (method == 'POST' and re.fullmatch(r'/api/practice/submissions/[1-9][0-9]*/review', uri)))
+
+
 def mobile_scope(headers) -> bool:
+    if account_scope(headers):
+        return True
     if (os.getenv('DEPLOY_SLOT') != 'staging' or headers.get('X-Forwarded-Host') != RECORD_HOST
             or headers.get('Origin') not in MOBILE_ORIGINS):
         return False
