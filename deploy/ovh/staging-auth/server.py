@@ -89,7 +89,7 @@ def account_scope(headers) -> bool:
     if uri in {'/api/auth/login', '/api/auth/register', '/api/auth/change-password', '/api/auth/forgot-password'}:
         return method == 'POST'
     if uri == '/api/auth/me':
-        return method == 'GET'
+        return method in {'GET', 'PATCH'}
     paths = {
         '/api/practice/classes': {'GET', 'POST'},
         '/api/practice/classes/available': {'GET'},

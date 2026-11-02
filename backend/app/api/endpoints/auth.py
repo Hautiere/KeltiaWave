@@ -131,6 +131,8 @@ def update_me(
     db: Session = Depends(get_db),
 ):
     patch = payload.model_dump(exclude_unset=True)
+    if 'display_name' in patch and (patch['display_name'] is None or not patch['display_name'].strip()):
+        raise HTTPException(status_code=400, detail="Nom de profil requis")
     if patch.get("breton_level") not in (None, *ALLOWED_BRETON_LEVELS):
         raise HTTPException(status_code=400, detail="Invalid Breton level")
 
