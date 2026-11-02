@@ -86,7 +86,7 @@ def account_scope(headers) -> bool:
     method = headers.get('X-Forwarded-Method')
     if '?' in uri:
         return False
-    if uri in {'/api/auth/login', '/api/auth/register', '/api/auth/change-password'}:
+    if uri in {'/api/auth/login', '/api/auth/register', '/api/auth/change-password', '/api/auth/forgot-password'}:
         return method == 'POST'
     if uri == '/api/auth/me':
         return method == 'GET'
