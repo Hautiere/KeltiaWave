@@ -10,6 +10,7 @@ from app.live import routes
 def live_client(monkeypatch):
     application = FastAPI()
     application.include_router(routes.router)
+    monkeypatch.setattr(routes, "w2v_available", lambda: True)
     monkeypatch.setattr(routes, "vosk_available", lambda language: True)
     monkeypatch.setattr(routes, "whisper_available", lambda language: True)
     monkeypatch.setattr(routes, "create_streaming_recognizer", lambda rate: {"rate": rate})
@@ -23,7 +24,9 @@ def test_live_capabilities_are_separate_and_honest(live_client):
     response = live_client.get("/api/live/capabilities")
     assert response.status_code == 200
     data = response.json()
-    assert data["languages"] == {"br": {"live": True, "whisper": True}}
+    assert data["languages"]["br"] == {"live": True, "whisper": True}
+    assert data["languages"]["cy"]["engine"] == "wav2vec2"
+    assert data["languages"]["cy"]["block_seconds"] == 4
     assert data["processing"] == "server"
     assert data["audio_format"] == "pcm_s16le_mono"
 
@@ -43,7 +46,7 @@ def test_live_pcm_and_stop_flush_last_words(live_client):
 
 
 @pytest.mark.parametrize("start", [[], {}, {"type": "start", "sample_rate": -1},
-    {"type": "start", "sample_rate": True}, {"type": "start", "sample_rate": 16000, "language": "cy"}])
+    {"type": "start", "sample_rate": True}, {"type": "start", "sample_rate": 16000, "language": "kw"}])
 def test_invalid_start_is_reported(live_client, start):
     with live_client.websocket_connect("/api/live/stream") as socket:
         socket.send_json(start)
@@ -138,3 +141,44 @@ def test_native_live_negotiates_only_the_public_protocol(live_client):
         socket.send_json({'type':'stop'})
         assert socket.receive_json()['type'] == 'final'
         assert socket.receive_json()['type'] == 'done'
+
+
+def test_welsh_live_flushes_complete_words_and_last_partial(live_client,monkeypatch):
+    from app.live import wav2vec2_stream as stream
+    monkeypatch.setattr(routes,'prepare_live',lambda:3)
+    monkeypatch.setattr(stream,'live_window_ids',lambda *args:[1,3,2])
+    monkeypatch.setattr(stream,'decode_live_ids',lambda ids:''.join({1:'bore',2:'da',3:' '}[i] for i in ids).strip())
+    with live_client.websocket_connect('/api/live/stream') as socket:
+        socket.send_json({'type':'start','sample_rate':48000,'language':'cy'})
+        assert socket.receive_json()['engine']=='wav2vec2'
+        socket.send_bytes(b'\0\0'*24000)
+        socket.send_json({'type':'ping'})
+        assert socket.receive_json()['type']=='pong'
+        socket.send_json({'type':'stop'})
+        assert socket.receive_json()=={'type':'final','text':'bore'}
+        assert socket.receive_json()=={'type':'partial','text':'da'}
+        assert socket.receive_json()=={'type':'final','text':'da'}
+        assert socket.receive_json()['type']=='done'
+    assert routes._active_sessions==0 and routes._active_welsh_sessions==0
+
+
+def test_welsh_live_missing_model_and_capacity_are_explicit(live_client,monkeypatch):
+    monkeypatch.setattr(routes,'w2v_available',lambda:False)
+    with live_client.websocket_connect('/api/live/stream') as socket:
+        socket.send_json({'type':'start','sample_rate':16000,'language':'cy'})
+        assert 'W2V gallois' in socket.receive_json()['message']
+    monkeypatch.setattr(routes,'w2v_available',lambda:True)
+    monkeypatch.setattr(routes,'_active_welsh_sessions',1)
+    with live_client.websocket_connect('/api/live/stream') as socket:
+        socket.send_json({'type':'start','sample_rate':16000,'language':'cy'})
+        assert 'déjà en cours' in socket.receive_json()['message']
+    assert routes._active_welsh_sessions==1
+
+
+def test_whisper_improvement_uses_captured_welsh_language(live_client,monkeypatch):
+    async def transcribe(audio,*,lang,tmp_prefix):
+        assert lang=='cy' and tmp_prefix=='keltia_live_cy_'
+        return {'text':'Bore da.','metrics':{}}
+    monkeypatch.setattr(routes,'transcribe_whisper_metrics',transcribe)
+    response=live_client.post('/api/live/improve',data={'language':'cy'},files={'audio_file':('live.webm',b'fixture','audio/webm')})
+    assert response.status_code==200 and response.json()['language']=='cy'

@@ -7,18 +7,19 @@
     <div><span class="eyebrow">ÉCOUTER & COMPRENDRE</span><h1>Live<span class="title-dot">.</span></h1><p class="subtitle">Le texte de ce que vous écoutez, en direct.</p></div>
     <span class="beta">Première version</span>
   </section>
-  <div class="badges"><span>◎ &nbsp; Breton</span><span>✦ &nbsp; Vosk</span><span>↗ &nbsp; Transcription sur serveur</span></div>
+  <div class="badges"><label class="language-choice">Langue <select aria-label="Langue de transcription" [ngModel]="language" (ngModelChange)="selectLanguage($event)" [disabled]="busy"><option value="br">Breton · Brezhoneg</option><option value="cy">Gallois · Cymraeg</option></select></label><span>✦ &nbsp; {{ engine }}</span><span>↗ &nbsp; Transcription sur serveur</span></div>
 
   @if (!audio.supported) {
     <section class="alert" role="status"><strong>Le partage audio n’est pas disponible dans ce navigateur.</strong><p>Essayez Live sur ordinateur, en HTTPS ou sur localhost, avec un navigateur qui permet de partager le son d’un onglet. L’audio des autres applications du téléphone n’est pas accessible depuis cette version web.</p></section>
   }
   @if (available === false && !error) {
-    <section class="alert" role="status">Le modèle Vosk breton n’est pas disponible sur le serveur. <button class="text-button" (click)="checkServer()">Réessayer</button></section>
+    <section class="alert" role="status">Le modèle {{engine}} {{language==='cy' ? 'gallois' : 'breton'}} n’est pas disponible sur le serveur. <button class="text-button" (click)="checkServer()">Réessayer</button></section>
   }
   @if (error) {
     <section class="alert error" role="alert">{{ error }} @if (!busy && available === false) { <button class="text-button" (click)="checkServer()">Réessayer</button> }</section>
   }
 
+  @if (language === 'cy') {<p class="welsh-note" role="status">W2V gallois : le texte arrive par blocs d’environ 4 secondes, avec quelques secondes de délai.</p>}
   <div class="workspace">
     <section class="listening-panel" aria-label="État de l’écoute">
       <div class="session-head"><span class="status" [class.active]="state === 'listening'"><i></i>{{ status }}</span><time>{{ elapsed }}</time></div>
@@ -34,10 +35,10 @@
     </section>
 
     <section class="transcript-panel" aria-label="Transcription">
-      <div class="transcript-head"><h2><span aria-hidden="true">▤</span> {{ version === 'whisper' ? 'Transcription Whisper' : 'Transcription en direct' }}</h2><span class="language-tag">BR</span></div>
+      <div class="transcript-head"><h2><span aria-hidden="true">▤</span> {{ version === 'whisper' ? 'Transcription Whisper' : 'Transcription en direct' }}</h2><span class="language-tag">{{ (text ? resultLanguage : language).toUpperCase() }}</span></div>
       @if (whisperText !== null) {
         <div class="versions" role="group" aria-label="Version de la transcription">
-          <button [attr.aria-pressed]="version === 'vosk'" (click)="version = 'vosk'">Vosk · direct</button>
+          <button [attr.aria-pressed]="version === 'vosk'" (click)="version = 'vosk'">{{ resultEngine }} · direct</button>
           <button [attr.aria-pressed]="version === 'whisper'" (click)="version = 'whisper'">Whisper · seconde version</button>
         </div>
       }

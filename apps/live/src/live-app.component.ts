@@ -1,15 +1,23 @@
 import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { LiveAudioService, LiveEvent } from './live-audio.service';
+import { FormsModule } from '@angular/forms';
+import { LiveAudioService, LiveEvent, LiveLanguage, LiveCapabilities } from './live-audio.service';
 
 type State = 'idle' | 'starting' | 'listening' | 'paused' | 'stopping';
 
 @Component({
-  selector: 'live-root', standalone: true,
+  selector: 'live-root', standalone: true, imports:[FormsModule],
   templateUrl: './live-app.component.html', styleUrl: './live-app.component.scss',
 })
 export class LiveAppComponent implements OnInit, OnDestroy {
   @ViewChild('transcript') transcript?: ElementRef<HTMLDivElement>;
   state: State = 'idle';
+  language:LiveLanguage='br';
+  resultLanguage:LiveLanguage='br';
+  private capabilities:LiveCapabilities|null=null;
+  private capabilitiesSequence=0;
+  get engine():string {return this.language==='cy'?'W2V':'Vosk';}
+  get resultEngine():string {return this.resultLanguage==='cy'?'W2V':'Vosk';}
+  selectLanguage(language:LiveLanguage):void {if(this.busy)return;this.language=language;void this.checkServer();}
   available: boolean | null = null;
   whisperAvailable = false;
   improving = false;
@@ -52,13 +60,16 @@ export class LiveAppComponent implements OnInit, OnDestroy {
   constructor(readonly audio: LiveAudioService, private readonly zone: NgZone) {}
   ngOnInit(): void { void this.checkServer(); }
   async checkServer(): Promise<void> {
+    const sequence=++this.capabilitiesSequence;
     this.available = null; this.error = '';
     try {
       const capabilities = await this.audio.capabilities();
-      this.available = capabilities.languages.br.live;
-      this.whisperAvailable = capabilities.languages.br.whisper;
+      if(sequence!==this.capabilitiesSequence) return;
+      this.capabilities=capabilities;
+      this.available = capabilities.languages[this.language]?.live ?? false;
+      this.whisperAvailable = capabilities.languages[this.text ? this.resultLanguage : this.language]?.whisper ?? false;
     }
-    catch { this.available = false; this.error = 'Impossible de joindre le serveur Live. Réessayez dans un instant.'; }
+    catch { if(sequence!==this.capabilitiesSequence)return;this.available = false; this.error = 'Impossible de joindre le serveur Live. Réessayez dans un instant.'; }
   }
   get busy(): boolean { return this.state !== 'idle' || this.improving; }
   get voskText(): string { return [...this.segments, this.partial].filter(Boolean).join('\n\n'); }
@@ -76,16 +87,19 @@ export class LiveAppComponent implements OnInit, OnDestroy {
     if (this.busy || !this.audio.supported || !this.available) return;
     // Keep the previous transcript until the new capture has actually started.
     const sequence = ++this.startSequence;
+    const language=this.language;
     this.state = 'starting'; this.error = ''; this.notice = '';
     try {
       await this.audio.start(
         event => this.zone.run(() => this.receive(event)),
         level => this.zone.run(() => { this.level = level; if (level > .003) this.lastSound = Date.now(); }),
         () => this.zone.run(() => this.ended()),
+        language,
       );
       if (sequence !== this.startSequence || this.state !== 'starting') return;
       this.segments = []; this.partial = ''; this.seconds = 0; this.follow = true;
       this.whisperText = null; this.version = 'vosk'; this.whisperError = '';
+      this.resultLanguage=language;this.whisperAvailable=this.capabilities?.languages[language]?.whisper ?? false;
       this.state = 'listening'; this.silence = false; this.lastSound = Date.now();
       this.clock = window.setInterval(() => {
         if (this.state === 'listening') { this.seconds++; this.silence = Date.now() - this.lastSound > 5000; }
@@ -123,14 +137,14 @@ export class LiveAppComponent implements OnInit, OnDestroy {
       });
       if (sequence !== this.whisperSequence) return;
       if (!result.text.trim()) {
-        this.whisperError = 'Whisper n’a pas reconnu de paroles. La version Vosk est conservée.';
+        this.whisperError = 'Whisper n’a pas reconnu de paroles. La version '+this.resultEngine+' est conservée.';
         return;
       }
       this.whisperText = result.text; this.version = 'whisper'; this.follow = true;
       this.scrollToLive();
     } catch {
       if (sequence !== this.whisperSequence) return;
-      this.whisperError = 'Whisper est indisponible ou le traitement a échoué. La version Vosk est conservée ; vous pouvez réessayer.';
+      this.whisperError = 'Whisper est indisponible ou le traitement a échoué. La version '+this.resultEngine+' est conservée ; vous pouvez réessayer.';
     } finally { if (sequence === this.whisperSequence) { this.stopWhisperProgress(); this.improving = false; } }
   }
   stop(): void {
@@ -174,5 +188,5 @@ export class LiveAppComponent implements OnInit, OnDestroy {
     try { await navigator.share({ title: 'KeltiaWave Live', text: this.text }); }
     catch (error) { if (!(error instanceof DOMException && error.name === 'AbortError')) this.notice = 'Partage indisponible. Copiez ou enregistrez le texte.'; }
   }
-  ngOnDestroy(): void { ++this.whisperSequence; this.stopWhisperProgress(); ++this.startSequence; this.audio.destroy(); this.ended(); }
+  ngOnDestroy(): void { ++this.capabilitiesSequence; ++this.whisperSequence; this.stopWhisperProgress(); ++this.startSequence; this.audio.destroy(); this.ended(); }
 }

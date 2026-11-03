@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpEventType } from '@angular/common/http';
 import { firstValueFrom, timeout, filter, map, tap } from 'rxjs';
 
+export type LiveLanguage = 'br' | 'cy';
 export interface LiveCapabilities {
-  languages: { br: { live: boolean; whisper: boolean } };
+  languages: { br: { live: boolean; whisper: boolean }; cy?: { live:boolean; whisper:boolean; engine?:string; block_seconds?:number } };
   max_session_seconds: number;
   max_audio_upload_bytes: number;
 }
@@ -28,6 +29,7 @@ export class LiveAudioService {
   private generation = 0;
   private recorder: MediaRecorder | null = null;
   private archivedAudio: File | null = null;
+  private archiveLanguage:LiveLanguage='br';
   private archiveMessage = '';
   private archiveLimit = 64 * 1024 * 1024;
   private onEvent: (event: LiveEvent) => void = () => {};
@@ -45,7 +47,7 @@ export class LiveAudioService {
   }
   async whisperEstimate(duration: number): Promise<number> {
     if (duration <= 0) return 0;
-    const params = new URLSearchParams({ lang: 'br', mode: 'quality', duration_seconds: String(duration) });
+    const params = new URLSearchParams({ lang: this.archiveLanguage, mode: 'quality', duration_seconds: String(duration) });
     try {
       const result = await firstValueFrom(this.http.get<{ estimated_seconds: number }>(`/api/transcribe/estimate?${params}`).pipe(timeout(10000)));
       return Number.isFinite(result.estimated_seconds) && result.estimated_seconds > 0 ? result.estimated_seconds : 0;
@@ -55,6 +57,7 @@ export class LiveAudioService {
     if (!this.archivedAudio) return Promise.reject(new Error('L’audio de cette écoute n’est pas disponible.'));
     const form = new FormData();
     form.append('audio_file', this.archivedAudio, this.archivedAudio.name);
+    form.append('language',this.archiveLanguage);
     return firstValueFrom(this.http.post<{ text: string }>(`/api/live/improve`, form, { observe: 'events', reportProgress: true }).pipe(
       tap(event => {
         if (event.type === HttpEventType.UploadProgress) onUpload(event.total ? Math.round(event.loaded * 100 / event.total) : null);
@@ -68,7 +71,7 @@ export class LiveAudioService {
     ));
   }
 
-  async start(onEvent: (event: LiveEvent) => void, onLevel: (level: number) => void, onEnd: () => void): Promise<void> {
+  async start(onEvent: (event: LiveEvent) => void, onLevel: (level: number) => void, onEnd: () => void, language:LiveLanguage = 'br'): Promise<void> {
     const generation = ++this.generation;
     this.cancelled = false;
     this.finishing = false;
@@ -112,8 +115,8 @@ export class LiveAudioService {
       await new Promise<void>((resolve, reject) => {
         let ready = false;
         this.stopWaiter = () => reject(new Error('Démarrage interrompu.'));
-        this.handshakeTimer = window.setTimeout(() => { reject(new Error('Le serveur Live ne répond pas.')); }, 15000);
-        socket.onopen = () => socket.send(JSON.stringify({ type: 'start', language: 'br', sample_rate: context.sampleRate }));
+        this.handshakeTimer = window.setTimeout(() => { reject(new Error('Le serveur Live ne répond pas.')); }, language === 'cy' ? 30000 : 15000);
+        socket.onopen = () => socket.send(JSON.stringify({ type: 'start', language, sample_rate: context.sampleRate }));
         socket.onmessage = ({ data }) => {
           let event: LiveEvent;
           try { event = JSON.parse(String(data)) as LiveEvent; }
@@ -123,7 +126,7 @@ export class LiveAudioService {
             this.clearHandshake();
             this.stopWaiter = null;
             this.active = true;
-            this.startArchive(stream, generation);
+            this.startArchive(stream, generation, language);
             this.node?.port.postMessage('resume');
             this.timer = window.setTimeout(() => { void this.stop(); }, 3600000);
             this.heartbeat = window.setInterval(() => {
@@ -180,7 +183,7 @@ export class LiveAudioService {
     this.active = false;
     this.releaseCapture();
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'stop' }));
-    this.timer = window.setTimeout(() => { this.fail('La finalisation a expiré. Le texte déjà reçu est conservé.'); }, 10000);
+    this.timer = window.setTimeout(() => { this.fail('La finalisation a expiré. Le texte déjà reçu est conservé.'); }, this.archiveLanguage === 'cy' ? 60000 : 10000);
   }
   destroy(): void { ++this.generation; this.cancelled = true; this.finishing = true; this.dispose(); this.archivedAudio = null; }
   private fail(message: string): void {
@@ -200,7 +203,8 @@ export class LiveAudioService {
     this.source?.disconnect(); this.source = null;
     void this.context?.close().catch(() => {}); this.context = null;
   }
-  private startArchive(stream: MediaStream, generation: number): void {
+  private startArchive(stream: MediaStream, generation: number, language:LiveLanguage): void {
+    this.archiveLanguage=language;
     this.archivedAudio = null;
     this.archiveMessage = '';
     const mime = typeof MediaRecorder !== 'undefined' && ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']

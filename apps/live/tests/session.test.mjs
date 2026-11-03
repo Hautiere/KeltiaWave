@@ -4,6 +4,8 @@ import ts from 'typescript';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { File } from 'node:buffer';
+import {createRequire} from 'node:module';
+const rx=createRequire(import.meta.url)('rxjs');
 
 function makeSession(recordable = false) {
   const tracks = [{ kind: 'audio', stopped: false, stop() { this.stopped = true; }, addEventListener() {} },
@@ -64,7 +66,7 @@ function makeSession(recordable = false) {
   }
   const exports = {};
   const sandbox = {
-    exports, URL, Error, ArrayBuffer, JSON, Promise, Blob, File,
+    exports, URL, URLSearchParams, Error, ArrayBuffer, JSON, Promise, Blob, File, FormData,
     location: { hostname: '127.0.0.1', port: '4800', protocol: 'http:', origin: 'http://127.0.0.1:4800' },
     navigator: { mediaDevices: { getDisplayMedia: async () => stream } },
     AudioContext: Context, AudioWorkletNode: Node, WebSocket: Socket,
@@ -75,18 +77,19 @@ function makeSession(recordable = false) {
       setInterval: callback => { intervals.set(++id, callback); return id; },
       clearInterval: key => intervals.delete(key),
     },
-    require: name => name === '@angular/core' ? { Injectable: () => target => target } : {},
+    require: name => name === '@angular/core' ? { Injectable: () => target => target } : name==='rxjs'?rx:name==='@angular/common/http'?{HttpEventType:{UploadProgress:1,Response:4}}:{},
   };
   if (recordable) sandbox.MediaRecorder = Recorder;
   const code = ts.transpileModule(readFileSync(new URL('../src/live-audio.service.ts', import.meta.url), 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, experimentalDecorators: true },
   }).outputText;
   vm.runInNewContext(code, sandbox);
-  return { service: new exports.LiveAudioService({}), sockets, nodes, contexts, tracks, timeouts, intervals, sandbox, recorders };
+  const calls=[];const http={post:(...args)=>{calls.push(args);return rx.of({type:4,body:{text:'Bore da.'}});},get:(url)=>{calls.push([url]);return rx.of({estimated_seconds:4});}};
+  return { service: new exports.LiveAudioService(http), calls, sockets, nodes, contexts, tracks, timeouts, intervals, sandbox, recorders };
 }
 
-async function openSession(session, events = []) {
-  const pending = session.service.start(event => events.push(event), () => {}, () => {});
+async function openSession(session, events = [], language='br') {
+  const pending = session.service.start(event => events.push(event), () => {}, () => {}, language);
   // Settle the capture and worklet setup promises without real timers or devices.
   for (let i = 0; i < 10 && !session.sockets.length; i++) await Promise.resolve();
   const socket = session.sockets[0];
@@ -173,4 +176,15 @@ test('audio size limit disables Whisper without interrupting Vosk', async () => 
   assert.match(session.service.whisperAudioMessage, /limite/);
   assert.equal(socket.readyState, 1);
   session.service.destroy();
+});
+
+test('Welsh capture uses cy for the handshake, estimate and post-stop Whisper audio',async()=>{
+  const session=makeSession(true);const socket=await openSession(session,[],'cy');
+  assert.equal(JSON.parse(socket.sent[0]).language,'cy');
+  await session.service.stop();socket.event({type:'done'});
+  session.sandbox.navigator.mediaDevices.getDisplayMedia=async()=>{throw new Error('Cancelled next capture');};
+  await assert.rejects(session.service.start(()=>{},()=>{},()=>{},'br'));
+  await session.service.whisperEstimate(10);await session.service.improve();
+  assert.match(session.calls[0][0],/lang=cy/);
+  assert.equal(session.calls[1][1].get('language'),'cy');
 });

@@ -589,3 +589,5 @@ footer a {
 @keyframes whisper-progress { from { transform:translateX(-110%); } to { transform:translateX(315%); } }
 @media(max-width:700px) { .whisper-progress { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce) { .indeterminate .progress-track i { animation:none; } }
+
+.language-choice{display:flex;align-items:center;gap:8px;color:#52627a;font-size:13px}.language-choice select{padding:7px 10px;border:1px solid #dce4ec;border-radius:10px;background:white;color:#20334c;font:inherit}.welsh-note{margin:0 0 18px;color:#52627a;font-size:13px;line-height:1.5}

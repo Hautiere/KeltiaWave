@@ -111,3 +111,36 @@ async def transcribe(audio_file: UploadFile):
         return dict(filename=filename, text=result['text'], segments=result['segments'], metrics=metrics)
     finally:
         shutil.rmtree(directory, ignore_errors=True)
+
+
+def prepare_live():
+    if not _lock.acquire(blocking=False):
+        raise HTTPException(503, 'W2V est occupé par une transcription. Réessayez dans un instant.')
+    try:
+        _, processor, _ = _load()
+        return processor.tokenizer.convert_tokens_to_ids(processor.tokenizer.word_delimiter_token)
+    finally:
+        _lock.release()
+
+
+def live_window_ids(pcm, sample_rate, left_frames, core_frames):
+    """Decode a bounded PCM window; keep context out of the committed CTC frames."""
+    import numpy as np
+    converted = subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-f', 's16le',
+        '-ar', str(sample_rate), '-ac', '1', '-i', 'pipe:0', '-f', 'f32le',
+        '-ar', '16000', '-ac', '1', 'pipe:1'], input=pcm, capture_output=True, check=True)
+    samples = np.frombuffer(converted.stdout, dtype='<f4')
+    if len(samples) < 400:
+        samples = np.pad(samples, (0, 400-len(samples)))
+    with _lock:
+        torch, processor, model = _load()
+        inputs = processor(samples, sampling_rate=16000, return_tensors='pt')
+        with torch.inference_mode():
+            predicted = model(**inputs).logits.argmax(dim=-1)[0].cpu().tolist()
+        return crop_ids(predicted, left_frames, core_frames, len(pcm)//2)
+
+
+def decode_live_ids(ids):
+    with _lock:
+        _, processor, _ = _load()
+        return processor.batch_decode([list(ids)])[0].strip()

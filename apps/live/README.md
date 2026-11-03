@@ -1,7 +1,7 @@
 # KeltiaWave Live
 
-Front Angular autonome pour suivre en direct un podcast breton, avec le backend
-commun et le moteur Vosk. Démarrage : `./scripts/start-live.sh` depuis la racine,
+Front Angular autonome pour suivre en direct un podcast breton (Vosk) ou gallois (W2V), avec le backend
+commun. Démarrage : `./scripts/start-live.sh` depuis la racine,
 puis ouvrir <http://127.0.0.1:4800>. Le backend doit écouter sur le port 8100 et
 disposer du modèle Vosk breton. Les appels HTTP et WebSocket passent par le même hôte que le front : Nginx
 en Docker, `proxy.conf.json` avec `npm start`. Aucun ajout CORS n’est nécessaire
@@ -33,7 +33,14 @@ Whisper conserve le texte et permet de réessayer. La taille audio est plafonné
 désactive Whisper pour cette session sans arrêter Vosk. Le texte reste dans la page jusqu’au rechargement ou au démarrage
 réussi d’une nouvelle écoute. Télécharger et partager restent possibles
 après une coupure. La première interface est en français ; la reconnaissance est
-en breton uniquement. Les mots provisoires sont surlignés.
+en breton ou en gallois. Les mots provisoires sont surlignés.
+
+Sélectionner Gallois active W2V : résultats par blocs utiles de quatre secondes,
+avec une seconde de contexte et un délai de calcul serveur. Le dernier bloc est
+finalisé à l’arrêt. Une seule écoute galloise est admise par processus ; une file
+bornée interrompt explicitement une écoute si le serveur ne suit plus. Le modèle
+local `wav2vec2-cy` et ses dépendances sont ceux de Transcribe (voir
+`backend/app/transcribe/README.md`). Whisper reçoit la langue de l’audio capturé.
 
 Pause suspend l’envoi d’audio, sans mettre en pause le podcast. Arrêter coupe le
 partage et attend les derniers mots du serveur. La session est limitée à une heure.
@@ -42,9 +49,9 @@ partage et attend les derniers mots du serveur. La session est limitée à une h
 
 - `GET /api/live/capabilities` : modèles Vosk/Whisper disponibles, format, traitement serveur et limites.
 - `POST /api/live/improve` : fichier `audio_file` de la session, reconnaissance
-  Whisper breton via le service partagé. Aucune réécriture à partir du texte seul.
+  Whisper via le service partagé, champ `language` (`br` par défaut ou `cy`). Aucune réécriture à partir du texte seul.
 - `WS /api/live/stream` : JSON `{ "type": "start", "sample_rate": 48000,
-  "language": "br" }`, puis blocs binaires PCM16 mono little-endian à la fréquence
+  "language": "br" } (`cy` pour W2V)`, puis blocs binaires PCM16 mono little-endian à la fréquence
   réelle de l’AudioContext. Les blocs ne dépassent pas 64 Kio.
 - Événements serveur : `ready`, `partial`, `final`, `error`, `done`.
 - `{ "type": "stop" }` finalise la reconnaissance. `ping` / `pong` maintient
@@ -56,7 +63,7 @@ de Record. Le service Whisper est partagé avec Record, Transcribe et Subtitles.
 ## Vérification et déploiement
 
 `npm run build:live` à la racine ; `npm --prefix apps/live test` pour le traitement
-PCM ; `backend/.venv/bin/python -m pytest backend/tests/test_live.py -q` pour l’API.
+PCM ; `backend/.venv/bin/python -m pytest backend/tests/test_live.py backend/tests/test_live_wav2vec2.py -q` pour l’API.
 Le service Docker `live` expose 4800 en local et 14800 pour le slot OVH candidat.
 Les configurations Caddy préparent `live.keltiawave.com` et
 `live.staging.keltiawave.com` (avec l’authentification staging existante).
