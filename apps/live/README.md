@@ -51,7 +51,7 @@ partage et attend les derniers mots du serveur. La session est limitée à une h
 - `POST /api/live/improve` : fichier `audio_file` de la session, reconnaissance
   Whisper via le service partagé, champ `language` (`br` par défaut ou `cy`). Aucune réécriture à partir du texte seul.
 - `WS /api/live/stream` : JSON `{ "type": "start", "sample_rate": 48000,
-  "language": "br" } (`cy` pour W2V)`, puis blocs binaires PCM16 mono little-endian à la fréquence
+  "language": "br" }` (`cy` pour W2V), puis blocs binaires PCM16 mono little-endian à la fréquence
   réelle de l’AudioContext. Les blocs ne dépassent pas 64 Kio.
 - Événements serveur : `ready`, `partial`, `final`, `error`, `done`.
 - `{ "type": "stop" }` finalise la reconnaissance. `ping` / `pong` maintient
