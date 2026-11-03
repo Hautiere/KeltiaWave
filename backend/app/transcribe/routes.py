@@ -32,9 +32,13 @@ def transcription_estimate(
     mode: str = Query(..., pattern="^(fast|quality)$"),
     duration_seconds: float = Query(..., gt=0, le=86400),
 ) -> Dict[str, Any]:
-    if lang == "cy" and mode == "fast":
-        raise HTTPException(status_code=400, detail="Vosk is not available for Welsh")
     return get_estimate(lang, mode, duration_seconds)
+
+
+@router.post('/transcribe_w2v_wel_metrics', summary='W2V Welsh — text and metrics from the local wav2vec2-cy model')
+async def transcribe_w2v_wel_metrics(audio_file: UploadFile = File(...)) -> Dict[str, Any]:
+    from app.transcribe.wav2vec2 import transcribe
+    return await transcribe(audio_file)
 
 
 # -------------------------------------------------------------------

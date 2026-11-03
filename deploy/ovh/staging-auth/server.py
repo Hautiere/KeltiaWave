@@ -63,7 +63,7 @@ def valid_record_access(headers) -> bool:
 MOBILE_POST_PATHS = {
     '/api/live/improve', '/api/mobile/live-ticket',
     '/api/transcribe/transcribe_whisper_bre_metrics',
-    '/api/transcribe/transcribe_whisper_wel_metrics',
+    '/api/transcribe/transcribe_whisper_wel_metrics', '/api/transcribe/transcribe_w2v_wel_metrics',
 }
 _TICKETS: dict[str, float] = {}
 _TICKET_LOCK = threading.Lock()

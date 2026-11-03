@@ -20,14 +20,14 @@ _LOCK = threading.Lock()
 
 
 def _profile_key(language: str, mode: str) -> str:
-    engine = "vosk" if mode == "fast" else "whisper"
+    engine = "wav2vec2" if language == "cy" and mode == "fast" else "vosk" if mode == "fast" else "whisper"
     return f"{engine}:{language}"
 
 
 def _default_rtf(language: str, mode: str) -> float:
-    engine = "VOSK" if mode == "fast" else "WHISPER"
+    engine = "W2V" if language == "cy" and mode == "fast" else "VOSK" if mode == "fast" else "WHISPER"
     name = f"TRANSCRIPTION_DEFAULT_RTF_{engine}_{language.upper()}"
-    fallback = 0.45 if mode == "fast" else 1.25
+    fallback = 1.25 if language == "cy" else 0.45 if mode == "fast" else 1.25
     try:
         return max(0.05, min(10.0, float(os.getenv(name, str(fallback)))))
     except ValueError:
@@ -60,7 +60,7 @@ def get_estimate(language: str, mode: str, duration_seconds: float) -> dict[str,
     return {
         "language": language,
         "mode": mode,
-        "engine": "vosk" if mode == "fast" else "whisper",
+        "engine": _profile_key(language, mode).split(":")[0],
         "duration_seconds": round(duration_seconds, 2),
         "estimated_seconds": round(estimate, 2),
         "real_time_factor": round(rtf, 4),

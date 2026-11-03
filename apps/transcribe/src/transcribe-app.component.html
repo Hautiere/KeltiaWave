@@ -21,14 +21,14 @@
         </label></fieldset>
 
         <fieldset><legend><span>3</span> {{ t('Mode') }}</legend><div class="mode-grid">
-          <button type="button" [class.selected]="mode === 'fast'" [disabled]="language === 'cy' || busy" (click)="selectMode('fast')"><b>ϟ</b><span><strong>{{ t('Rapide') }} · Vosk</strong><small>{{ t('Brouillon breton immédiat') }}</small></span><i></i></button>
+          <button type="button" [class.selected]="mode === 'fast'" [disabled]="busy" (click)="selectMode('fast')"><b>ϟ</b><span><strong>{{ fastEngine }} · {{ t('Rapide') }}</strong><small>{{ language === 'cy' ? t('Gallois')+' · Wav2Vec2' : t('Brouillon breton immédiat') }}</small></span><i></i></button>
           <button type="button" [class.selected]="mode === 'quality'" [disabled]="busy" (click)="selectMode('quality')"><b>✦</b><span><strong>{{ t('Qualité') }} · Whisper</strong><small>{{ t('Breton et gallois, meilleure précision') }}</small></span><i></i></button>
         </div></fieldset>
 
         <div class="form-actions"><p [class.error]="error">{{ error || message }}</p><button class="start" type="submit" [disabled]="!file || busy"><span class="loader-eq" *ngIf="busy" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>{{ busy ? t('Traitement en cours…') : t('Lancer la transcription') }} <span *ngIf="!busy">→</span></button></div>
         <div class="progress-stack" *ngIf="busy">
           <div class="progress-row"><span>{{ t('Chargement du fichier') }}</span><strong>{{ uploadProgress }} %</strong><div class="progress"><i [style.width.%]="uploadProgress"></i></div></div>
-          <div class="progress-row" [class.indeterminate]="!transcriptionEstimate || estimateExceeded"><span>{{ t('Transcription') }} · {{ mode === 'fast' ? 'Vosk' : 'Whisper' }}</span><strong *ngIf="transcriptionEstimate && !estimateExceeded">{{ transcriptionProgress }} % · ~{{ remainingTime }}</strong><strong *ngIf="!transcriptionEstimate || estimateExceeded">{{ t('Temps écoulé') }} {{ elapsedTime }}</strong><div class="progress"><i [style.width.%]="transcriptionEstimate && !estimateExceeded ? transcriptionProgress : null"></i></div></div>
+          <div class="progress-row" [class.indeterminate]="!transcriptionEstimate || estimateExceeded"><span>{{ t('Transcription') }} · {{ mode === 'fast' ? fastEngine : 'Whisper' }}</span><strong *ngIf="transcriptionEstimate && !estimateExceeded">{{ transcriptionProgress }} % · ~{{ remainingTime }}</strong><strong *ngIf="!transcriptionEstimate || estimateExceeded">{{ t('Temps écoulé') }} {{ elapsedTime }}</strong><div class="progress"><i [style.width.%]="transcriptionEstimate && !estimateExceeded ? transcriptionProgress : null"></i></div></div>
         </div>
       </form>
 

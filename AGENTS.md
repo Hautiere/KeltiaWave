@@ -10,6 +10,7 @@
 - `apps/{record,transcribe,subtitles}/`: audio tools. `apps/live/`: component/template/styles, `live-audio.service.ts`, `public/live-pcm-worklet.js`.
 - `backend/app/api/endpoints/`: corpus/accounts; `backend/app/{record,transcribe,subtitles,learning,live}/`: feature APIs.
 - `backend/app/live/routes.py`: capabilities, WebSocket stream, Whisper improve. Shared Whisper: `backend/app/transcribe/service.py`; Vosk: `backend/app/vosk_utils.py`.
+- Welsh W2V file ASR: `backend/app/transcribe/wav2vec2.py` and its README; model directory `backend/models/wav2vec2-cy` stays outside Git.
 - `backend/tests/`: tests; `deploy/`, `scripts/`: delivery/local commands. README and feature READMEs only as needed.
 - Native Android is in sibling `../keltiawave-mobile`; start with its `AGENTS.md`. Its Breton Vosk is local in Record/Transcribe/Live; web Vosk still uses the server. Phone updates require an APK.
 

@@ -32,3 +32,5 @@ Le domaine historique `transcription.keltiawave.com` reste compatible.
 Sur ordinateur, la page occupe la fenêtre sans scrollbar globale. Le footer
 commun KeltiaWave reste visible et reprend l'adresse Hautiere prod, la signature
 **Brezhoneg gant Fañch** et l'adresse de contact.
+
+Gallois : **W2V · Rapide** utilise le modèle serveur local `wav2vec2-cy` ; **Whisper · Qualité** reste disponible. W2V est un traitement de fichier CTC (sans KenLM), pas du Live. Détails : [backend Transcribe](../../backend/app/transcribe/README.md). Le serveur de développement utilise `proxy.conf.json` pour garder les requêtes sur la même origine.

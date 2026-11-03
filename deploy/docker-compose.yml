@@ -11,6 +11,7 @@ services:
       - "8100:8100"
     environment:
       MODELS_ROOT: /opt/models
+      W2V_CY_MODEL_PATH: ${W2V_CY_MODEL_PATH:-/opt/models/wav2vec2-cy}
       HF_HOME: /app/data/hf-cache
       VOSK_MODEL_PATH: ${VOSK_MODEL_PATH:-/opt/models/vosk-model-br-25.02}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-keltiawave}
@@ -32,6 +33,7 @@ services:
       MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-200}
       WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
       WHISPER_COMPUTE: ${WHISPER_COMPUTE:-int8}
+      TRANSCRIPTION_DEFAULT_RTF_W2V_CY: ${TRANSCRIPTION_DEFAULT_RTF_W2V_CY:-1.25}
       TRANSCRIPTION_DEFAULT_RTF_VOSK_BR: ${TRANSCRIPTION_DEFAULT_RTF_VOSK_BR:-0.45}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_BR:-1.25}
       TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY: ${TRANSCRIPTION_DEFAULT_RTF_WHISPER_CY:-1.25}
@@ -47,6 +49,7 @@ services:
     volumes:
       - ${VOSK_MODEL_HOST_DIR:-../backend/models/vosk-model-br-25.02}:/opt/models/vosk-model-br-25.02:ro
       - ${WHISPER_BRETON_MODEL_HOST_DIR:-../backend/models/whisper-breton-ct2}:/opt/models/whisper-breton-ct2:ro
+      - ${W2V_WELSH_MODEL_HOST_DIR:-../backend/models/wav2vec2-cy}:/opt/models/wav2vec2-cy:ro
       - ${WHISPER_WELSH_MODEL_HOST_DIR:-../backend/models/whisper-welsh-ct2}:/opt/models/whisper-welsh-ct2:ro
       - backend_data:/app/data
 

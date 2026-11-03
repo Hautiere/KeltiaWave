@@ -83,12 +83,13 @@ export class TranscribeAppComponent {
   selectLanguage(language: TranscribeLanguage): void {
     if (this.busy) return;
     this.language = language;
-    this.mode = language === 'br' ? 'fast' : 'quality';
+    this.mode = 'fast';
     this.refreshServerEstimate();
   }
 
+  get fastEngine():string {return this.language === 'cy' ? 'W2V' : 'Vosk';}
   selectMode(mode: TranscribeMode): void {
-    if (this.busy || (this.language === 'cy' && mode === 'fast')) return;
+    if (this.busy) return;
     this.mode = mode;
     this.refreshServerEstimate();
   }
@@ -108,7 +109,7 @@ export class TranscribeAppComponent {
           this.transcriptionActive = false;
           this.result = event.result; this.text = event.result.text || ''; this.busy = false;
           this.rememberProcessingSpeed(event.result);
-          this.message = `${this.status('Transcription terminée avec')} ${this.mode === 'fast' ? 'Vosk' : 'Whisper'}.`;
+          this.message = `${this.status('Transcription terminée avec')} ${this.mode === 'fast' ? this.fastEngine : 'Whisper'}.`;
         } else if (event.progress < 100) {
           this.message = `${this.status('Envoi du fichier…')} ${event.progress}%`;
         } else {
@@ -122,7 +123,7 @@ export class TranscribeAppComponent {
 
   reset(): void {
     this.request?.unsubscribe(); this.stopTranscriptionProgress(); this.busy = false; this.file = null; this.result = null; this.text = ''; this.uploadProgress = 0; this.transcriptionElapsed = 0; this.transcriptionActive = false; this.transcriptionEstimate = 0; this.transcriptionProgress = 0; this.mediaDuration = 0; this.serverRealTimeFactor = 0; this.error = '';
-    this.mode = this.language === 'br' ? 'fast' : 'quality';
+    this.mode = 'fast';
     this.message = this.status('Choisissez un fichier audio ou vidéo.');
   }
 

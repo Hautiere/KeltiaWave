@@ -37,6 +37,7 @@ class AuthTests(unittest.TestCase):
             for uri, method in [('/api/auth/me','PATCH'),('/api/practice/classes/available','GET'),('/api/practice/notifications','GET'),('/api/practice/classes/1','PATCH'),('/api/practice/submissions/1/read','POST')]:
                 self.assertTrue(auth.mobile_authorized({**headers, 'X-Forwarded-Uri':uri,'X-Forwarded-Method':method}))
             self.assertTrue(auth.mobile_authorized({**headers, 'X-Forwarded-Uri': '/api/auth/forgot-password'}))
+            self.assertTrue(auth.mobile_authorized({**headers, 'X-Forwarded-Uri':'/api/transcribe/transcribe_w2v_wel_metrics','Authorization':f'Bearer {device}'}))
             self.assertFalse(auth.mobile_authorized({**headers, 'X-KeltiaWave-Device': ''}))
             for uri in ['/api/auth/users', '/api/practice/submissions?x=1', '/api/admin-data/', '/api/practice/submissions/../file']:
                 self.assertFalse(auth.mobile_authorized({**headers, 'X-Forwarded-Uri': uri}))

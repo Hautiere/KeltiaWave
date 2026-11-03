@@ -149,7 +149,7 @@ record.staging.keltiawave.com {
 	}
 	@mobile_preflight {
 		method OPTIONS
-		path /api/live/capabilities /api/live/improve /api/mobile/live-ticket /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics
+		path /api/live/capabilities /api/live/improve /api/mobile/live-ticket /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics /api/transcribe/transcribe_w2v_wel_metrics
 		header_regexp Access-Control-Request-Method "^(GET|POST)$"
 	}
 	handle @mobile_preflight {
@@ -165,7 +165,7 @@ record.staging.keltiawave.com {
 		request_header X-Forwarded-Uri /api/mobile/live-ticket
 		reverse_proxy keltiawave-staging-auth:8080
 	}
-	@mobile_api path /api/live/capabilities /api/live/stream /api/live/improve /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics
+	@mobile_api path /api/live/capabilities /api/live/stream /api/live/improve /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics /api/transcribe/transcribe_w2v_wel_metrics
 	handle @mobile_api {
 		forward_auth keltiawave-staging-auth:8080 {
 			uri /verify-mobile
