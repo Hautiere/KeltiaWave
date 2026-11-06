@@ -61,3 +61,17 @@ La simulation en lecture seule sur la production existante a retrouvé 650
 phrases et 650 audios à créer, zéro correspondance préexistante, zéro conflit
 et zéro erreur. SHA-256 de l’archive ciblée :
 `da7bdd40ce4f7f13611d7cc435313601b3023dbc0feec1db5c1fcfa03ad60ca8`.
+
+Pour préserver également les profils et mots de passe des comptes existants,
+la mise à jour production utilise les deux fichiers Compose :
+
+```sh
+docker compose --env-file /home/ubuntu/apps/keltiawave/shared/.env.production \
+  -f deploy/ovh/docker-compose.candidate.yml \
+  -f deploy/ovh/production-preserve-users.yml up -d
+```
+
+Le second fichier désactive les initialisations/réinitialisations de comptes au
+démarrage ; il conserve la configuration d’authentification normale et les
+comptes présents. Le port Live propre à la production est `24800`, lié à
+`127.0.0.1`, pour conserver le port `14800` du staging.
