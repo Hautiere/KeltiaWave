@@ -5,6 +5,7 @@ COPY apps/corpus/package*.json ./
 RUN npm ci
 
 COPY apps/corpus/ .
+COPY apps/shared/ /shared/
 RUN npm run build
 
 FROM nginx:1.27-alpine

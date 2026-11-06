@@ -84,7 +84,8 @@ par le site. En l’absence de son système, partager l’audio de l’onglet du
 
 ## Interface et progression Whisper
 
-L’en-tête reprend le portail et la mascotte de Transcribe. Sous le texte, trois
+La disposition reprend Record : réglages rapides, commande circulaire, minuterie
+et carte de transcription. La source reste le partage audio du navigateur. Sous le texte, trois
 boutons bleus proposent Whisper, Enregistrer et Partager. Whisper reste facultatif :
 il retranscrit l’audio pour proposer une seconde version ponctuée et plus lisible,
 sans remplacer le texte Vosk. La progression distingue l’envoi réel du fichier

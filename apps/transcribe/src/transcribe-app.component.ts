@@ -1,3 +1,4 @@
+import { mobileToolLinks, mobileLabel } from '../../shared/mobile-tools';
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +27,9 @@ const COPY: Record<InterfaceLanguage, Record<string, string>> = {
   styleUrls: ['./transcribe-app.component.scss', './keltia-footer.scss'],
 })
 export class TranscribeAppComponent {
+  get mobileLinks() { return mobileToolLinks(); }
+  mobileLabel(key: string): string { return mobileLabel(key, this.interfaceLanguage); }
+
   interfaceLanguage: InterfaceLanguage = this.initialInterfaceLanguage();
   language: TranscribeLanguage = 'br';
   mode: TranscribeMode = 'fast';

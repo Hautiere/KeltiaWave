@@ -1,13 +1,21 @@
+
+  <div class="kw-mobile-only kw-mobile-shell">
+    <nav class="kw-mobile-nav" aria-label="KeltiaWave"><a [href]="mobileLinks.record"  [attr.aria-disabled]="busy" (click)="busy ? $event.preventDefault() : null">Record</a><a [href]="mobileLinks.transcribe"  [attr.aria-disabled]="busy" (click)="busy ? $event.preventDefault() : null">Transcribe</a><a [href]="mobileLinks.komz"  [attr.aria-disabled]="busy" (click)="busy ? $event.preventDefault() : null">Komz</a><a [href]="mobileLinks.live" aria-current="page" [attr.aria-disabled]="busy" (click)="busy ? $event.preventDefault() : null">Live</a><a class="kw-mobile-account" [href]="mobileLinks.account" [attr.aria-label]="mobileLabel('account')" [attr.aria-disabled]="busy" (click)="busy ? $event.preventDefault() : null"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></a>
+      <details class="kw-mobile-languages" #mobileLanguageMenu><summary [attr.aria-label]="mobileLabel('interface')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/></svg><span class="kw-mobile-language-caption">{{ mobileLabel('languages') }}</span></summary><div class="kw-mobile-language-panel"><label>{{ mobileLabel('interface') }}<select [value]="mobileInterfaceLanguage" (change)="changeMobileInterfaceLanguage($any($event.target).value)"><option value="fr">Français</option><option value="en">English</option><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label><button type="button" (click)="mobileLanguageMenu.open=false">{{ mobileLabel('close') }}</button></div></details>
+    </nav>
+    <header class="kw-mobile-brandbar"><div class="kw-mobile-identity"><a class="kw-mobile-brand" [href]="mobileLinks.portal"><img src="assets/keltiawave-wave-icon.svg" width="32" height="32" alt=""><strong aria-label="KeltiaWave Live"><span class="kw-mobile-product">KeltiaWave</span><span class="kw-mobile-tool">Live</span></strong></a><p class="kw-mobile-subtitle">{{ mobileLabel('liveSubtitle') }}</p></div><label class="kw-mobile-audio"><img [src]="language === 'cy' ? 'assets/flag-wales.svg' : 'assets/flag-brittany.png'" alt=""><select [attr.aria-label]="mobileLabel('audio')" [value]="language" [disabled]="busy" (change)="selectLanguage($any($event.target).value)"><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label></header>
+  </div>
 <header class="site-header">
   <div class="brand-lockup"><a class="portal-home" [href]="portalHref" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><img src="assets/portal-home.svg" alt=""></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><div class="brand"><img src="assets/keltiawave-mascot.webp" alt="Mascotte KeltiaWave"><span><strong><b>KeltiaWave</b> Live</strong><small>Le texte de ce que vous écoutez, en direct.</small></span></div></div>
   <a class="portal-link" [href]="portalHref"><span aria-hidden="true">▦</span> Autres outils</a>
 </header>
 <main>
-  <section class="intro">
-    <div><span class="eyebrow">ÉCOUTER & COMPRENDRE</span><h1>Live<span class="title-dot">.</span></h1><p class="subtitle">Le texte de ce que vous écoutez, en direct.</p></div>
-    <span class="beta">Première version</span>
-  </section>
-  <div class="badges"><label class="language-choice">Langue <select aria-label="Langue de transcription" [ngModel]="language" (ngModelChange)="selectLanguage($event)" [disabled]="busy"><option value="br">Breton · Brezhoneg</option><option value="cy">Gallois · Cymraeg</option></select></label><span>✦ &nbsp; {{ engine }}</span><span>↗ &nbsp; Transcription sur serveur</span></div>
+  <section class="intro live-page-title"><div><h1>Live</h1><p class="subtitle">Suivre une parole en direct, puis l’améliorer avec Whisper.</p></div></section>
+  <div class="badges live-quick-settings">
+    <label class="language-choice live-quick-item"><span class="live-quick-icon">⚑</span><span><small>Langue audio</small><select aria-label="Langue de transcription" [ngModel]="language" (ngModelChange)="selectLanguage($event)" [disabled]="busy"><option value="br">Breton · Brezhoneg</option><option value="cy">Gallois · Cymraeg</option></select></span></label>
+    <div class="live-quick-item"><span class="live-quick-icon">≋</span><span><small>Mode</small><strong>{{ engine }} · Rapide + Whisper · Qualité</strong></span></div>
+    <div class="live-quick-item"><span class="live-quick-icon">▣</span><span><small>Source</small><strong>Audio partagé du navigateur</strong></span></div>
+  </div>
 
   @if (!audio.supported) {
     <section class="alert" role="status"><strong>Le partage audio n’est pas disponible dans ce navigateur.</strong><p>Essayez Live sur ordinateur, en HTTPS ou sur localhost, avec un navigateur qui permet de partager le son d’un onglet. L’audio des autres applications du téléphone n’est pas accessible depuis cette version web.</p></section>
@@ -21,21 +29,30 @@
 
   @if (language === 'cy') {<p class="welsh-note" role="status">W2V gallois : le texte arrive par blocs d’environ 4 secondes, avec quelques secondes de délai.</p>}
   <div class="workspace">
+    <section class="kw-mobile-only kw-mobile-live-capture">
+      <button class="kw-mobile-listen" type="button" [class.active]="state !== 'idle'" [disabled]="improving || state === 'starting' || state === 'stopping' || (state === 'idle' && (!audio.supported || !available))" (click)="state === 'idle' ? start() : stop()" [attr.aria-label]="state === 'idle' ? 'Démarrer l’écoute' : 'Arrêter l’écoute'">
+        @if (state === 'idle') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="8" rx="2"/><rect x="17" y="12" width="4" height="8" rx="2"/></svg> } @else { <span aria-hidden="true">■</span> }
+      </button>
+      <div class="kw-mobile-listen-state"><span>{{ mobileText(status) }}</span><time>{{ elapsed }}</time></div>
+      @if (state === 'listening' || state === 'paused') { <button class="kw-mobile-pause" type="button" (click)="pause()">{{ mobileText(state === 'paused' ? 'Reprendre' : 'Pause') }}</button> }
+      <small>{{ mobileText('Partage audio du navigateur · Internet requis') }}</small>
+    </section>
+
     <section class="listening-panel" aria-label="État de l’écoute">
-      <div class="session-head"><span class="status" [class.active]="state === 'listening'"><i></i>{{ status }}</span><time>{{ elapsed }}</time></div>
-      <div class="waveform" aria-hidden="true">@for (bar of bars; track bar) { <span [style.height.px]="state === 'listening' ? 5 + level * (20 + (bar * 17 % 65)) * 100 : 5 + (bar * 13 % 16)" [class.moving]="state === 'listening'"></span> }</div>
-      @if (state === 'idle') {
-        <button class="primary start" (click)="start()" [disabled]="busy || !audio.supported || !available"><span aria-hidden="true">◉</span> {{ text ? 'Nouvelle écoute' : 'Démarrer Live' }}</button>
-        @if (text) { <p class="small-note">Une nouvelle écoute remplacera le texte affiché. Pensez à l’enregistrer.</p> }
-      } @else {
-        <div class="controls"><button class="primary" (click)="pause()" [disabled]="state !== 'listening' && state !== 'paused'">{{ state === 'paused' ? '▶ Reprendre' : 'Ⅱ Pause' }}</button><button class="stop" (click)="stop()" [disabled]="state === 'stopping'">■ Arrêter</button></div>
-      }
+      <p class="live-record-state"><i [class.active]="state === 'listening'"></i>{{ mobileText(status) }}</p>
+      <button class="live-record-button" type="button" [class.stop]="state !== 'idle'" [disabled]="improving || state === 'starting' || state === 'stopping' || (state === 'idle' && (!audio.supported || !available))" (click)="state === 'idle' ? start() : stop()" [attr.aria-label]="state === 'idle' ? 'Démarrer l’écoute' : 'Arrêter l’écoute'">
+        @if (state === 'idle') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="12" width="4" height="8" rx="2"/><rect x="17" y="12" width="4" height="8" rx="2"/></svg> } @else { <span aria-hidden="true">■</span> }
+      </button>
+      <time class="live-record-time">{{ elapsed }}</time>
+      <small class="live-record-tap">{{ state === 'idle' ? 'Touchez pour écouter' : 'Touchez pour arrêter' }}</small>
+      <div class="waveform" aria-hidden="true">@for (bar of bars.slice(0,18); track bar) { <span [style.height.px]="state === 'listening' ? 5 + level * (20 + (bar * 17 % 65)) * 100 : 5 + (bar * 13 % 16)" [class.moving]="state === 'listening'"></span> }</div>
+      @if (state === 'listening' || state === 'paused') { <button class="live-record-pause" type="button" (click)="pause()">{{ state === 'paused' ? '▶ Reprendre' : 'Ⅱ Pause' }}</button> }
       <div class="source-note"><span aria-hidden="true">▣</span><div><strong>Audio partagé de l’ordinateur</strong><span>Aucun microphone utilisé</span></div></div>
       <p class="privacy">L’audio est transcrit sur le serveur et gardé dans cette page pour Whisper. Il est effacé au rechargement ou à la prochaine écoute.</p>
     </section>
 
     <section class="transcript-panel" aria-label="Transcription">
-      <div class="transcript-head"><h2><span aria-hidden="true">▤</span> {{ version === 'whisper' ? 'Transcription Whisper' : 'Transcription en direct' }}</h2><span class="language-tag">{{ (text ? resultLanguage : language).toUpperCase() }}</span></div>
+      <div class="transcript-head"><h2><span aria-hidden="true">▤</span> {{ version === 'whisper' ? 'Whisper · Qualité' : (text ? resultEngine : engine) + ' · Rapide' }}</h2><span class="language-tag">{{ (text ? resultLanguage : language).toUpperCase() }}</span></div>
       @if (whisperText !== null) {
         <div class="versions" role="group" aria-label="Version de la transcription">
           <button [attr.aria-pressed]="version === 'vosk'" (click)="version = 'vosk'">{{ resultEngine }} · direct</button>
@@ -44,7 +61,7 @@
       }
       <div #transcript class="transcript" tabindex="0" aria-label="Texte transcrit, défilement manuel possible" (scroll)="onScroll()">
         @if (!text) {
-          <div class="empty"><span class="empty-icon" aria-hidden="true">≋</span><h3>Écoutez. Suivez. Comprenez.</h3><p>Les paroles du podcast apparaîtront ici,<br>au rythme de l’écoute.</p></div>
+          <div class="empty"><span class="empty-icon" aria-hidden="true">≋</span><h3>{{ mobileText('Écoutez. Suivez. Comprenez.') }}</h3><p><span class="kw-mobile-only">{{ mobileText('Les paroles du podcast apparaîtront ici, au rythme de l’écoute.') }}</span><span class="kw-desktop-live-copy">Les paroles du podcast apparaîtront ici,<br>au rythme de l’écoute.</span></p></div>
         }
         @if (version === 'whisper') { <p>{{ whisperText }}</p> }
         @else {
@@ -52,7 +69,7 @@
           @if (partial) { <p class="partial">{{ partial }}</p> }
         }
       </div>
-      @if (!follow && busy) { <button class="follow" (click)="returnToLive()">Revenir au direct ↓</button> }
+      @if (!follow && busy) { <button class="follow" (click)="returnToLive()">{{ mobileText('Revenir au direct ↓') }}</button> }
       <div class="exports"><button (click)="improve()" [disabled]="busy || !whisperAvailable || !audio.whisperAudio">{{ improving ? 'Traitement Whisper…' : '✦ Whisper' }}</button><button (click)="save()" [disabled]="!text">↓ &nbsp; Enregistrer</button><button (click)="share()" [disabled]="!text">↗ &nbsp; Partager</button></div>
       @if (improving) {
         <section class="whisper-progress" aria-label="Progression Whisper">
@@ -70,7 +87,7 @@
       }
       @if (state === 'idle' && (audio.whisperAudio || audio.whisperAudioMessage)) {
         <section class="whisper-panel" aria-label="Seconde transcription">
-          <h2>Améliorer la lisibilité avec Whisper</h2>
+          <h2>{{ mobileText('Améliorer la lisibilité avec Whisper') }}</h2>
           <p>En option, Whisper propose une version ponctuée et plus cohérente des phrases. Le texte Vosk reste disponible.</p>
           @if (!whisperAvailable) { <p>Le modèle Whisper breton n’est pas disponible sur le serveur.</p> }
           @if (audio.whisperAudioMessage) { <p>{{ audio.whisperAudioMessage }}</p> }
@@ -83,4 +100,5 @@
 
   <section class="how-to"><h2>Votre podcast, plus facile à suivre.</h2><ol><li><span>1</span><div><strong>Ouvrez votre podcast</strong><p>Dans un onglet ou une application de votre ordinateur.</p></div></li><li><span>2</span><div><strong>Démarrez Live</strong><p>Choisissez la source proposée et activez le partage audio.</p></div></li><li><span>3</span><div><strong>Suivez le texte ici</strong><p>Lancez la lecture et revenez sur Live.</p></div></li></ol><p class="browser-note">Le son système est proposé si le navigateur le permet. Sinon, partagez l’onglet du podcast avec son audio. Le choix de la source et l’autorisation sont obligatoires à chaque démarrage. Le navigateur demande aussi un partage visuel : Live n’utilise et ne transmet que l’audio. Une connexion Internet est nécessaire. Les transcriptions automatiques peuvent contenir des erreurs.</p></section>
 </main>
+<div class="kw-mobile-only kw-mobile-actions"><div class="kw-mobile-action-grid"><button type="button" [disabled]="busy || !whisperAvailable || !audio.whisperAudio" (click)="improve()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/></svg><span>{{ mobileLabel('quality') }}</span><small>{{ mobileLabel('online') }}</small></button><button type="button" [disabled]="!text.trim()" (click)="save()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6Z"/><path d="M14 2v5h5"/></svg><span>{{ mobileLabel('save') }}</span></button><button type="button" [disabled]="!text.trim()" (click)="share()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M5 13v8h14v-8"/></svg><span>{{ mobileLabel('share') }}</span></button></div></div><details class="kw-mobile-only kw-mobile-help"><summary>ⓘ {{ mobileLabel('help') }}</summary><p>Live web nécessite Internet et un navigateur compatible avec le partage audio. Le navigateur ne permet pas de capturer le son des autres applications du téléphone. Whisper reste facultatif après arrêt.</p></details>
 <footer><a [href]="portalHref">KeltiaWave</a><span>Des outils pour les langues vivantes.</span></footer>

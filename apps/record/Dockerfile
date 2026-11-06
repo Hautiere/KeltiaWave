@@ -3,6 +3,7 @@ WORKDIR /app
 COPY apps/record/package*.json ./
 RUN npm ci
 COPY apps/record/ .
+COPY apps/shared/ /shared/
 RUN npm run build
 
 FROM nginx:1.27-alpine

@@ -1,3 +1,4 @@
+import { mobileToolLinks, mobileLabel, mobileLiveText } from '../../shared/mobile-tools';
 import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LiveAudioService, LiveEvent, LiveLanguage, LiveCapabilities } from './live-audio.service';
@@ -9,6 +10,16 @@ type State = 'idle' | 'starting' | 'listening' | 'paused' | 'stopping';
   templateUrl: './live-app.component.html', styleUrl: './live-app.component.scss',
 })
 export class LiveAppComponent implements OnInit, OnDestroy {
+  get mobileLinks() { return mobileToolLinks(); }
+  mobileLabel(key: string): string { return mobileLabel(key, this.mobileInterfaceLanguage); }
+  mobileText(source: string): string { return window.matchMedia('(max-width:700px)').matches ? mobileLiveText(source, this.mobileInterfaceLanguage) : source; }
+  mobileInterfaceLanguage = typeof localStorage === 'undefined' ? 'fr' : localStorage.getItem('keltiawave-public-language') || 'fr';
+  changeMobileInterfaceLanguage(value: string): void {
+    if (!['fr','en','br','cy'].includes(value)) return;
+    this.mobileInterfaceLanguage = value;
+    localStorage.setItem('keltiawave-public-language', value);
+  }
+
   @ViewChild('transcript') transcript?: ElementRef<HTMLDivElement>;
   state: State = 'idle';
   language:LiveLanguage='br';

@@ -305,3 +305,31 @@
 @media (max-width: 600px) { .theme-grid, .practice-grid { grid-template-columns: 1fr; } .journey-hero { min-height: 150px; gap: 15px; padding: 22px; } .theme-stage .journey-hero { padding-right: 22px; } .theme-stage .journey-hero::after { display: none; } .journey-symbol { flex-basis: 54px; height: 54px; font-size: 29px; } .phrase-row { grid-template-columns: minmax(0, 1fr) 52px; gap: 9px; padding: 10px; } .row-practice { grid-column: 1 / -1; } .phrase-toolbar { align-items: flex-start; flex-direction: column; } .compare-row { grid-template-columns: 25px minmax(0,1fr); } .compare-row strong { grid-column: 2; } .record-fields { grid-template-columns: 1fr; } .score-total { align-items: flex-start; flex-direction: column; gap: 9px; } .score-breakdown { grid-template-columns: 1fr; } }
 
 .voice-origin { display:block; width:fit-content; max-width:100%; margin:6px 0; padding:4px 9px; border-radius:8px; background:#eaf2ff; color:#194f80; font-size:12px; font-weight:700; line-height:1.5; overflow-wrap:anywhere; }
+
+@media(max-width:700px) {
+  :host { --kw-accent:#9333ea; }
+  .kw-header,.kw-footer { display:none; }
+  .kw-shell { height:100%; min-height:0; display:flex; flex-direction:column; background:#f6f8fb; }
+  .kw-main { flex:1; width:100%; min-height:0; margin:0; padding:16px 12px; overflow:auto; box-sizing:border-box; }
+  .theme-stage .journey-hero { display:block; min-height:0; margin:0 0 18px; padding:0; border:0; border-radius:0; background:none; }
+  .theme-stage .journey-hero::after,.theme-stage .journey-symbol,.theme-stage .journey-hero small,.theme-stage .journey-hero p,.theme-stage .journey-heading { display:none; }
+  .theme-stage .journey-hero h1 { margin:0; font-size:23px; line-height:1.3; }
+  .theme-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .theme-tile { border-radius:18px; box-shadow:0 3px 9px #16386309; }
+  .tile-art { aspect-ratio:1.75; }
+  .tile-art>span { display:none; }
+  .tile-info { min-height:94px; gap:8px; padding:12px 14px; }
+  .tile-info strong { font-size:13px; line-height:1.4; }
+  .tile-info small { font-size:11px; padding-right:14px; }
+  .tile-info b { right:12px; bottom:10px; color:#52627a; }
+  .domain-hero { padding:16px; min-height:0; border-radius:18px; }
+  .domain-hero h1 { font-size:20px; }
+  .phrase-row,.practice-phrase-card,.record-panel,.reference-card { border-radius:16px; }
+  .practice-grid { gap:12px; }
+  .practice-phrase-card { padding:16px; }
+  .practice-phrase-card h1 { font-size:22px; overflow-wrap:anywhere; }
+  .level-tabs { display:flex; flex-wrap:wrap; gap:6px; }
+  .level-tabs button,.row-practice,.journey-back { min-height:44px; }
+}
+
+@media(max-width:700px) { :host { height:100dvh; min-height:0; overflow:hidden; display:flex; flex-direction:column; } }

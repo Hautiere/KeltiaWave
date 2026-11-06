@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "mobile-tools.css",
+                "input": "../shared",
+                "output": "assets"
               }
             ],
             "styles": [

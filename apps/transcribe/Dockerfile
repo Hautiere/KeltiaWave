@@ -3,6 +3,7 @@ WORKDIR /app
 COPY apps/transcribe/package*.json ./
 RUN npm ci
 COPY apps/transcribe/ .
+COPY apps/shared/ /shared/
 RUN npm run build
 
 FROM nginx:1.27-alpine

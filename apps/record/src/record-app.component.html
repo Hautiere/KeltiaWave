@@ -1,4 +1,11 @@
-<div class="app-shell">
+<div class="app-shell" [class.is-recording]="recording" [class.is-finalizing]="finalizing">
+  <div class="kw-mobile-only kw-mobile-shell">
+    <nav class="kw-mobile-nav" aria-label="KeltiaWave"><a [href]="mobileLinks.record" aria-current="page" [attr.aria-disabled]="captureBusy" (click)="captureBusy ? $event.preventDefault() : null">Record</a><a [href]="mobileLinks.transcribe"  [attr.aria-disabled]="captureBusy" (click)="captureBusy ? $event.preventDefault() : null">Transcribe</a><a [href]="mobileLinks.komz"  [attr.aria-disabled]="captureBusy" (click)="captureBusy ? $event.preventDefault() : null">Komz</a><a [href]="mobileLinks.live"  [attr.aria-disabled]="captureBusy" (click)="captureBusy ? $event.preventDefault() : null">Live</a><a class="kw-mobile-account" [href]="mobileLinks.account" [attr.aria-label]="mobileLabel('account')" [attr.aria-disabled]="captureBusy" (click)="captureBusy ? $event.preventDefault() : null"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></a>
+      <details class="kw-mobile-languages" #mobileLanguageMenu><summary [attr.aria-label]="mobileLabel('interface')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/></svg><span class="kw-mobile-language-caption">{{ mobileLabel('languages') }}</span></summary><div class="kw-mobile-language-panel"><label>{{ mobileLabel('interface') }}<select [value]="interfaceLanguage" (change)="changeInterfaceLanguage($any($event.target).value)"><option value="fr">Français</option><option value="en">English</option><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label><button type="button" (click)="mobileLanguageMenu.open=false">{{ mobileLabel('close') }}</button></div></details>
+    </nav>
+    <header class="kw-mobile-brandbar"><div class="kw-mobile-identity"><a class="kw-mobile-brand" [href]="mobileLinks.portal"><img src="assets/keltiawave-wave-icon.svg" width="32" height="32" alt=""><strong aria-label="KeltiaWave Record"><span class="kw-mobile-product">KeltiaWave</span><span class="kw-mobile-tool">Record</span></strong></a><p class="kw-mobile-subtitle">{{ mobileLabel('recordSubtitle') }}</p></div><label class="kw-mobile-audio"><img [src]="language === 'cy' ? 'assets/flag-wales.svg' : 'assets/flag-brittany.png'" alt=""><select [attr.aria-label]="mobileLabel('audio')" [value]="language" [disabled]="captureBusy" (change)="selectLanguage($any($event.target).value)"><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label></header>
+  </div>
+
   <header class="topbar">
     <div class="brand-lockup"><a class="portal-home" [href]="portalUrl" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><img src="assets/portal-home.svg" alt=""></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><div class="brand"><img class="mascot" src="assets/keltiawave-mascot.webp" alt="Mascotte KeltiaWave"><span><strong><b>KeltiaWave</b> Record</strong><small>{{ t('Record your voice and get real-time transcription.') }}</small></span></div></div>
     <div class="header-actions"><a class="tools-link" [href]="portalUrl"><span>▦</span> {{ t('Other tools') }}</a><select aria-label="Interface language" [ngModel]="interfaceLanguage" (ngModelChange)="changeInterfaceLanguage($event)"><option value="en">EN</option><option value="fr">FR</option><option value="br">BR</option><option value="cy">CY</option></select></div>
@@ -8,15 +15,15 @@
     <header class="page-title"><h1>Record</h1><p>{{ t('Record your voice and get real-time transcription.') }}</p></header>
 
     <section class="quick-settings">
-      <label class="quick-item"><span class="quick-icon">🏴</span><span><small>{{ t('Language') }}</small><select [(ngModel)]="language" [disabled]="recording"><option value="br">{{ t('Breton') }}</option><option value="cy">{{ t('Welsh') }}</option></select></span><b>⌄</b></label>
-      <div class="quick-item"><span class="quick-icon turquoise">≋</span><span><small>{{ t('Mode') }}</small><strong>{{ t(language === 'br' ? 'Live + Quality' : 'Whisper quality') }}</strong></span><b>⌄</b></div>
+      <label class="quick-item"><span class="quick-icon">🏴</span><span><small>{{ t('Language') }}</small><select [ngModel]="language" (ngModelChange)="selectLanguage($event)" [disabled]="captureBusy"><option value="br">{{ t('Breton') }}</option><option value="cy">{{ t('Welsh') }}</option></select></span><b>⌄</b></label>
+      <div class="quick-item"><span class="quick-icon turquoise">≋</span><span><small>{{ t('Mode') }}</small><strong>{{ language === 'cy' ? 'W2V' : 'Vosk' }} · {{ t('Live + Quality') }}</strong></span><b>⌄</b></div>
       <div class="quick-item tip-item"><span class="quick-icon">♧</span><span><small>{{ t('Tip') }}</small><strong>{{ t('Speak clearly, at a steady pace') }}</strong></span></div>
     </section>
 
     <section class="record-workspace">
       <div class="capture-panel">
         <p class="state"><i [class.recording]="recording"></i>{{ t(recording ? 'Recording in progress' : (audioFile ? 'Recording ready' : 'Ready to record')) }}</p>
-        <button class="microphone" type="button" [class.stop]="recording" [disabled]="busy" (click)="toggleRecording()" [attr.aria-label]="t(recording ? 'Stop recording' : 'Start recording')">
+        <button class="microphone" type="button" [class.stop]="recording" [disabled]="starting || finalizing || busy" (click)="toggleRecording()" [attr.aria-label]="t(recording ? 'Stop recording' : 'Start recording')">
           <svg *ngIf="!recording" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"></path></svg><span *ngIf="recording">■</span>
         </button>
         <time>{{ elapsed }}</time>
@@ -26,37 +33,39 @@
       </div>
 
       <section class="live-transcript">
-        <header><h2>{{ t(improved ? 'Transcription versions' : 'Transcription (real-time)') }}</h2><span [class.online]="live">● {{ live ? t('Live') : (improved ? '2 ' + t('versions') : t('Ready')) }}</span></header>
-        <textarea *ngIf="!improved" [(ngModel)]="draft" [placeholder]="t(language === 'br' ? 'Your transcription will appear here while you speak…' : 'Record first, then generate the Welsh transcription with Whisper…')"></textarea>
+        <header><h2>{{ improved ? t('Transcription versions') : directEngine + ' · ' + t('Fast') }}</h2><span [class.online]="live">● {{ live ? t('Live') : (improved ? '2 ' + t('versions') : t('Ready')) }}</span></header>
+        <textarea *ngIf="!improved" [(ngModel)]="draft" [placeholder]="t('Your transcription will appear here while you speak…')"></textarea>
         <div class="transcript-comparison" *ngIf="improved">
-          <section><header><strong>Vosk</strong><span>{{ t('Live draft') }}</span></header><textarea [(ngModel)]="draft" aria-label="Version Vosk"></textarea><footer><span>{{ countWords(draft) }} {{ t('words') }}</span><i>•</i><span>{{ draft.length }} {{ t('characters') }}</span></footer></section>
+          <section><header><strong>{{ directEngine }}</strong><span>{{ t('Live draft') }}</span></header><textarea [(ngModel)]="draft" [attr.aria-label]="'Version ' + directEngine"></textarea><footer><span>{{ countWords(draft) }} {{ t('words') }}</span><i>•</i><span>{{ draft.length }} {{ t('characters') }}</span></footer></section>
           <section><header><strong>Whisper</strong><span>{{ t('High accuracy') }}</span></header><textarea [(ngModel)]="improved" aria-label="Version Whisper"></textarea><footer><span>{{ countWords(improved) }} {{ t('words') }}</span><i>•</i><span>{{ improved.length }} {{ t('characters') }}</span></footer></section>
         </div>
         <footer *ngIf="!improved"><span>{{ t('Words') }}: {{ wordCount }}</span><i>•</i><span>{{ t('Characters') }}: {{ characterCount }}</span></footer>
-        <footer class="versions-kept" *ngIf="improved"><strong>{{ t('Vosk and Whisper are both kept and editable') }}</strong></footer>
+        <footer class="versions-kept" *ngIf="improved"><strong>{{ t('Both direct and Whisper versions are kept') }}</strong></footer>
       </section>
     </section>
 
     <details class="record-settings">
       <summary><span>⚙</span> {{ t('Recording settings') }} <b>⌄</b></summary>
-      <div><label><span>{{ t('Microphone') }}</span><select [(ngModel)]="microphoneId" [disabled]="recording"><option value="">{{ t('Default microphone') }}</option><option *ngFor="let mic of microphones; let i = index" [value]="mic.deviceId">{{ mic.label || (t('Microphone') + ' ' + (i + 1)) }}</option></select></label><button type="button" (click)="reset()">{{ t('Clear recording') }}</button></div>
+      <div><label><span>{{ t('Microphone') }}</span><select [(ngModel)]="microphoneId" [disabled]="captureBusy"><option value="">{{ t('Default microphone') }}</option><option *ngFor="let mic of microphones; let i = index" [value]="mic.deviceId">{{ mic.label || (t('Microphone') + ' ' + (i + 1)) }}</option></select></label><button type="button" (click)="reset()">{{ t('Clear recording') }}</button></div>
     </details>
 
     <section class="whisper-notice">
-      <span class="info-icon">ⓘ</span><p><strong>Whisper ({{ t('High accuracy') }})</strong> {{ t('is available after recording to improve the Vosk draft.') }}</p>
+      <span class="info-icon">ⓘ</span><p><strong>Whisper ({{ t('High accuracy') }})</strong> {{ t('is available after recording to improve the Vosk draft.').replace('Vosk', directEngine) }}</p>
       <button type="button" [disabled]="!canUseWhisper" (click)="runWhisper()">{{ busy ? t('Processing…') : whisperLabel }} <span>→</span></button>
     </section>
     <section class="whisper-progress" *ngIf="busy" aria-live="polite"><div><span>Whisper · {{ t('Processing…') }}</span><strong>{{ whisperProgress }} %</strong></div><div class="progress-track"><i [style.width.%]="whisperProgress"></i></div><small>{{ t('Estimated progress — completion is confirmed only when the result is received.') }}</small></section>
 
+    <p *ngIf="language === 'cy'" class="welsh-note">W2V · {{ t('Welsh') }} : transcription par blocs d’environ 4 secondes, avec Internet.</p>
     <p class="message" [class.error]="error">{{ error || message }}</p>
     <section class="downloads" *ngIf="audioFile">
       <button type="button" [disabled]="!draft.trim() && !improved.trim()" (click)="shareEmail()">{{ t('Send by email') }}</button>
       <button type="button" (click)="saveAudio()">{{ t('Download audio') }}</button>
       <button *ngIf="!improved" type="button" [disabled]="!draft.trim()" (click)="saveText()">{{ t('Download text') }}</button>
-      <button *ngIf="improved" type="button" [disabled]="!draft.trim()" (click)="saveVoskText()">{{ t('Save Vosk') }}</button>
+      <button *ngIf="improved" type="button" [disabled]="!draft.trim()" (click)="saveVoskText()">{{ t('Download text') + ' ' + directEngine }}</button>
       <button *ngIf="improved" type="button" [disabled]="!improved.trim()" (click)="saveWhisperText()">{{ t('Save Whisper') }}</button>
       <button *ngIf="improved" class="save-both" type="button" [disabled]="!draft.trim() && !improved.trim()" (click)="saveBothTexts()">{{ t('Save both') }}</button>
     </section>
   </main>
+<div class="kw-mobile-only kw-mobile-actions"><div class="kw-mobile-action-grid"><button type="button" [disabled]="!canUseWhisper" (click)="runWhisper()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/></svg><span>{{ mobileLabel('quality') }}</span><small>{{ mobileLabel('online') }}</small></button><button type="button" [disabled]="!transcript.trim()" (click)="saveText()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6Z"/><path d="M14 2v5h5"/></svg><span>{{ mobileLabel('save') }}</span></button><button type="button" [disabled]="!transcript.trim()" (click)="shareEmail()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3Z"/><path d="m3 5 9 7 9-7"/></svg><span>{{ mobileLabel('email') }}</span></button></div></div><details class="kw-mobile-only kw-mobile-help"><summary>ⓘ {{ mobileLabel('help') }}</summary><p>La reconnaissance web et Whisper nécessitent Internet. L’audio reste dans cette page jusqu’au rechargement. Vérifiez les transcriptions avant de les utiliser.</p></details>
   <footer class="keltia-footer"><span>Hautiere prod, 14 Hent Prat Carbon, Beg-Meil</span><i>•</i><strong><b>Brezhoneg</b> <em>gant</em> <mark>Fañch</mark></strong><i>•</i><a href="mailto:contact@keltiawave.com">contact@keltiawave.com</a></footer>
 </div>

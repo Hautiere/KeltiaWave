@@ -1637,3 +1637,7 @@ body .kw-shell .account-chip.connected {
 @media (min-width: 601px) {
   body .kw-shell .brand-title { font-size: 22px !important; }
 }
+
+@media(min-width:701px) { .kw-mobile-only { display:none !important; } }
+
+@media(max-width:700px) { body:has(app-v2-record) .keltia-global-footer { display:none !important; } }

@@ -1,3 +1,4 @@
+import { mobileToolLinks, mobileLabel } from '../../../../../shared/mobile-tools';
 import { selectReferenceAudios } from '../../core/reference-audios';
 import { audioAttribution } from '../../core/audio-attribution';
 import { CommonModule } from '@angular/common';
@@ -23,6 +24,9 @@ import { canonicalSubdomain, subdomainsFor, subdomainLabel } from '../../core/su
   styleUrls: ['./v2-record.component.scss'],
 })
 export class V2RecordComponent implements OnInit, OnDestroy {
+  get mobileLinks() { return mobileToolLinks(); }
+  mobileLabel(key: string): string { return mobileLabel(key, this.i18n.language()); }
+
   readonly audioAttribution = audioAttribution;
   @ViewChild('recordedPreview') private recordedPreview?: ElementRef<HTMLAudioElement>;
   phrases: Phrase[] = [];
@@ -111,6 +115,8 @@ export class V2RecordComponent implements OnInit, OnDestroy {
       && this.matchesSubdomain(phrase)
       && (!this.onlyWithAudio || this.hasReference(phrase)));
   }
+
+  trackSubdomain(_index: number, option: { value: string }): string { return option.value; }
 
   get subdomainOptions() {
     return subdomainsFor(this.selectedTheme, this.i18n.language());

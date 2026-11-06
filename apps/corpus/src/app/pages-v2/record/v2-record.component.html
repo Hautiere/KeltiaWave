@@ -1,4 +1,11 @@
 <div class="kw-shell">
+  <div class="kw-mobile-only kw-mobile-shell">
+    <nav class="kw-mobile-nav" aria-label="KeltiaWave"><a [href]="mobileLinks.record"  [attr.aria-disabled]="isRecording || submitting || assessing" (click)="isRecording || submitting || assessing ? $event.preventDefault() : null">Record</a><a [href]="mobileLinks.transcribe"  [attr.aria-disabled]="isRecording || submitting || assessing" (click)="isRecording || submitting || assessing ? $event.preventDefault() : null">Transcribe</a><a [href]="mobileLinks.komz" aria-current="page" [attr.aria-disabled]="isRecording || submitting || assessing" (click)="isRecording || submitting || assessing ? $event.preventDefault() : null">Komz</a><a [href]="mobileLinks.live"  [attr.aria-disabled]="isRecording || submitting || assessing" (click)="isRecording || submitting || assessing ? $event.preventDefault() : null">Live</a><a class="kw-mobile-account" [href]="mobileLinks.account" [attr.aria-label]="mobileLabel('account')" [attr.aria-disabled]="isRecording || submitting || assessing" (click)="isRecording || submitting || assessing ? $event.preventDefault() : null"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/></svg></a>
+      <details class="kw-mobile-languages" #mobileLanguageMenu><summary [attr.aria-label]="mobileLabel('interface')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 6h14M5 18h14"/></svg><span class="kw-mobile-language-caption">{{ mobileLabel('languages') }}</span></summary><div class="kw-mobile-language-panel"><label>{{ mobileLabel('interface') }}<select [value]="i18n.language()" (change)="setLanguage($any($event.target).value)"><option value="fr">Français</option><option value="en">English</option><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label><button type="button" (click)="mobileLanguageMenu.open=false">{{ mobileLabel('close') }}</button></div></details>
+    </nav>
+    <header class="kw-mobile-brandbar"><div class="kw-mobile-identity"><a class="kw-mobile-brand" [href]="mobileLinks.portal"><img src="assets/keltiawave-wave-icon.svg" width="32" height="32" alt=""><strong aria-label="KeltiaWave Komz"><span class="kw-mobile-product">KeltiaWave</span><span class="kw-mobile-tool">Komz</span></strong></a><p class="kw-mobile-subtitle">{{ mobileLabel('komzSubtitle') }}</p></div><label class="kw-mobile-audio"><img src="assets/flag-brittany.png" alt=""><select [attr.aria-label]="mobileLabel('audio')" [disabled]="true"><option value="br">Brezhoneg</option></select></label></header>
+  </div>
+
   <header class="kw-header">
     <div class="kw-bar">
       <div class="brand-lockup">
@@ -58,7 +65,7 @@
       <button class="journey-back" type="button" (click)="backToThemes()">{{ copy.backThemes }}</button>
       <div class="journey-hero domain-hero"><span class="journey-symbol" [ngClass]="selectedDomain?.tone || 'green'">{{ selectedDomain?.icon }}</span><div><small>KOMZ · 02 / 03</small><h1>{{ selectedDomain?.labelKey || 'v2.theme' | t }}</h1><p>{{ copy.intro }}</p></div></div>
       <div class="phrase-toolbar"><div class="level-tabs" role="group" [attr.aria-label]="subdomainCopy.level"><button type="button" *ngFor="let level of ['all','A1','A2','B1','B2','C1','C2']" [class.active]="selectedLevel === level" [attr.aria-pressed]="selectedLevel === level" (click)="selectedLevel = level">{{ level === 'all' ? copy.all : level }} ({{ levelCount(level) }})</button></div><span aria-live="polite">{{ filteredPhrases.length }} {{ copy.phrases }}</span></div>
-      <label class="subdomain-filter"><span>{{ subdomainCopy.label }}</span><select [(ngModel)]="selectedSubdomain"><option value="">{{ subdomainCopy.all }}</option><option *ngFor="let option of subdomainOptions" [value]="option.value">{{ option.label }} ({{ subdomainCount(option.value) }})</option><option [value]="unclassifiedSubdomain">{{ subdomainCopy.unclassified }} ({{ unclassifiedCount }})</option></select></label>
+      <label class="subdomain-filter"><span>{{ subdomainCopy.label }}</span><select [(ngModel)]="selectedSubdomain"><option value="">{{ subdomainCopy.all }}</option><option *ngFor="let option of subdomainOptions; trackBy: trackSubdomain" [value]="option.value">{{ option.label }} ({{ subdomainCount(option.value) }})</option><option [value]="unclassifiedSubdomain">{{ subdomainCopy.unclassified }} ({{ unclassifiedCount }})</option></select></label>
       <label class="audio-availability"><input type="checkbox" [checked]="!onlyWithAudio" (change)="onlyWithAudio = !$any($event.target).checked">{{ copy.showWithoutAudio }}</label>
       <div class="phrase-list" *ngIf="filteredPhrases.length; else emptyLevel">
         <article class="phrase-row" *ngFor="let phrase of filteredPhrases">
@@ -121,6 +128,7 @@
       <div class="practice-tip">✦ {{ copy.tip }}</div>
     </section>
   </main>
+<details class="kw-mobile-only kw-mobile-help"><summary>ⓘ {{ mobileLabel('help') }}</summary><p>Komz nécessite Internet pour charger les phrases et les voix de référence. Les envois pédagogiques restent privés et distincts du corpus public.</p></details>
 
   <footer class="kw-footer">
     <span>KeltiaWave</span>
