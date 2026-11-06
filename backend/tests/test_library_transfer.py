@@ -430,3 +430,23 @@ def test_archive_ids_are_remapped_in_empty_target(libraries, tmp_path):
     import_library(b, sb, changed, apply=True)
     assert snapshot(a, sa) == snapshot(b, sb)
     assert max(p.id for p in b.query(Phrase)) < 100
+
+
+def test_old_botocore_model_still_sends_signed_create_only_condition():
+    import boto3
+    client = boto3.client('s3', region_name='us-east-1', endpoint_url='https://storage.invalid',
+                          aws_access_key_id='test', aws_secret_access_key='test')
+    client.meta.service_model.operation_model('PutObject').input_shape.members.pop('IfNoneMatch', None)
+    captured = {}
+    class RequestCaptured(Exception):
+        pass
+    def inspect_request(request, **kwargs):
+        captured.update(request.headers)
+        raise RequestCaptured()
+    client.meta.events.register('before-send.s3.PutObject', inspect_request)
+    store = TransferStorage(client=client, bucket='test')
+    with pytest.raises(RuntimeError) as error:
+        store.put('s3://test/audios/imports/exclusive.mp3', b'fixture')
+    assert isinstance(error.value.__cause__, RequestCaptured)
+    assert captured['If-None-Match'] == b'*'
+    assert b'if-none-match' in captured['Authorization'].lower()

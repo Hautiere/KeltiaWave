@@ -75,3 +75,16 @@ Le second fichier désactive les initialisations/réinitialisations de comptes a
 démarrage ; il conserve la configuration d’authentification normale et les
 comptes présents. Le port Live propre à la production est `24800`, lié à
 `127.0.0.1`, pour conserver le port `14800` du staging.
+
+## Compatibilité du stockage vérifiée sur staging
+
+Le test d’import réel a détecté que le modèle de service du SDK boto3 épinglé
+ne connaît pas encore l’argument `IfNoneMatch` de `PutObject`. La transaction
+staging a été annulée. `TransferStorage` transmet désormais la même condition
+HTTP `If-None-Match: *` via le [hook public avant appel de
+boto3](https://docs.aws.amazon.com/boto3/latest/guide/events.html#before-call)
+lorsque cet argument n’est pas pris en charge. Les clients récents conservent
+l’argument natif. Il n’y a aucun repli vers une écriture sans condition.
+Le client est propre au transfert ; les autres envois audio sont inchangés.
+Un test avec le vrai sérialiseur et le signataire botocore vérifie que cet en-tête
+est présent et signé, sans requête réseau. Les 41 tests Bibliothèque passent.

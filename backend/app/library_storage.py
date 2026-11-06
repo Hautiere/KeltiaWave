@@ -14,6 +14,18 @@ class TransferStorage:
         self.root = Path(root if root is not None else storage.LOCAL_AUDIO_DIR).resolve()
         self.client = client
         self.bucket = bucket
+        self._conditional_header = False
+        if client is not None and getattr(client, 'meta', None) is not None:
+            members = client.meta.service_model.operation_model('PutObject').input_shape.members
+            if 'IfNoneMatch' not in members:
+                # Older pinned botocore models lack the argument. Inject the
+                # same HTTP condition through the documented before-call hook,
+                # before signing, on this transfer-only client.
+                def create_only(params, **kwargs):
+                    params.setdefault('headers', {})['If-None-Match'] = '*'
+                client.meta.events.register('before-call.s3.PutObject', create_only,
+                                            unique_id='keltiawave-library-create-only')
+                self._conditional_header = True
 
     @classmethod
     def configured(cls):
@@ -79,8 +91,11 @@ class TransferStorage:
         if self.client is not None:
             # Conditional creation also works when the random key already exists.
             try:
-                self.client.put_object(Bucket=self.bucket, Key=self.s3_key(ref), Body=data,
-                                       ContentType='application/octet-stream', IfNoneMatch='*')
+                options = dict(Bucket=self.bucket, Key=self.s3_key(ref), Body=data,
+                               ContentType='application/octet-stream')
+                if not self._conditional_header:
+                    options['IfNoneMatch'] = '*'
+                self.client.put_object(**options)
             except ClientError as exc:
                 if exc.response.get('Error', {}).get('Code') in {'PreconditionFailed', '412', 'ConditionalRequestConflict'}:
                     raise FileExistsError(f'Storage collision, existing object preserved: {ref}') from exc
