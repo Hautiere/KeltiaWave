@@ -88,3 +88,50 @@ l’argument natif. Il n’y a aucun repli vers une écriture sans condition.
 Le client est propre au transfert ; les autres envois audio sont inchangés.
 Un test avec le vrai sérialiseur et le signataire botocore vérifie que cet en-tête
 est présent et signé, sans requête réseau. Les 41 tests Bibliothèque passent.
+
+## Résultat de la livraison production
+
+La version applicative `7969fdbf308d6dedca87ba7d81da324c1e215722` a été
+validée sur staging puis livrée en production par promotion des mêmes images.
+Les fichiers source du tag ont été vérifiés par SHA-256. La livraison conserve
+les volumes production et applique la protection des comptes décrite ci-dessus.
+
+L’import réel a ajouté exactement 650 phrases et 650 audios. La simulation
+suivante retrouve les 650 associations et ne propose aucun ajout. Le contrôle
+HTTP des 650 nouveaux médias à travers le frontend a renvoyé 650 réponses 200 et
+650 SHA-256 conformes ; 650 traductions FR, EN et CY sont présentes.
+
+L’audit des 12 tables présentes avant livraison retrouve toutes leurs anciennes
+lignes, avec zéro modification et zéro suppression :
+
+| Données | Avant | Après | Lignes anciennes modifiées/supprimées |
+| --- | ---: | ---: | ---: |
+| Comptes | 16 | 16 | 0 |
+| Phrases | 786 | 1 436 | 0 |
+| Audios | 703 | 1 353 | 0 |
+| Leçons Learning | 5 | 5 | 0 |
+| Vidéos Learning | 5 | 5 | 0 |
+| Validations audio | 6 | 6 | 0 |
+
+Les sauvegardes vérifiées sont conservées sur le VPS dans
+`shared/backups/production/pre-web-20261106-e0614db/` : PostgreSQL, MinIO,
+données backend, source, images, routage et rapports d’audit. Les anciens fichiers
+source restent dans `releases/production-pre-web-20261106`. Aucun secret ni média
+utilisateur n’a été transféré dans Git.
+
+La route `live.keltiawave.com` a été ajoutée au fichier Caddy actif. Une comparaison
+structurelle confirme la conservation de toutes les routes et journalisations
+préexistantes. Les fichiers hôte et conteneur sont identiques après rechargement.
+Les huit domaines publics répondent HTTP 200 : portail, Komz, Voices, Learning,
+Record, Transcribe, Subtitles et Live. Les vidéos conservent la lecture Range de
+1 024 octets. Record affiche W2V lorsqu’on choisit le gallois ; Record et Live à
+393 px ne présentent ni débordement horizontal ni image cassée.
+
+Les flux breton et gallois ont été vérifiés avec un silence synthétique à travers
+le proxy frontend en production. Le navigateur public a également reçu
+`ready`, `final`, puis `done` via `wss://live.keltiawave.com/api/live/stream` en
+gallois. Ces contrôles vérifient le transport et le moteur ; ils ne constituent
+pas un test de qualité sur une prise de parole galloise réelle.
+
+Le commit final de documentation ne modifie pas les images applicatives : la
+révision applicative ci-dessus reste celle des images promues.

@@ -82,6 +82,33 @@ déployé ne dépend donc d'un backend installé sur la machine de développemen
 Les scripts `start-*`, les proxies Angular et les branches locales du portail
 conservent volontairement leurs URLs localhost pour le développement uniquement.
 
+## Mettre à jour une production existante sans remplacer ses données
+
+Pour une livraison de code et l’ajout de contenu, conserver les volumes de la
+pile `keltiawave-production`. Le wrapper `deploy-production-candidate-ovh.sh`
+ci-dessous clone le staging : **ne pas l’utiliser pour cette mise à jour**.
+
+Sauvegarder PostgreSQL, MinIO, les données backend, la source et Caddy ; capturer
+les empreintes des lignes existantes avec `scripts/audit_existing_rows.py` dans
+le backend. Valider d’abord le code et l’archive ciblée sur staging. Les images
+construites et testées sur staging peuvent être promues sous les tags production :
+ce transfert d’images ne copie aucune base ni aucun volume.
+
+Appliquer `production-preserve-users.yml` en complément de la configuration
+candidate lors des mises à jour en place : il désactive les initialisations de
+comptes au démarrage afin de conserver les profils et mots de passe existants.
+Garder les secrets et les ports du slot production ; Live utilise `24800` en
+production et `14800` sur staging.
+
+Importer uniquement une archive Bibliothèque ciblée, en simulation puis avec
+application d’un plan sans conflit. Le mécanisme est additif : il ne met pas à
+jour les phrases préexistantes. Vérifier après livraison les empreintes des lignes
+initiales, les médias, les traductions et les domaines publics. Ne pas restaurer
+une base locale ou staging par-dessus la production.
+
+La [livraison du 6 novembre 2026](../../docs/deployment-2026-11-06.md) documente
+les contrôles et sauvegardes utilisés pour 650 phrases et audios supplémentaires.
+
 ## Préparer la production depuis le staging validé
 
 La production est une pile distincte : elle ne réutilise ni les conteneurs ni
