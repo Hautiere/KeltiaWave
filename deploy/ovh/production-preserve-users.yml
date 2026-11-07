@@ -1,0 +1,10 @@
+# Apply with docker-compose.candidate.yml when updating an existing production.
+# Keep authentication keys and account data from the production environment;
+# disable only startup seeding/resetting of accounts.
+services:
+  backend:
+    environment:
+      BOOTSTRAP_ADMIN_EMAIL: ""
+      BOOTSTRAP_ADMIN_PASSWORD: ""
+      BOOTSTRAP_CLASS_USERS: "false"
+      DISABLE_TEST_ACCOUNTS: "false"

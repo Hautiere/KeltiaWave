@@ -31,3 +31,11 @@ def test_wav_duration_is_measured_server_side(tmp_path):
         audio.writeframes(b"\x00\x00" * 32000)
 
     assert calibration.wav_duration_seconds(str(audio_path)) == 2.0
+
+
+def test_welsh_fast_calibration_is_separate_from_vosk(tmp_path,monkeypatch):
+    monkeypatch.setattr(calibration,'CALIBRATION_FILE',tmp_path/'calibration.json')
+    calibration.record_observation('cy','fast',5,10)
+    payload=calibration.get_estimate('cy','fast',10)
+    assert payload['engine']=='wav2vec2' and payload['estimated_seconds']==5
+    assert 'wav2vec2:cy' in (tmp_path/'calibration.json').read_text()

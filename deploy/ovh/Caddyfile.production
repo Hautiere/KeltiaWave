@@ -59,6 +59,12 @@ subtitles.keltiawave.com {
 	reverse_proxy keltiawave-production-subtitles:80
 }
 
+live.keltiawave.com {
+	import keltiawave_security
+	import keltiawave_production_log
+	reverse_proxy keltiawave-production-live:80
+}
+
 # Keep historical portal links and bookmarks working during the transition.
 transcription.keltiawave.com {
 	import keltiawave_security
@@ -116,8 +122,89 @@ play.staging.keltiawave.com {
 
 record.staging.keltiawave.com {
 	import keltiawave_staging_security
-	import keltiawave_staging_auth
-	reverse_proxy keltiawave-staging-record:80
+	@account_preflight {
+        method OPTIONS
+        path /api/auth/* /api/practice/*
+    }
+    handle @account_preflight {
+        reverse_proxy keltiawave-staging-record:80
+    }
+    @account_api {
+        path /api/auth/* /api/practice/*
+        header X-KeltiaWave-Device *
+    }
+    handle @account_api {
+        forward_auth keltiawave-staging-auth:8080 {
+            uri /verify-mobile
+        }
+        reverse_proxy keltiawave-staging-record:80 {
+            header_up -X-KeltiaWave-Device
+        }
+    }
+	# Temporary mobile test access; POST always remains authenticated.
+	@record_preflight {
+		method OPTIONS
+		path /api/record/transcribe /api/record/improve /api/record/email
+		header Access-Control-Request-Method POST
+	}
+	@mobile_preflight {
+		method OPTIONS
+		path /api/live/capabilities /api/live/improve /api/mobile/live-ticket /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics /api/transcribe/transcribe_w2v_wel_metrics
+		header_regexp Access-Control-Request-Method "^(GET|POST)$"
+	}
+	handle @mobile_preflight {
+		reverse_proxy keltiawave-staging-record:80
+	}
+	@mobile_ticket {
+		method POST
+		path /api/mobile/live-ticket
+	}
+	handle @mobile_ticket {
+		request_header X-Forwarded-Host record.staging.keltiawave.com
+		request_header X-Forwarded-Method POST
+		request_header X-Forwarded-Uri /api/mobile/live-ticket
+		reverse_proxy keltiawave-staging-auth:8080
+	}
+	@mobile_api path /api/live/capabilities /api/live/stream /api/live/improve /api/transcribe/estimate /api/transcribe/transcribe_vosk_bre_metrics_v2 /api/transcribe/transcribe_whisper_bre_metrics /api/transcribe/transcribe_whisper_wel_metrics /api/transcribe/transcribe_w2v_wel_metrics
+	handle @mobile_api {
+		forward_auth keltiawave-staging-auth:8080 {
+			uri /verify-mobile
+		}
+		# Only the negotiated public protocol reaches the backend; the one-use
+		# ticket is consumed by staging auth and never appears in a URL.
+		reverse_proxy keltiawave-staging-record:80 {
+			header_up -Authorization
+			header_up Sec-WebSocket-Protocol keltiawave-live
+		}
+	}
+
+	@record_post {
+		method POST
+		path /api/record/transcribe /api/record/improve
+	}
+	handle @record_preflight {
+		reverse_proxy keltiawave-staging-record:80
+	}
+	@email_post {
+		method POST
+		path /api/record/email
+	}
+	handle @email_post {
+		# Backend validates the staging device credential; never anonymous delivery.
+		reverse_proxy keltiawave-staging-record:80
+	}
+	handle @record_post {
+		forward_auth keltiawave-staging-auth:8080 {
+			uri /verify-record
+		}
+		reverse_proxy keltiawave-staging-record:80 {
+			header_up -Authorization
+		}
+	}
+	handle {
+		import keltiawave_staging_auth
+		reverse_proxy keltiawave-staging-record:80
+	}
 }
 
 transcribe.staging.keltiawave.com {
@@ -130,4 +217,10 @@ subtitles.staging.keltiawave.com {
 	import keltiawave_staging_security
 	import keltiawave_staging_auth
 	reverse_proxy keltiawave-staging-subtitles:80
+}
+
+live.staging.keltiawave.com {
+	import keltiawave_staging_security
+	import keltiawave_staging_auth
+	reverse_proxy keltiawave-staging-live:80
 }

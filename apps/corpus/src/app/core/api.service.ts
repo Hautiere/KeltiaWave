@@ -8,7 +8,10 @@ export interface Phrase {
   id: number;
   texte: string;
   traduction_fr?: string | null;
+  traduction_en?: string | null;
+  traduction_cy?: string | null;
   theme: string | null;
+  subdomain?: string | null;
   niveau: string | null;
   source: string | null;
   source_url?: string | null;
@@ -19,6 +22,7 @@ export interface Phrase {
 }
 
 export interface AudioRead {
+  origin?: string;
   id: number;
   phrase_id: number;
   filename: string;
@@ -52,6 +56,8 @@ export interface AudioRead {
     created_at: string;
   }>;
 }
+
+export interface MyAudioRead extends AudioRead { phrase_text: string; }
 
 export interface AudioUploadMetadata {
   phraseSource?: 'suggested' | 'custom';
@@ -121,8 +127,30 @@ export class ApiService {
     });
   }
 
+  myAudios() {
+    return this.http.get<MyAudioRead[]>(`${this.baseUrl}/audios/mine`, { headers: this.auth.authHeaders });
+  }
+
   listAudios(status: 'pending' | 'approved' | 'rejected') {
     return this.http.get<AudioRead[]>(`${this.baseUrl}/audios/`, { params: { status } as any });
+  }
+
+  transcribeBreton(audio: Blob, filename: string) {
+    const form = new FormData();
+    form.append('audio_file', audio, filename);
+    return this.http.post<{ text: string }>(`${this.baseUrl}/transcribe/transcribe_vosk_bre_metrics_v2`, form);
+  }
+
+  compareRhythm(audio: Blob, reference: Blob, referenceId: number) {
+    const form = new FormData();
+    form.append('audio_file', audio, 'learner.wav');
+    form.append('reference_file', reference, `reference-${referenceId}.mp3`);
+    return this.http.post<{ comparison: {
+      rhythm_score: number;
+      emphasis_score: number;
+      pace_score: number;
+      pause_score: number;
+    }; hf_prosody: { model: string; cosine_similarity: number; calibrated_score: boolean } | null }>(`${this.baseUrl}/transcribe/rhythm`, form);
   }
 
   validateAudio(id: number, approved: boolean) {

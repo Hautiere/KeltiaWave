@@ -1,0 +1,46 @@
+/* New mobile elements are absent from the desktop layout. */
+.kw-mobile-only { display:none !important; }
+@media (max-width:700px) {
+  :host { --kw-accent:#2563eb; height:100dvh; min-height:0; display:flex; flex-direction:column; overflow:hidden; background:#f6f8fb; color:#0a1734; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+  .kw-mobile-only { display:block !important; }
+  .kw-mobile-shell { position:relative; z-index:30; flex:none; background:white; }
+  .kw-mobile-nav { display:flex; align-items:center; gap:4px; min-height:46px; padding:3px 10px; border-bottom:1px solid #dfe6ee; box-sizing:border-box; }
+  .kw-mobile-nav>a { position:relative; display:flex; align-items:center; justify-content:center; min-height:44px; padding:0 5px; color:#0a1734; font-size:12px; font-weight:750; text-decoration:none; }
+  .kw-mobile-nav>a[aria-current=page] { color:var(--kw-accent); }
+  .kw-mobile-nav>a[aria-current=page]::after { content:''; position:absolute; bottom:-3px; left:5px; right:5px; height:4px; border-radius:5px 5px 0 0; background:var(--kw-accent); }
+  .kw-mobile-nav>a[aria-disabled=true] { opacity:.45; }
+  .kw-mobile-account svg,.kw-mobile-languages svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.7; }
+  .kw-mobile-languages { margin-left:auto; }
+  .kw-mobile-languages>summary { display:flex; align-items:center; gap:4px; min-height:44px; padding:0 4px; color:#52627a; font-size:11px; font-weight:750; cursor:pointer; list-style:none; }
+  .kw-mobile-languages>summary::-webkit-details-marker { display:none; }
+  .kw-mobile-language-panel { position:absolute; top:49px; right:12px; width:min(280px,calc(100vw - 24px)); padding:16px; border:1px solid #dfe6ee; border-radius:14px; background:white; box-shadow:0 12px 30px #0a173426; box-sizing:border-box; }
+  .kw-mobile-language-panel label { display:block; font-size:12px; font-weight:750; }
+  .kw-mobile-language-panel select { width:100%; min-height:44px; margin:7px 0 12px; padding:8px; border:1px solid #dce4ec; border-radius:8px; background:white; color:#0a1734; font:inherit; }
+  .kw-mobile-language-panel button { min-height:44px; padding:8px 16px; border:0; border-radius:9px; background:#edf4ff; color:#1558bf; font:700 12px Inter,system-ui,sans-serif; }
+  .kw-mobile-brandbar { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:84px; padding:13px 14px; border-bottom:1px solid #e8edf5; box-sizing:border-box; background:linear-gradient(#fff,#fbfdff); }
+  .kw-mobile-identity { flex:1; min-width:0; }
+  .kw-mobile-brand { display:flex; align-items:center; gap:6px; min-width:0; text-decoration:none; }
+  .kw-mobile-brand>img { flex:none; width:32px; height:32px; object-fit:contain; }
+  .kw-mobile-brand>strong { display:flex; flex-wrap:wrap; gap:2px 6px; min-width:0; font-size:16px; font-weight:850; line-height:1.2; letter-spacing:-.055em; }
+  .kw-mobile-product { color:var(--kw-accent); white-space:nowrap; }
+  .kw-mobile-tool { color:#2563eb; white-space:nowrap; }
+  .kw-mobile-subtitle { margin:2px 0 0 38px; color:#27344e; font-size:11px; line-height:1.35; }
+  .kw-mobile-audio { flex:none; display:flex; align-items:center; gap:5px; padding:5px 0; font-size:10px; font-weight:800; }
+  .kw-mobile-audio img { flex:none; width:48px; height:34px; object-fit:contain; border-radius:5px; }
+  .kw-mobile-audio select { width:84px; min-width:0; min-height:44px; padding:4px; border:1px solid #dce4ec; border-radius:8px; background:white; color:#0a1734; font:inherit; }
+  .kw-mobile-audio select:disabled { opacity:1; color:#0a1734; }
+  .kw-mobile-actions { flex:none; padding:8px 10px; border-top:1px solid #e7edf7; background:white; }
+  .kw-mobile-action-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+  .kw-mobile-action-grid>button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-width:0; min-height:74px; padding:7px 6px; border:1px solid #dfebfc; border-radius:15px; background:linear-gradient(#f4f9ff,#e5f0ff); color:#0a1734; font:700 11px/1.2 Inter,system-ui,sans-serif; cursor:pointer; }
+  .kw-mobile-action-grid>button:disabled { opacity:.45; cursor:default; }
+  .kw-mobile-action-grid svg { flex:none; width:25px; height:25px; fill:none; stroke:#1463ff; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .kw-mobile-action-grid small { color:#52627a; font-size:9px; font-weight:400; }
+  .kw-mobile-help { position:relative; flex:none; border-top:1px solid #e7edf7; background:white; color:var(--kw-accent); }
+  .kw-mobile-help>summary { display:flex; align-items:center; gap:9px; min-height:48px; padding:10px 18px max(10px,env(safe-area-inset-bottom)); box-sizing:border-box; font-size:12px; font-weight:750; cursor:pointer; list-style:none; }
+  .kw-mobile-help>summary::after { content:'›'; margin-left:auto; font-size:26px; }
+  .kw-mobile-help>p { position:absolute; z-index:40; bottom:100%; left:12px; right:12px; max-height:55dvh; overflow:auto; margin:0 0 6px; padding:18px; border:1px solid #dbe6f4; border-radius:14px; background:white; color:#334155; font-size:13px; line-height:1.6; box-shadow:0 8px 24px #0a173426; }
+  .kw-mobile-shell :focus-visible,.kw-mobile-actions :focus-visible,.kw-mobile-help :focus-visible { outline:3px solid #479bff; outline-offset:2px; }
+  @media(max-width:360px) { .kw-mobile-nav { padding-inline:5px; gap:2px; } .kw-mobile-languages .kw-mobile-language-caption { display:none; } .kw-mobile-brandbar { padding-inline:8px; gap:4px; } .kw-mobile-brand>strong { font-size:14px; } .kw-mobile-brand>img { width:26px; height:26px; } .kw-mobile-subtitle { margin-left:32px; font-size:10px; } .kw-mobile-audio { gap:3px; font-size:9px; } .kw-mobile-audio img { width:40px; height:28px; } .kw-mobile-audio select { width:78px; } }
+}
+
+@media(max-width:700px) { .kw-mobile-nav { overflow-x:auto; flex-wrap:nowrap; } .kw-mobile-nav>a,.kw-mobile-nav>details { flex-shrink:0; } }

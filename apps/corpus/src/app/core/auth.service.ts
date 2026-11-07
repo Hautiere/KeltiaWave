@@ -83,10 +83,18 @@ export class AuthService {
     );
   }
 
-  changePassword(payload: { current_password: string; new_password: string }) {
+  changePassword(payload: { new_password: string }) {
     return this.http.post<AuthUser>(`${API_BASE}/auth/change-password`, payload, { headers: this.authHeaders }).pipe(
       tap((user) => this.applyUser(user)),
     );
+  }
+
+  resetPassword(token: string, new_password: string) {
+    return this.http.post(`${API_BASE}/auth/reset-password`, { token, new_password });
+  }
+
+  forgotPassword(email: string) {
+    return this.http.post(`${API_BASE}/auth/forgot-password`, { email });
   }
 
   updateMe(payload: UserProfileUpdate) {
@@ -97,6 +105,10 @@ export class AuthService {
 
   listUsers() {
     return this.http.get<AuthUser[]>(`${API_BASE}/auth/users`, { headers: this.authHeaders });
+  }
+
+  createUser(payload: { email: string; password: string; display_name: string; role: AuthUser['role']; breton_level: BretonLevel; organization: string; must_change_password: boolean }) {
+    return this.http.post<AuthUser>(`${API_BASE}/auth/users`, payload, { headers: this.authHeaders });
   }
 
   updateUser(id: number, payload: AdminUserUpdate) {

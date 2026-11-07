@@ -51,6 +51,7 @@ check_page learning "${LEARNING_CANDIDATE_PORT:-14300}"
 check_page record "${RECORD_CANDIDATE_PORT:-14400}"
 check_page transcribe "${TRANSCRIBE_CANDIDATE_PORT:-14500}"
 check_page subtitles "${SUBTITLES_CANDIDATE_PORT:-14600}"
+check_page live "${LIVE_CANDIDATE_PORT:-14800}"
 
 # These minimums deliberately prevent promotion of an empty content database.
 check_json_count "Komz phrases" "http://127.0.0.1:${CORPUS_CANDIDATE_PORT:-14200}/api/phrases/?langue=br" "${EXPECTED_MIN_PHRASES:-105}"

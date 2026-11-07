@@ -20,7 +20,7 @@ export interface TranscriptionEstimate {
 
 @Injectable({ providedIn: 'root' })
 export class TranscribeApiService {
-  private readonly base = location.port === '4500' ? `${location.protocol}//${location.hostname}:8100` : '';
+  private readonly base = '';
   constructor(private readonly http: HttpClient) {}
 
   estimate(language: TranscribeLanguage, mode: TranscribeMode, durationSeconds: number): Observable<TranscriptionEstimate> {
@@ -34,7 +34,7 @@ export class TranscribeApiService {
 
   transcribe(file: File, language: TranscribeLanguage, mode: TranscribeMode): Observable<TranscribeProgress> {
     const endpoint = language === 'cy'
-      ? '/api/transcribe/transcribe_whisper_wel_metrics'
+      ? mode === 'fast' ? '/api/transcribe/transcribe_w2v_wel_metrics' : '/api/transcribe/transcribe_whisper_wel_metrics'
       : mode === 'quality'
         ? '/api/transcribe/transcribe_whisper_bre_metrics'
         : '/api/transcribe/transcribe_vosk_bre_metrics_v2?clean=false&include_words=false';

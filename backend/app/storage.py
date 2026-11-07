@@ -11,7 +11,6 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 
 
 LOCAL_AUDIO_DIR = Path(__file__).resolve().parents[1] / "data" / "audios"
-LOCAL_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _env(name: str, default: str | None = None) -> str | None:
@@ -74,6 +73,7 @@ def save_audio_file_path(source_path: Path, storage_name: str, content_type: str
         )
         return f"s3://{bucket}/{key}"
 
+    LOCAL_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
     dest = LOCAL_AUDIO_DIR / storage_name
     if source_path.resolve() != dest.resolve():
         shutil.copy2(source_path, dest)
@@ -97,6 +97,7 @@ async def save_audio_upload(file: UploadFile, phrase_id: int) -> str:
         )
         return f"s3://{bucket}/{key}"
 
+    LOCAL_AUDIO_DIR.mkdir(parents=True, exist_ok=True)
     dest = LOCAL_AUDIO_DIR / Path(key).name
     dest.write_bytes(await file.read())
     return str(Path("data") / "audios" / dest.name)

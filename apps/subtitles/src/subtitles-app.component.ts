@@ -15,6 +15,7 @@ const LABELS: Record<string, Record<UiLanguage,string>> = {
   breton:{fr:'Breton',en:'Breton',br:'Brezhoneg',cy:'Llydaweg'},
   welsh:{fr:'Gallois',en:'Welsh',br:'Kembraeg',cy:'Cymraeg'},
   engine:{fr:'Moteur',en:'Engine',br:'Keflusker',cy:'Peiriant'},
+  w2vHelp:{fr:'W2V · Rapide — calage approximatif à ajuster. Whisper · Qualité fournit des segments horodatés.',en:'W2V · Fast — approximate timing to adjust. Whisper · Quality provides timestamped segments.',br:'W2V · Buan — amzerioù bras da reizhañ. Whisper · Kalite a ro segmantoù gant amzerioù.',cy:'W2V · Cyflym — amseru bras i’w addasu. Mae Whisper · Ansawdd yn darparu segmentau ag amsernodau.'},
   generate:{fr:'Générer les sous-titres',en:'Generate subtitles',br:'Krouiñ an istitloù',cy:'Creu isdeitlau'},
   import:{fr:'Importer SRT',en:'Import SRT',br:'Enporzhiañ SRT',cy:'Mewnforio SRT'},
   export:{fr:'Exporter SRT',en:'Export SRT',br:'Ezporzhiañ SRT',cy:'Allforio SRT'},
@@ -43,10 +44,12 @@ export class SubtitlesAppComponent implements AfterViewInit,OnDestroy {
   @ViewChild('player') player?: ElementRef<HTMLVideoElement>;
   @ViewChild('cueTable') cueTable?: ElementRef<HTMLElement>;
   @ViewChildren('cueRow') cueRows?: QueryList<ElementRef<HTMLElement>>;
-  readonly portalUrl = window.location.hostname.endsWith('.staging.keltiawave.com')
+  readonly portalUrl = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:4100/`
+    : window.location.hostname.endsWith('.staging.keltiawave.com')
     ? 'https://staging.keltiawave.com/'
     : 'https://keltiawave.com/';
-  ui:UiLanguage=this.initialUi(); language:'br'|'cy'='br'; engine:'vosk'|'whisper'='vosk';
+  ui:UiLanguage=this.initialUi(); language:'br'|'cy'='br'; engine:'vosk'|'whisper'|'wav2vec2'='vosk';
   file:File|null=null; mediaUrl=''; cues:SubtitleSegment[]=[]; current=-1; busy=false; upload=0; work=0; error=''; message=''; dirty=false;
   maxChars=42; maxLines=2; maxDuration=6; private request?:Subscription; private progressTimer?:number; private nativeTrack?:TextTrack; private importedSrtName='';
   constructor(private readonly api:SubtitlesApiService){}
@@ -55,7 +58,7 @@ export class SubtitlesAppComponent implements AfterViewInit,OnDestroy {
   t(key:string){return LABELS[key]?.[this.ui]||key;}
   changeUi(value:string){this.ui=value as UiLanguage;localStorage.setItem('keltiawave-public-language',value);document.documentElement.lang=value;}
   choose(input:HTMLInputElement){const file=input.files?.[0];if(file)this.setMedia(file);input.value='';}
-  setLanguage(value:'br'|'cy'){this.language=value;if(value==='cy')this.engine='whisper';}
+  setLanguage(value:'br'|'cy'){this.language=value;if(value==='cy'&&this.engine==='vosk')this.engine='wav2vec2';if(value==='br'&&this.engine==='wav2vec2')this.engine='vosk';}
   generate(){if(!this.file||this.busy)return;this.busy=true;this.error='';this.upload=0;this.work=0;this.message=this.t('processing');
     this.request=this.api.transcribe(this.file,this.language,this.engine).subscribe({next:event=>{this.upload=event.upload;if(event.upload===100&&!event.result)this.startProgress();if(event.result){this.stopProgress();this.work=100;this.cues=this.format(event.result.segments?.length?event.result.segments:[{start:0,end:this.duration||4,text:event.result.text||''}]);this.current=this.cues.length?0:-1;this.dirty=!!this.cues.length;this.refreshNativeTrack();this.centerActiveCue(this.current);this.busy=false;this.message=`${this.cues.length} ${this.t('subtitles')}`;}},error:error=>{this.stopProgress();this.busy=false;this.error=String(error?.error?.detail||error?.message||error);}});
   }

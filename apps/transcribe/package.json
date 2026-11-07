@@ -2,7 +2,7 @@
   "name": "keltiawave-transcribe-frontend",
   "version": "0.1.0",
   "private": true,
-  "scripts": { "start": "ng serve --host 127.0.0.1 --port 4500", "build": "ng build", "test": "ng test" },
+  "scripts": { "start": "ng serve --host 127.0.0.1 --port 4500 --proxy-config proxy.conf.json", "build": "ng build", "test": "ng test" },
   "dependencies": {
     "@angular/common": "^20.0.0",
     "@angular/compiler": "^20.0.0",

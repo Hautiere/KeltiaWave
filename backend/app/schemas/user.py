@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 
 
 class UserRead(BaseModel):
@@ -36,8 +36,14 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class UserAdminCreate(UserRegister):
+    email: str = Field(max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    role: Literal['admin', 'teacher', 'contributor', 'learner'] = 'contributor'
+    breton_level: Literal['undefined', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'] = 'undefined'
+    must_change_password: bool = True
+
+
 class PasswordChangeRequest(BaseModel):
-    current_password: str
     new_password: str = Field(min_length=8, max_length=128)
 
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd -P)"
-LEGACY_MODELS="${1:-$PROJECT_DIR/../breizh-transcriptor-whisper/backend/app/models}"
+LEGACY_MODELS="${1:-$PROJECT_DIR/../../breizh_transcriptors/breizh-transcriptor-whisper/backend/app/models}"
 TARGET="$PROJECT_DIR/backend/models"
 
 if [ ! -d "$LEGACY_MODELS" ]; then

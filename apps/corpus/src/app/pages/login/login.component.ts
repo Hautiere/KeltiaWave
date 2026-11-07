@@ -49,7 +49,6 @@ export class LoginComponent {
   successKey: string | null = null;
   mode: 'login' | 'register' = 'login';
   password = '';
-  currentPassword = '';
   newPassword = '';
   confirmPassword = '';
   error: string | null = null;
@@ -156,11 +155,9 @@ export class LoginComponent {
 
     this.changingPassword = true;
     this.auth.changePassword({
-      current_password: this.currentPassword,
       new_password: this.newPassword,
     }).subscribe({
       next: () => {
-        this.currentPassword = '';
         this.newPassword = '';
         this.confirmPassword = '';
         this.successKey = 'account.passwordChanged';
@@ -207,7 +204,6 @@ export class LoginComponent {
   logout(): void {
     this.auth.logout();
     this.password = '';
-    this.currentPassword = '';
     this.newPassword = '';
     this.confirmPassword = '';
     this.successKey = null;

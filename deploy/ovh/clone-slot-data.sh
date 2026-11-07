@@ -76,4 +76,4 @@ destination_compose up -d --wait backend
 # Nginx resolves the Docker hostname when it starts. The backend is recreated
 # during the restore, so restart every frontend proxy to discard the previous
 # container address before running the smoke tests or switching Caddy.
-destination_compose restart corpus learning record transcribe subtitles
+destination_compose restart corpus learning record transcribe subtitles live

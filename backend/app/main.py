@@ -2,8 +2,9 @@
 import os
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from .db import Base, engine
+from .practice_schema import ensure_practice_columns
+from .api.endpoints import practice
 from .api.endpoints import phrases
 from .api.endpoints import enregistrements
 from .api.endpoints import auth
@@ -41,6 +42,7 @@ corpus_tables = [
     if not table.name.startswith("learning_")
 ]
 Base.metadata.create_all(bind=engine, tables=corpus_tables)
+ensure_practice_columns(engine)
 
 def ensure_dev_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("audios")}
@@ -77,9 +79,12 @@ ensure_dev_columns()
 def ensure_phrase_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("phrases")}
     wanted = {
+        "subdomain": "TEXT",
         "source": "TEXT",
         "source_url": "TEXT",
         "traduction_fr": "TEXT",
+        "traduction_en": "TEXT",
+        "traduction_cy": "TEXT",
     }
     missing = [(name, ddl) for name, ddl in wanted.items() if name not in existing]
     if not missing:
@@ -111,6 +116,9 @@ def ensure_user_columns() -> None:
     existing = {col["name"] for col in inspect(engine).get_columns("users")}
     wanted = {
         "must_change_password": "BOOLEAN DEFAULT FALSE NOT NULL",
+        "auth_version": "INTEGER DEFAULT 0 NOT NULL",
+        "temporary_password_hash": "TEXT",
+        "temporary_password_expires_at": "TIMESTAMP",
         "profile_type": "TEXT DEFAULT 'contributor' NOT NULL",
         "breton_level": "TEXT DEFAULT 'undefined' NOT NULL",
         "organization": "TEXT",
@@ -421,31 +429,23 @@ def disable_test_accounts() -> None:
 
 disable_test_accounts()
 
+# Same school/level groups and teachers as the historical web class screen.
+from .db import SessionLocal
+from .web_formations import sync_web_formations
+with SessionLocal() as practice_db:
+    sync_web_formations(practice_db)
+
 # Compat dev: expose les anciens fichiers locaux.
 app.mount("/static/audios", StaticFiles(directory=str(LOCAL_AUDIO_DIR)), name="audios")
 
-# CORS partagé par les cinq applications autonomes.
-default_origins = [
-    f"http://{host}:{port}"
-    for host in ("localhost", "127.0.0.1")
-    for port in (4200, 4300, 4400, 4500, 4600)
-]
-configured_origins = [
-    origin.strip()
-    for origin in os.getenv("CORS_ALLOW_ORIGINS", "").split(",")
-    if origin.strip()
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=configured_origins or default_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Shared CORS policy for web and Capacitor clients.
+from .cors import configure_cors
+configure_cors(app, os.getenv("CORS_ALLOW_ORIGINS", ""))
 
 # API
 app.include_router(phrases.router, prefix="/api/phrases", tags=["phrases"])
 app.include_router(enregistrements.router, prefix="/api/audios", tags=["audios"])
+app.include_router(practice.router, prefix="/api/practice", tags=["practice"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(admin_data.router, prefix="/api/admin-data", tags=["admin-data"])
 app.include_router(learning_routes.router, prefix="/api/learning", tags=["learning"])

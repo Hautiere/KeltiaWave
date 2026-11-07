@@ -1,3 +1,4 @@
+import { GAME_COPY } from './game-copy';
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -30,7 +31,9 @@ interface StoredProgress { lessonId: number; status: 'started' | 'completed'; be
 })
 export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
   readonly api = inject(LearningApiService);
-  readonly portalUrl = window.location.hostname.endsWith('.staging.keltiawave.com')
+  readonly portalUrl = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:4100/`
+    : window.location.hostname.endsWith('.staging.keltiawave.com')
     ? 'https://staging.keltiawave.com/'
     : 'https://keltiawave.com/';
   @ViewChild('lessonVideo') private lessonVideo?: ElementRef<HTMLMediaElement>;
@@ -150,7 +153,8 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
   get displayedScore(): number { return this.historicalProgress?.bestScore ?? this.score; }
   get displayedTotalQuestions(): number { return this.historicalProgress?.totalQuestions || this.blanks.length; }
   get displayedScorePercent(): number { return this.historicalProgress ? this.progressScore(this.historicalProgress) : this.scorePercent; }
-  t(key: string): string {
+  t(key: string, values: Record<string, string | number> = {}): string {
+    if (GAME_COPY[key]) return GAME_COPY[key][this.uiLanguage].replace(/\{(\w+)\}/g, (match, name: string) => String(values[name] ?? match));
     if (key === 'heroTitle') return ({ fr: 'Regarder. Écouter. Play.', br: 'Sellit. Selaouit. C’hoariit.', en: 'Watch. Listen. Play.' })[this.uiLanguage];
     if (key === 'sourceOriginal') return ({ fr: 'Aller sur l’original', br: 'Mont d’an orin', en: 'Go to the original' })[this.uiLanguage];
     const extra: Record<string, Record<UiLanguage, string>> = {
@@ -166,6 +170,10 @@ export class AppComponent implements AfterViewInit, OnDestroy, OnInit {
     };
     if (extra[key]) return extra[key][this.uiLanguage];
     return this.uiText[this.uiLanguage][key] ?? key;
+  }
+  catalogStatusLabel(status: string): string {
+    const keys: Record<string, string> = { Nouveau: 'gameNew', 'En cours': 'gameInProgress', 'Terminé': 'gameCompleted' };
+    return status.replace(/^(Nouveau|En cours|Terminé)/, label => this.t(keys[label]));
   }
   adminT(key: string): string {
     if (key === 'transcriptionHelp') return ({ fr: 'Importe un fichier TXT, SRT ou VTT, puis corrige chaque bloc avec la vidéo.', br: 'Enporzh ur restr TXT, SRT pe VTT, ha reizhañ pep bloc’h gant ar video.', en: 'Import a TXT, SRT or VTT file, then edit each block alongside the video.' })[this.uiLanguage];

@@ -24,7 +24,7 @@ nouvelle application.
 
 - import d'un média ou d'un fichier SRT ;
 - choix du breton ou du gallois ;
-- cartes moteur harmonisées avec Transcribe : Vosk rapide et Whisper précis ;
+- moteurs bretons : Vosk et Whisper ; moteurs gallois : W2V · Rapide ou Whisper · Qualité, sur ordinateur et mobile ;
 - génération par l'API spécialisée avec progression de chargement et estimation
   du traitement ;
 - prévisualisation des sous-titres sur la vidéo ;
@@ -45,3 +45,12 @@ colonnes Début/Fin sont resserrées afin de privilégier le texte. Un bouton
 **Format** repliable règle le nombre maximal de caractères et de lignes sans
 repousser la matrice vers le bas. Les blocs n'enregistrent plus de retours à la
 ligne fixes : leur affichage s'adapte naturellement à la largeur disponible.
+
+W2V réutilise le modèle gallois local du backend, sans KenLM ni horodatages fins.
+Son texte est réparti sur la durée du média : le calage est approximatif et doit
+être ajusté dans l’éditeur. Whisper fournit des segments horodatés et reste
+préférable pour le calage. « Rapide » reprend le nom du mode Transcribe et ne
+garantit pas un calcul plus rapide que Whisper.
+
+Les appels passent par `/api` sur l’origine du front : Nginx en Docker ou le
+proxy Angular en développement. L’API accepte `engine=wav2vec2` pour `language=cy`.

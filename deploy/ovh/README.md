@@ -82,6 +82,33 @@ déployé ne dépend donc d'un backend installé sur la machine de développemen
 Les scripts `start-*`, les proxies Angular et les branches locales du portail
 conservent volontairement leurs URLs localhost pour le développement uniquement.
 
+## Mettre à jour une production existante sans remplacer ses données
+
+Pour une livraison de code et l’ajout de contenu, conserver les volumes de la
+pile `keltiawave-production`. Le wrapper `deploy-production-candidate-ovh.sh`
+ci-dessous clone le staging : **ne pas l’utiliser pour cette mise à jour**.
+
+Sauvegarder PostgreSQL, MinIO, les données backend, la source et Caddy ; capturer
+les empreintes des lignes existantes avec `scripts/audit_existing_rows.py` dans
+le backend. Valider d’abord le code et l’archive ciblée sur staging. Les images
+construites et testées sur staging peuvent être promues sous les tags production :
+ce transfert d’images ne copie aucune base ni aucun volume.
+
+Appliquer `production-preserve-users.yml` en complément de la configuration
+candidate lors des mises à jour en place : il désactive les initialisations de
+comptes au démarrage afin de conserver les profils et mots de passe existants.
+Garder les secrets et les ports du slot production ; Live utilise `24800` en
+production et `14800` sur staging.
+
+Importer uniquement une archive Bibliothèque ciblée, en simulation puis avec
+application d’un plan sans conflit. Le mécanisme est additif : il ne met pas à
+jour les phrases préexistantes. Vérifier après livraison les empreintes des lignes
+initiales, les médias, les traductions et les domaines publics. Ne pas restaurer
+une base locale ou staging par-dessus la production.
+
+La [livraison du 6 novembre 2026](../../docs/deployment-2026-11-06.md) documente
+les contrôles et sauvegardes utilisés pour 650 phrases et audios supplémentaires.
+
 ## Préparer la production depuis le staging validé
 
 La production est une pile distincte : elle ne réutilise ni les conteneurs ni
@@ -131,7 +158,7 @@ La zone DNS OVH peut utiliser un wildcard A vers l'IPv4 du VPS :
 *.keltiawave.com -> 51.178.38.152
 ```
 
-Il couvre les domaines Learning, Komz, Voices, Transcribe, Record et Subtitles.
+Il couvre les domaines Learning, Komz, Voices, Transcribe, Record, Subtitles et Live.
 Le wildcard distinct `*.staging.keltiawave.com` reste plus spécifique et ne
 conflite pas avec la production. Les domaines racines sont déclarés séparément.
 
@@ -155,3 +182,145 @@ Les sauvegardes de promotion se trouvent dans
 `/home/ubuntu/apps/keltiawave/shared/backups/pre-promotion-*`. Elles contiennent
 le Caddyfile, PostgreSQL, MinIO, les données de l'application historique et les
 empreintes SHA-256.
+
+## Modèle de prosodie Komz
+
+Le backend conserve le cache Hugging Face dans `/app/data/hf-cache` sur le volume
+`backend_data`. Après le premier déploiement de chaque pile, télécharger les
+deux fichiers du modèle public dans le conteneur backend correspondant :
+
+```sh
+cd /home/ubuntu/apps/keltiawave/releases/staging
+docker compose --env-file /home/ubuntu/apps/keltiawave/shared/.env.staging \
+  -f deploy/ovh/docker-compose.candidate.yml exec -T backend python -c \
+  "from huggingface_hub import snapshot_download; snapshot_download('Orange/Speaker-wavLM-pro', allow_patterns=['config.json', 'model.safetensors'])"
+```
+
+Remplacer `staging` par `production` et utiliser `.env.production` pour la pile
+publique. Sans ces poids, l'API renvoie `hf_prosody: null` et Komz ne peut pas
+afficher de pourcentage de prosodie. La similarité affichée reste expérimentale
+et ne constitue pas une note validée de prononciation.
+
+## Capacitor mobile CORS
+
+The explicit allowlist includes `http://localhost`, `https://localhost` and
+`capacitor://localhost`. Capacitor 8 defaults to HTTPS on Android and the
+capacitor scheme on iOS; verify the actual WebView Origin when diagnosing errors.
+`CORS_ALLOW_ORIGINS`, when nonempty, replaces the defaults completely.
+
+For existing installations, append these three comma-separated origins to the
+existing CORS_ALLOW_ORIGINS value in the private environment file. Preserve all
+existing origins. Do not print or commit the environment file. Changing the
+versioned defaults does not override an existing environment value.
+
+Apply first to shared/.env.staging as part of the normal staging workflow.
+After validation, the equivalent change belongs in
+`/home/ubuntu/apps/keltiawave/shared/.env.production`. Recreate the backend with
+the updated environment through the deployment workflow; a process restart alone
+does not update the container environment. Never use a wildcard origin.
+
+Validation order: tests, commit/push, staging deployment, preflight, then a short
+Android Whisper transcription. The staging authentication proxy must also permit
+the authorized test request to reach FastAPI; do not disable staging protection.
+
+```sh
+curl -i -X OPTIONS https://record.staging.keltiawave.com/api/record/transcribe \
+  -H 'Origin: http://localhost' \
+  -H 'Access-Control-Request-Method: POST'
+```
+
+Expect HTTP 200 and `Access-Control-Allow-Origin: http://localhost` when the
+request reaches FastAPI. Repeat for HTTPS localhost and capacitor localhost.
+The web root domain is not the Record API endpoint. Only validate the production
+Record domain after the approved production deployment. A successful preflight
+alone does not prove Whisper or audio upload works.
+
+## Temporary Android Record staging access
+
+Only `record.staging.keltiawave.com` has the temporary API routes. OPTIONS
+preflights requesting POST on exactly `/api/record/transcribe` or
+`/api/record/improve` reach FastAPI's explicit CORS policy without a session.
+POST goes through `/verify-record`; a valid browser session or temporary Bearer
+credential is required. Other hosts, paths and methods keep `/verify` and the
+normal staging login. Unauthorized API requests return 401, with CORS headers
+only for the three approved Capacitor origins. The Bearer header is removed
+before forwarding audio to Record/backend.
+
+The auth container must have `DEPLOY_SLOT=staging`. Temporary access is disabled
+unless both `STAGING_RECORD_TOKEN_SHA256` (SHA-256 hex digest of a random token)
+and `STAGING_RECORD_TOKEN_EXPIRES_AT` (Unix timestamp) are configured in the
+private staging environment. Use a 32-byte random token with a two-hour lifetime.
+Keep its plaintext out of environment files, Git, URLs, command arguments and
+logs. Deliver it privately to the tester. Only the digest belongs in the staging
+environment; recreate **staging-auth only** to apply it. Never configure it in
+production. An expired token fails closed and does not affect browser sessions.
+
+Build the mobile app with `ng build --configuration development`, then
+`npx cap sync android`. In the backend settings use
+`https://record.staging.keltiawave.com` and enter the token in the masked field.
+It stays in memory, is sent only to the two exact URLs, and disappears when the
+app process restarts or the tester clears it. Production builds never send it.
+
+Validate Caddy before reloading the shared proxy. Patch only the Record staging
+host block in the active file; preserve and compare every other byte. Keep a
+backup for immediate rollback. Do not run the production promotion script.
+Check public preflight, unauthorized 401, authorized short synthetic audio POST,
+and that other staging applications still redirect to login. Then test Android
+recording, playback, and Whisper with real speech.
+
+After the test, clear both token environment entries and recreate staging-auth.
+Restore the original Record staging block (normal staging security, staging auth,
+and Record reverse_proxy), validate and reload Caddy. This removes the preflight
+exception too. Delete the tester's private token file and clear the app field.
+Run `python3 -m unittest discover -s deploy/ovh/staging-auth -p 'test_*.py'`
+for the authentication regression suite.
+
+Deployment note: a single-file Docker bind mount can still refer to an old inode
+if its host file was previously replaced. Compare the host and container file
+hashes before reloading. Copy the validated candidate into the container and
+reload that exact path; do not assume `/etc/caddy/Caddyfile` matches the host.
+Keep the host file updated for future container recreation. Until the stale mount
+is repaired in a separate maintenance operation, a reload/restart from that old
+mounted file can restore obsolete routing. Do not restart the shared proxy just
+for this staging test. For rollback, copy the saved original into the container,
+validate it and reload that explicit path as well.
+
+
+## Remembered Android development access
+
+A debug emulator may be provisioned once with a random 256-bit device credential.
+`STAGING_RECORD_DEVICE_SHA256` stores only its SHA-256 digest in the private
+staging environment. This credential has no periodic expiry and remains valid
+until explicitly revoked; it is strictly limited to the existing two Record
+Whisper POST endpoints and the staging slot. It never authorizes email, another
+application, or production. Clear this environment variable and recreate only
+staging-auth to revoke it. Existing browser login remains unchanged.
+
+The Android debug plugin imports a private `files/staging-device.seed` once,
+encrypts it with an Android Keystore AES-GCM key in no-backup storage, and deletes
+the seed. The seed must be streamed through adb run-as, never passed on the
+command line or included in the APK. Release builds do not return a credential.
+App updates retain access; uninstalling or wiping emulator data requires new
+provisioning. This is development-only device enrollment, not production user
+authentication. A debug device remains accessible to its authorized adb operator.
+
+### Lien de récupération du compte
+
+Configurer `PASSWORD_RESET_URL=https://komz.staging.keltiawave.com/reinitialiser-mot-de-passe` dans `shared/.env.staging`. Le backend envoie désormais un lien à usage unique et la page demande de choisir le nouveau mot de passe. Le déploiement ajoute `auth_version` aux comptes pour invalider les sessions après réinitialisation. Voir [le parcours de récupération](../../docs/password-recovery.md).
+
+
+## Live et suivi des contributions (31 octobre 2026)
+
+Le service Live utilise `LIVE_CANDIDATE_PORT` (14800 par défaut). Vérifier que ce
+port n’est pas occupé par un autre slot et que le staging conserve ses volumes.
+Le domaine `live.staging.keltiawave.com` doit pointer sur le VPS et passer par la
+même authentification staging que les autres applications. Le script de livraison
+ne recharge pas Caddy : si la route Live manque dans le fichier actif, ajouter
+uniquement cette route staging après sauvegarde et validation du fichier actif.
+Ne pas remplacer la configuration de production par le fichier du dépôt.
+
+Contrôles après livraison : `/api/live/capabilities`, connexion WebSocket via
+l’origine frontend, pages Portal/Komz/Listen/Record, et refus 401 de
+`/api/audios/mine` sans session. Vérifier les comptes et les volumes avant/après.
+La réception d’un audio approuvé doit le conserver dans le compte personnel et
+l’inclure dans le corpus approuvé.

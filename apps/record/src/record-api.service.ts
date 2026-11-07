@@ -7,13 +7,9 @@ export interface RecordResult { filename: string; language: RecordLanguage; engi
 
 @Injectable({ providedIn: 'root' })
 export class RecordApiService {
-  readonly httpBase = this.localDevelopment ? `${location.protocol}//${location.hostname}:8100` : '';
-  readonly wsBase = this.localDevelopment
-    ? `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.hostname}:8100`
-    : `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
+  readonly httpBase = '';
+  readonly wsBase = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
   constructor(private readonly http: HttpClient) {}
-
-  private get localDevelopment(): boolean { return location.port === '4400'; }
 
   transcribe(file: File, language: RecordLanguage): Promise<RecordResult> {
     return this.post('/api/record/transcribe', file, language, '');

@@ -6,7 +6,10 @@ from typing import Optional
 class PhraseBase(BaseModel):
     texte: str = Field(..., min_length=1)
     traduction_fr: Optional[str] = None
+    traduction_en: Optional[str] = None
+    traduction_cy: Optional[str] = None
     theme: Optional[str] = None
+    subdomain: Optional[str] = None
     niveau: Optional[str] = None   # ex: "A1", "B2", etc.
     source: Optional[str] = None
     source_url: Optional[str] = None
@@ -22,7 +25,10 @@ class PhraseCreate(PhraseBase):
 class PhraseUpdate(BaseModel):
     texte: Optional[str] = None
     traduction_fr: Optional[str] = None
+    traduction_en: Optional[str] = None
+    traduction_cy: Optional[str] = None
     theme: Optional[str] = None
+    subdomain: Optional[str] = None
     niveau: Optional[str] = None
     source: Optional[str] = None
     source_url: Optional[str] = None

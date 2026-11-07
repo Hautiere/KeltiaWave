@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from fastapi import APIRouter
+from app.transcribe.wav2vec2 import available as w2v_available
 
 router = APIRouter(
     prefix="/api/transcription/models",
@@ -22,6 +23,7 @@ TRANSCRIPTION_MODELS_STATUS = {
     "default_engine": "whisper",   # ✅ AJOUT
 
     "engines": {
+        "wav2vec2": {"languages": {"cy": {"available": w2v_available(), "default_model_id": "wav2vec2-cy"}}},
         "whisper": {
             "languages": {
                 "br": {
@@ -55,6 +57,7 @@ TRANSCRIPTION_MODELS_STATUS = {
         }
     },
     "models": {
+        "wav2vec2-cy": {"engine": "wav2vec2", "provider": "transformers", "name": "wav2vec2-cy", "variant": "greedy-ctc"},
         "whisper_ct2_large_int8_v2024_10": {
             "engine": "whisper",
             "provider": "ctranslate2",

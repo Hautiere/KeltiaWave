@@ -1,8 +1,8 @@
 <header class="topbar">
-  <a class="brand" [href]="portalUrl" aria-label="Portail KeltiaWave">
+  <div class="brand-lockup"><a class="portal-home" [href]="portalUrl" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><img src="/assets/portal-home.svg" alt=""></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><div class="brand">
     <img class="brand-mascot" src="/assets/keltiawave-mascot.webp" alt="">
     <span><b><i>KeltiaWave</i> Play</b><small>Test your listening skills</small></span>
-  </a>
+  </div></div>
   <nav aria-label="Navigation principale">
     <button type="button" [class.active]="mode === 'learn' && screen !== 'progression'" (click)="navigate('learn')">{{ t('lessons') }}</button>
     <button type="button" *ngIf="api.user()?.role === 'admin'" [class.active]="mode === 'admin'" (click)="navigate('admin')">{{ t('admin') }}</button>
@@ -43,9 +43,9 @@
 
 <main *ngIf="mode === 'learn'; else adminView" [class.lesson-running]="screen === 'exercise' || screen === 'correction'">
   <section class="page-heading" *ngIf="screen !== 'catalog' && screen !== 'progression' && screen !== 'profiles'">
-    <p class="eyebrow">Compréhension du breton</p>
-    <h1>Jeu 1 · Texte à trous <span>Vidéo</span></h1>
-    <p>Écoute, complète les mots manquants et réécoute chaque passage.</p>
+    <p class="eyebrow">{{ t('gameEyebrow') }}</p>
+    <h1>{{ t('gameHeading') }} <span>{{ t(activeMediaIsAudio ? 'gameAudio' : 'gameVideo') }}</span></h1>
+    <p>{{ t('gameIntro') }}</p>
   </section>
 
   <section class="test-profiles-page" *ngIf="screen === 'profiles'">
@@ -64,13 +64,13 @@
         <label><span>{{ t('duration') }}</span><select [(ngModel)]="catalogDuration"><option value="Toutes">{{ t('allDurations') }}</option><option value="Courte">≤ 3 min</option><option value="Moyenne">3–10 min</option><option value="Longue">&gt; 10 min</option></select></label>
         <fieldset><legend>{{ t('gameType') }}</legend><label class="check-filter"><input type="checkbox" checked disabled> {{ t('gaps') }}</label></fieldset>
         <button class="reset-filter" type="button" (click)="catalogSearch = ''; catalogLevel = 'Tous'; catalogTheme = 'Tous'; catalogDuration = 'Toutes'">↻ {{ t('reset') }}</button>
-        <div class="filter-help"><b>Comment ça marche ?</b><p>Regarde la vidéo, écoute attentivement et complète les mots manquants.</p></div>
+        <div class="filter-help"><b>{{ t('gameHow') }}</b><p>{{ t('gameHelp') }}</p></div>
       </aside>
       <section class="catalog-results">
         <header><b>{{ filteredCatalogLessons.length }} {{ t('lessons').toLowerCase() }}</b><span>▦ {{ t('grid') }}</span></header>
         <div class="lesson-grid">
           <article class="video-card" *ngFor="let lesson of filteredCatalogLessons">
-            <button class="video-card-main" type="button" (click)="openCatalogLesson(lesson)"><span class="lesson-thumbnail" [class.has-image]="!!lesson.thumbnail" [attr.data-visual]="lesson.visual"><img *ngIf="lesson.thumbnail" [src]="lesson.thumbnail" alt="" loading="lazy"><span class="thumbnail-label">{{ lesson.theme }}</span><b class="thumbnail-duration">◷ {{ lesson.duration }}</b></span><span class="lesson-copy"><strong>{{ lesson.title }}</strong><span class="lesson-meta"><i>Niveau {{ lesson.level }}</i><i>{{ lesson.theme }}</i></span><small>{{ lesson.questions }} mots à trouver <em>{{ lesson.status }}</em></small><span class="lesson-progress" *ngIf="lesson.progress"><i [style.width.%]="lesson.progress"></i></span></span></button>
+            <button class="video-card-main" type="button" (click)="openCatalogLesson(lesson)"><span class="lesson-thumbnail" [class.has-image]="!!lesson.thumbnail" [attr.data-visual]="lesson.visual"><img *ngIf="lesson.thumbnail" [src]="lesson.thumbnail" alt="" loading="lazy"><span class="thumbnail-label">{{ lesson.theme }}</span><b class="thumbnail-duration">◷ {{ lesson.duration }}</b></span><span class="lesson-copy"><strong>{{ lesson.title }}</strong><span class="lesson-meta"><i>{{ t('gameLevel') }} {{ lesson.level }}</i><i>{{ lesson.theme }}</i></span><small>{{ lesson.questions }} {{ t('gameWordsToFind') }} <em>{{ catalogStatusLabel(lesson.status) }}</em></small><span class="lesson-progress" *ngIf="lesson.progress"><i [style.width.%]="lesson.progress"></i></span></span></button>
             <a class="card-source-link" *ngIf="lesson.source?.videos?.[0]?.source_url as sourceUrl" [href]="sourceUrl" target="_blank" rel="noopener noreferrer">↗ {{ lesson.source?.videos?.[0]?.source_link_label || t('sourceOriginal') }}</a>
           </article>
         </div>
@@ -94,7 +94,7 @@
     <ng-template #noProgress><p class="empty-catalog">{{ t('noProgress') }}</p></ng-template>
   </section>
 
-  <ol class="steps" *ngIf="screen !== 'catalog' && screen !== 'progression' && screen !== 'profiles'" aria-label="Progression de la leçon">
+  <ol class="steps" *ngIf="screen !== 'catalog' && screen !== 'progression' && screen !== 'profiles'" [attr.aria-label]="t('gameProgress')">
     <li [class.current]="screen === 'intro'" [class.done]="screen !== 'intro'"><b>1</b><span>{{ t('lesson') }}</span></li>
     <li [class.current]="screen === 'exercise'"><b>2</b><span>{{ t('listen') }}</span></li>
     <li [class.current]="screen === 'correction'"><b>3</b><span>{{ t('correction') }}</span></li>
@@ -107,7 +107,7 @@
         <video *ngIf="!activeMediaIsAudio" #lessonVideo controls preload="metadata" [src]="videoUrl || null" (play)="handleVideoPlay()" (timeupdate)="syncExercisePageWithVideo($event)" (loadedmetadata)="videoMetadataLoaded()"></video>
         <audio *ngIf="activeMediaIsAudio" #lessonVideo controls preload="metadata" [src]="videoUrl || null" (play)="handleVideoPlay()" (timeupdate)="syncExercisePageWithVideo($event)" (loadedmetadata)="videoMetadataLoaded()"></audio>
         <div class="audio-cover-copy" *ngIf="activeMediaIsAudio"><span>🎧</span><b>{{ activeLesson.title }}</b><small>{{ activeLesson.theme }}</small></div>
-        <label class="audio-seeker" *ngIf="activeMediaIsAudio && videoUrl"><time>{{ formatTime(currentVideoTime) }}</time><input type="range" min="0" [max]="videoDurationSeconds || 0" step="0.1" [value]="currentVideoTime" (input)="seekMedia($event)" aria-label="Position dans le fichier audio"><time>{{ formatTime(videoDurationSeconds || 0) }}</time></label>
+        <label class="audio-seeker" *ngIf="activeMediaIsAudio && videoUrl"><time>{{ formatTime(currentVideoTime) }}</time><input type="range" min="0" [max]="videoDurationSeconds || 0" step="0.1" [value]="currentVideoTime" (input)="seekMedia($event)" [attr.aria-label]="t('gameAudioPosition')"><time>{{ formatTime(videoDurationSeconds || 0) }}</time></label>
         <div class="result-subtitles" *ngIf="screen === 'result' && subtitleLanguage !== 'off'">
           <p *ngFor="let segment of currentSubtitleSegments">
             <ng-container *ngIf="subtitleLanguage === 'fr'; else bretonSubtitle">{{ segment.translation }}</ng-container>
@@ -120,30 +120,30 @@
           </p>
         </div>
         <div class="video-placeholder" *ngIf="!videoUrl">
-          <span class="play-symbol">▶</span><b>Ajoute une vidéo de test</b><small>Le fichier reste dans ton navigateur.</small>
+          <span class="play-symbol">▶</span><b>{{ t('gameAddVideo') }}</b><small>{{ t('gameLocalFile') }}</small>
         </div>
       </div>
       <div class="media-actions">
-        <div class="subtitle-language-buttons" *ngIf="screen === 'result' && videoUrl"><button class="file-button subtitle-toggle" type="button" [class.active]="subtitleLanguage === 'br'" (click)="toggleSubtitles('br')">Sous-titres BR</button><button class="file-button subtitle-toggle" type="button" *ngIf="hasFrenchSubtitles" [class.active]="subtitleLanguage === 'fr'" (click)="toggleSubtitles('fr')">Sous-titres FR</button></div>
+        <div class="subtitle-language-buttons" *ngIf="screen === 'result' && videoUrl"><button class="file-button subtitle-toggle" type="button" [class.active]="subtitleLanguage === 'br'" (click)="toggleSubtitles('br')">{{ t('gameSubtitles') }} BR</button><button class="file-button subtitle-toggle" type="button" *ngIf="hasFrenchSubtitles" [class.active]="subtitleLanguage === 'fr'" (click)="toggleSubtitles('fr')">{{ t('gameSubtitles') }} FR</button></div>
         <a class="original-link" *ngIf="activeSourceUrl" [href]="activeSourceUrl" target="_blank" rel="noopener noreferrer">↗ {{ activeSourceLinkLabel || t('sourceOriginal') }}</a>
       </div>
       <small class="file-name" *ngIf="videoName">{{ videoName }}</small>
     </article>
 
     <article class="lesson-card" *ngIf="screen === 'intro'">
-      <span class="level">Niveau {{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2><p>{{ activeLesson.description }}</p>
+      <span class="level">{{ t('gameLevel') }} {{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2><p>{{ activeLesson.description }}</p>
       <dl><div><dt>{{ t('duration') }}</dt><dd>{{ activeLesson.duration }}</dd></div><div><dt>{{ t('theme') }}</dt><dd>{{ activeLesson.theme }}</dd></div><div><dt>{{ t('questions') }}</dt><dd>{{ blanks.length }} {{ t('words') }}</dd></div></dl>
       <button class="primary" type="button" (click)="startLesson()">{{ t('start') }}</button>
     </article>
 
     <article class="exercise-card" *ngIf="screen === 'exercise' || screen === 'correction'" [style.height.px]="playerPanelHeight || null">
-      <div class="card-title"><div><span class="level">{{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2></div><span *ngIf="exercisePageCount > 1">Page {{ exercisePage + 1 }} / {{ exercisePageCount }}</span></div>
+      <div class="card-title"><div><span class="level">{{ activeLesson.level }}</span><h2>{{ activeLesson.title }}</h2></div><span *ngIf="exercisePageCount > 1">{{ t('gamePage') }} {{ exercisePage + 1 }} / {{ exercisePageCount }}</span></div>
       <p class="instruction">{{ screen === 'exercise' ? t('instruction') : t('correction') }}</p>
       <div #transcriptScroll class="transcript" [class.corrected]="screen === 'correction'">
         <article #transcriptSegment *ngFor="let segment of visibleSegments" [attr.data-segment-id]="segment.id" [class.segment-active]="isSegmentActive(segment)"><time>{{ formatTime(segment.start) }}</time><p>
           <ng-container *ngFor="let part of segment.parts">
             <ng-container *ngIf="part.blank as blank; else plainPart">
-              <input [(ngModel)]="blank.value" [disabled]="screen === 'correction'" [attr.aria-label]="'Mot manquant ' + blank.id" [class.good]="screen === 'correction' && isCorrect(blank)" [class.bad]="screen === 'correction' && !isCorrect(blank)" autocomplete="off" spellcheck="false">
+              <input [(ngModel)]="blank.value" [disabled]="screen === 'correction'" [attr.aria-label]="t('gameMissingWord') + ' ' + blank.id" [class.good]="screen === 'correction' && isCorrect(blank)" [class.bad]="screen === 'correction' && !isCorrect(blank)" autocomplete="off" spellcheck="false">
               <span class="answer-mark good" *ngIf="screen === 'correction' && isCorrect(blank)">✓</span><span class="answer-mark bad" *ngIf="screen === 'correction' && !isCorrect(blank)">✕</span>
             </ng-container>
             <ng-template #plainPart>{{ part.text }}</ng-template>
@@ -151,27 +151,27 @@
         </p></article>
       </div>
       <div class="correction-list" *ngIf="screen === 'correction'">
-        <div *ngFor="let blank of visibleBlanks" [class.success]="isCorrect(blank)"><span><b>Ta réponse :</b> {{ blank.value || '—' }}</span><span *ngIf="!isCorrect(blank)"><b>Réponse :</b> {{ blank.answer }}</span><button type="button" (click)="replay(blank)" [disabled]="!videoUrl">{{ replayingId === blank.id ? 'Lecture…' : '↻ Réécouter' }}</button></div>
+        <div *ngFor="let blank of visibleBlanks" [class.success]="isCorrect(blank)"><span><b>{{ t('gameYourAnswer') }}</b> {{ blank.value || '—' }}</span><span *ngIf="!isCorrect(blank)"><b>{{ t('gameAnswer') }}</b> {{ blank.answer }}</span><button type="button" (click)="replay(blank)" [disabled]="!videoUrl">{{ replayingId === blank.id ? t('gamePlaying') : '↻ ' + t('gameReplay') }}</button></div>
       </div>
       <footer class="actions paged-actions">
-        <button class="secondary" type="button" *ngIf="exercisePage > 0" (click)="previousExercisePage()">← Page précédente</button>
-        <button class="secondary" type="button" *ngIf="screen === 'exercise' && exercisePage === 0" (click)="screen = 'intro'">Retour</button>
+        <button class="secondary" type="button" *ngIf="exercisePage > 0" (click)="previousExercisePage()">← {{ t('gamePrevious') }}</button>
+        <button class="secondary" type="button" *ngIf="screen === 'exercise' && exercisePage === 0" (click)="screen = 'intro'">{{ t('gameBack') }}</button>
         <span class="page-dots" *ngIf="exercisePageCount > 1"><i *ngFor="let index of exercisePageIndexes" [class.active]="index === exercisePage"></i></span>
-        <button class="primary" type="button" *ngIf="exercisePage < exercisePageCount - 1" (click)="nextExercisePage()">Page suivante →</button>
-        <button class="primary" type="button" *ngIf="screen === 'exercise' && exercisePage === exercisePageCount - 1" (click)="validate()">Valider</button>
-        <button class="primary" type="button" *ngIf="screen === 'correction' && exercisePage === exercisePageCount - 1" (click)="showResult()">Voir mon résultat</button>
+        <button class="primary" type="button" *ngIf="exercisePage < exercisePageCount - 1" (click)="nextExercisePage()">{{ t('gameNext') }} →</button>
+        <button class="primary" type="button" *ngIf="screen === 'exercise' && exercisePage === exercisePageCount - 1" (click)="validate()">{{ t('gameValidate') }}</button>
+        <button class="primary" type="button" *ngIf="screen === 'correction' && exercisePage === exercisePageCount - 1" (click)="showResult()">{{ t('gameShowResult') }}</button>
       </footer>
     </article>
 
     <article class="result-card" *ngIf="screen === 'result'" [class.translation-active]="resultTab === 'translation'" [style.height.px]="resultTab === 'translation' ? (playerPanelHeight || null) : null">
-      <nav class="result-tabs" aria-label="Contenu pédagogique"><button type="button" [class.active]="resultTab === 'result'" (click)="selectResultTab('result')">{{ t('result') }}</button><button type="button" [class.active]="resultTab === 'translation'" (click)="selectResultTab('translation')">{{ t('translation') }}</button><button type="button" [class.active]="resultTab === 'vocabulary'" (click)="selectResultTab('vocabulary')">{{ t('vocabulary') }}</button><button type="button" [class.active]="resultTab === 'grammar'" (click)="selectResultTab('grammar')">{{ t('grammar') }}</button></nav>
+      <nav class="result-tabs" [attr.aria-label]="t('gameLearningContent')"><button type="button" [class.active]="resultTab === 'result'" (click)="selectResultTab('result')">{{ t('result') }}</button><button type="button" [class.active]="resultTab === 'translation'" (click)="selectResultTab('translation')">{{ t('translation') }}</button><button type="button" [class.active]="resultTab === 'vocabulary'" (click)="selectResultTab('vocabulary')">{{ t('vocabulary') }}</button><button type="button" [class.active]="resultTab === 'grammar'" (click)="selectResultTab('grammar')">{{ t('grammar') }}</button></nav>
       <div class="result-tab-content" *ngIf="resultTab === 'result'">
-        <p class="eyebrow">{{ historicalProgress ? 'Meilleur résultat enregistré' : 'Leçon terminée' }}</p><h2>{{ scoreAppreciation() }}</h2><div class="score-ring"><strong>{{ displayedScore }}</strong><span>/ {{ displayedTotalQuestions }}</span><small>{{ displayedScorePercent }} %</small></div><p>{{ displayedScore }} bonne{{ displayedScore > 1 ? 's' : '' }} réponse{{ displayedScore > 1 ? 's' : '' }} sur {{ displayedTotalQuestions }}.</p><div class="result-detail" *ngIf="!historicalProgress"><span *ngFor="let blank of blanks" [class.success]="isCorrect(blank)">{{ isCorrect(blank) ? '✓' : '✕' }} {{ blank.answer }}</span></div><p class="history-note" *ngIf="historicalProgress">Détail des réponses non conservé · {{ historicalProgress.attempts }} tentative{{ historicalProgress.attempts > 1 ? 's' : '' }} enregistrée{{ historicalProgress.attempts > 1 ? 's' : '' }}.</p>
+        <p class="eyebrow">{{ historicalProgress ? t('gameBestResult') : t('gameFinished') }}</p><h2>{{ scoreAppreciation() }}</h2><div class="score-ring"><strong>{{ displayedScore }}</strong><span>/ {{ displayedTotalQuestions }}</span><small>{{ displayedScorePercent }} %</small></div><p>{{ t('gameScore', {score: displayedScore, total: displayedTotalQuestions}) }}</p><div class="result-detail" *ngIf="!historicalProgress"><span *ngFor="let blank of blanks" [class.success]="isCorrect(blank)">{{ isCorrect(blank) ? '✓' : '✕' }} {{ blank.answer }}</span></div><p class="history-note" *ngIf="historicalProgress">{{ t('gameHistory', {count: historicalProgress.attempts}) }}</p>
       </div>
-      <div #translationScroll class="learning-list translation-scroll" *ngIf="resultTab === 'translation'"><span class="translation-spacer" aria-hidden="true"></span><article #translationSegment *ngFor="let segment of activeLesson.segments" [attr.data-segment-id]="segment.id" [class.segment-active]="isSegmentActive(segment)"><time>{{ formatTime(segment.start) }}</time><div><b>{{ displaySegmentText(segment) }}</b><p>{{ segment.translation || 'Traduction non renseignée.' }}</p></div></article><span class="translation-spacer" aria-hidden="true"></span></div>
-      <div class="learning-list vocabulary-list" *ngIf="resultTab === 'vocabulary'"><article *ngFor="let item of activeLesson.vocabulary"><b>{{ item.word }}</b><div><strong>{{ item.translation }}</strong><p>{{ item.example }}</p></div></article><p class="empty-tab" *ngIf="!activeLesson.vocabulary.length">Aucun vocabulaire renseigné pour cette leçon.</p></div>
-      <div *ngIf="resultTab === 'grammar'"><div class="grammar-card" *ngFor="let item of activeLesson.grammar"><span>Point de grammaire</span><h3>{{ item.title }}</h3><p>{{ item.explanation }}</p><blockquote>{{ item.example }}<small>{{ item.translation }}</small></blockquote></div><p class="empty-tab" *ngIf="!activeLesson.grammar.length">Aucun point de grammaire renseigné pour cette leçon.</p></div>
-      <div class="actions compact-actions"><button class="secondary" type="button" (click)="retry()">Recommencer</button><button class="primary" type="button" (click)="screen = 'catalog'">Retour aux leçons</button></div>
+      <div #translationScroll class="learning-list translation-scroll" *ngIf="resultTab === 'translation'"><span class="translation-spacer" aria-hidden="true"></span><article #translationSegment *ngFor="let segment of activeLesson.segments" [attr.data-segment-id]="segment.id" [class.segment-active]="isSegmentActive(segment)"><time>{{ formatTime(segment.start) }}</time><div><b>{{ displaySegmentText(segment) }}</b><p>{{ segment.translation || t('gameNoTranslation') }}</p></div></article><span class="translation-spacer" aria-hidden="true"></span></div>
+      <div class="learning-list vocabulary-list" *ngIf="resultTab === 'vocabulary'"><article *ngFor="let item of activeLesson.vocabulary"><b>{{ item.word }}</b><div><strong>{{ item.translation }}</strong><p>{{ item.example }}</p></div></article><p class="empty-tab" *ngIf="!activeLesson.vocabulary.length">{{ t('gameNoVocabulary') }}</p></div>
+      <div *ngIf="resultTab === 'grammar'"><div class="grammar-card" *ngFor="let item of activeLesson.grammar"><span>{{ t('gameGrammarPoint') }}</span><h3>{{ item.title }}</h3><p>{{ item.explanation }}</p><blockquote>{{ item.example }}<small>{{ item.translation }}</small></blockquote></div><p class="empty-tab" *ngIf="!activeLesson.grammar.length">{{ t('gameNoGrammar') }}</p></div>
+      <div class="actions compact-actions"><button class="secondary" type="button" (click)="retry()">{{ t('restart') }}</button><button class="primary" type="button" (click)="screen = 'catalog'">{{ t('backLessons') }}</button></div>
     </article>
   </section>
 </main>

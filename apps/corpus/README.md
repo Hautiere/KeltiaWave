@@ -67,3 +67,17 @@ Déploiements publics :
 node_modules/.bin/tsc -p tsconfig.app.json --noEmit
 node_modules/.bin/ngc -p tsconfig.app.json --outDir /tmp/keltia-komz-ngc
 ```
+
+## Comptes et récupération du mot de passe
+
+Admin → Comptes permet d’ajouter des utilisateurs et de choisir leur rôle. Le mot de passe initial peut être affiché pendant la saisie.
+
+« Mot de passe oublié ? » est disponible dans le menu de connexion et ouvre `/compte?auth=forgot`, une vue dédiée à la demande par email. Le lien reçu expire après 30 minutes et ouvre `/reinitialiser-mot-de-passe` pour choisir et confirmer un nouveau mot de passe. Sa validation invalide les anciennes sessions. Un compte déjà connecté peut changer son mot de passe dans Mon compte, sans ressaisir l’ancien.
+
+Voir [la configuration email et le parcours complet](../../docs/password-recovery.md).
+
+## Komz et Listen : explorateur partagé
+
+Komz (`/lire`) et Listen (`/` ou `/home-bibliotheque`) utilisent les mêmes cartes de thèmes et sous-domaines, filtres de niveau, recherche et pagination. Komz garde la référence après enregistrement et analyse ; Listen propose son écoute immédiatement, puis ouvre Komz pour répéter et comparer après écoute complète. Les préférences de vue classique/moderne sont indépendantes. Voir [le guide des interfaces](../../docs/komz-interface.md).
+
+Vérifications ciblées depuis la racine : `npm run build:corpus` et `node --test apps/corpus/tests/*.test.mjs`.

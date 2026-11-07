@@ -8,6 +8,7 @@ from ...models import Audio, Phrase
 from ...schemas import PhraseCreate, PhraseUpdate, PhraseRead
 from ...auth import get_current_user
 from ...phrase_themes import classify_phrase_theme
+from ...phrase_provenance import apply_phrase_provenance
 
 router = APIRouter()
 
@@ -27,6 +28,7 @@ def create_phrase(payload: PhraseCreate, db: Session = Depends(get_db), current_
         raise HTTPException(status_code=400, detail="Theme is required")
     if values.get("niveau") not in {"A1", "A2", "B1", "B2", "C1", "C2"}:
         raise HTTPException(status_code=400, detail="Level is required")
+    apply_phrase_provenance(values)
     obj = Phrase(**values)
     db.add(obj)
     db.commit()
@@ -50,6 +52,7 @@ def update_phrase(phrase_id: int, payload: PhraseUpdate, db: Session = Depends(g
     values = payload.model_dump(exclude_unset=True)
     if "theme" in values and not (values.get("theme") or "").strip():
         values["theme"] = classify_phrase_theme(values.get("texte") or obj.texte)
+    apply_phrase_provenance(values, obj.source, obj.source_url)
     for k, v in values.items():
         setattr(obj, k, v)
     db.add(obj)

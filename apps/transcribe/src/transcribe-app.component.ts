@@ -1,3 +1,4 @@
+import { mobileToolLinks, mobileLabel } from '../../shared/mobile-tools';
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +27,9 @@ const COPY: Record<InterfaceLanguage, Record<string, string>> = {
   styleUrls: ['./transcribe-app.component.scss', './keltia-footer.scss'],
 })
 export class TranscribeAppComponent {
+  get mobileLinks() { return mobileToolLinks(); }
+  mobileLabel(key: string): string { return mobileLabel(key, this.interfaceLanguage); }
+
   interfaceLanguage: InterfaceLanguage = this.initialInterfaceLanguage();
   language: TranscribeLanguage = 'br';
   mode: TranscribeMode = 'fast';
@@ -46,7 +50,9 @@ export class TranscribeAppComponent {
   private request?: Subscription;
   private transcriptionTimer?: ReturnType<typeof setInterval>;
 
-  readonly portalBase = window.location.hostname.endsWith('.staging.keltiawave.com')
+  readonly portalBase = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:4100/`
+    : window.location.hostname.endsWith('.staging.keltiawave.com')
     ? 'https://staging.keltiawave.com/'
     : 'https://keltiawave.com/';
 
@@ -81,12 +87,13 @@ export class TranscribeAppComponent {
   selectLanguage(language: TranscribeLanguage): void {
     if (this.busy) return;
     this.language = language;
-    this.mode = language === 'br' ? 'fast' : 'quality';
+    this.mode = 'fast';
     this.refreshServerEstimate();
   }
 
+  get fastEngine():string {return this.language === 'cy' ? 'W2V' : 'Vosk';}
   selectMode(mode: TranscribeMode): void {
-    if (this.busy || (this.language === 'cy' && mode === 'fast')) return;
+    if (this.busy) return;
     this.mode = mode;
     this.refreshServerEstimate();
   }
@@ -106,7 +113,7 @@ export class TranscribeAppComponent {
           this.transcriptionActive = false;
           this.result = event.result; this.text = event.result.text || ''; this.busy = false;
           this.rememberProcessingSpeed(event.result);
-          this.message = `${this.status('Transcription terminée avec')} ${this.mode === 'fast' ? 'Vosk' : 'Whisper'}.`;
+          this.message = `${this.status('Transcription terminée avec')} ${this.mode === 'fast' ? this.fastEngine : 'Whisper'}.`;
         } else if (event.progress < 100) {
           this.message = `${this.status('Envoi du fichier…')} ${event.progress}%`;
         } else {
@@ -120,7 +127,7 @@ export class TranscribeAppComponent {
 
   reset(): void {
     this.request?.unsubscribe(); this.stopTranscriptionProgress(); this.busy = false; this.file = null; this.result = null; this.text = ''; this.uploadProgress = 0; this.transcriptionElapsed = 0; this.transcriptionActive = false; this.transcriptionEstimate = 0; this.transcriptionProgress = 0; this.mediaDuration = 0; this.serverRealTimeFactor = 0; this.error = '';
-    this.mode = this.language === 'br' ? 'fast' : 'quality';
+    this.mode = 'fast';
     this.message = this.status('Choisissez un fichier audio ou vidéo.');
   }
 

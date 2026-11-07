@@ -30,6 +30,7 @@ interface QuickDemoProfile {
           <span aria-hidden="true">◉</span>
           Se connecter avec mon compte
         </a>
+        <a routerLink="/compte" [queryParams]="{ auth: 'forgot' }" (click)="closeMenu()">Mot de passe oublié ?</a>
         <div class="demo-menu-head">
           <strong>Profils de démonstration</strong>
           <span>Connexion immédiate</span>
@@ -62,6 +63,7 @@ interface QuickDemoProfile {
           <button class="admin-submit" type="submit" [disabled]="busyDemoEmail !== null || !adminEmail || !adminPassword">
             {{ busyDemoEmail === adminEmail ? 'Connexion…' : 'Se connecter' }}
           </button>
+          <a routerLink="/compte" [queryParams]="{ auth: 'forgot' }" (click)="closeMenu()">Mot de passe oublié ?</a>
         </form>
         <p class="signin-error" *ngIf="loginError">{{ loginError }}</p>
       </div>
@@ -414,7 +416,7 @@ export class V2SessionActionComponent {
           return;
         }
         this.closeMenu();
-        void this.router.navigate(['/admin']);
+        void this.router.navigate([response.user.must_change_password ? '/compte' : '/admin']);
       },
       error: (err) => {
         this.adminPassword = '';

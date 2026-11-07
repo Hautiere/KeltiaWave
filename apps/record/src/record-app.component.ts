@@ -1,3 +1,4 @@
+import { mobileToolLinks, mobileLabel } from '../../shared/mobile-tools';
 import { CommonModule } from '@angular/common';
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -12,11 +13,22 @@ const RECORD_COPY: Record<Exclude<InterfaceLanguage, 'en'>, Record<string, strin
 
 @Component({ selector: 'record-root', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './record-app.component.html', styleUrls: ['./record-app.component.scss', './keltia-footer.scss'] })
 export class RecordAppComponent implements OnInit, OnDestroy {
-  readonly portalUrl = window.location.hostname.endsWith('.staging.keltiawave.com')
+  get mobileLinks() { return mobileToolLinks(); }
+  mobileLabel(key: string): string { return mobileLabel(key, this.interfaceLanguage); }
+
+  readonly portalUrl = ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? `${window.location.protocol}//${window.location.hostname}:4100/`
+    : window.location.hostname.endsWith('.staging.keltiawave.com')
     ? 'https://staging.keltiawave.com/'
     : 'https://keltiawave.com/';
   interfaceLanguage: InterfaceLanguage = this.initialInterfaceLanguage();
   language: RecordLanguage = 'br';
+  resultLanguage: RecordLanguage = 'br';
+  starting = false;
+  finalizing = false;
+  get captureBusy(): boolean { return this.starting || this.recording || this.finalizing || this.busy; }
+  get directEngine(): string { return (this.audioFile || this.recording || this.finalizing ? this.resultLanguage : this.language) === 'cy' ? 'W2V' : 'Vosk'; }
+  selectLanguage(value: RecordLanguage): void { if (!this.captureBusy && (value === 'br' || value === 'cy')) this.language = value; }
   microphones: MediaDeviceInfo[] = [];
   microphoneId = '';
   recording = false;
@@ -44,12 +56,20 @@ export class RecordAppComponent implements OnInit, OnDestroy {
   private processor: ScriptProcessorNode | null = null;
   private committed = '';
   private partial = '';
+  private session = 0;
+  private finishSocket: (() => void) | null = null;
+  private finishTimer: number | null = null;
+  private recorderFinished: Promise<void> = Promise.resolve();
+  private resolveRecorder: (() => void) | null = null;
   private whisperProgressTimer: number | null = null;
 
   constructor(readonly api: RecordApiService, private readonly zone: NgZone) {}
 
   t(source: string): string {
     const special: Record<string, Record<InterfaceLanguage, string>> = {
+      'Fast': { en:'Fast', fr:'Rapide', br:'Buan', cy:'Cyflym' },
+      'Both direct and Whisper versions are kept': { en:'Both direct and Whisper versions are kept', fr:'Les versions directe et Whisper sont conservées', br:'Miret eo ar stummoù war-eeun ha Whisper', cy:'Cedwir y fersiynau uniongyrchol a Whisper' },
+      'Send by email': { en:'Send by email', fr:'Envoyer par email', br:'Kas dre bostel', cy:'Anfon drwy e-bost' },
       'Generate text with Whisper': { en:'Generate text with Whisper', fr:'Générer le texte avec Whisper', br:'Krouiñ an destenn gant Whisper', cy:'Creu testun gyda Whisper' },
       'Improve with Whisper': { en:'Improve with Whisper', fr:'Améliorer avec Whisper', br:'Gwellaat gant Whisper', cy:'Gwella gyda Whisper' },
       'Estimated progress — completion is confirmed only when the result is received.': { en:'Estimated progress — completion is confirmed only when the result is received.', fr:'Progression estimée — la fin est confirmée uniquement à la réception du résultat.', br:'Araokadenn priziet — kadarnaet eo an dibenn pa vez resevet an disoc’h hepken.', cy:'Cynnydd amcangyfrifedig — cadarnheir ei fod wedi gorffen pan dderbynnir y canlyniad.' },
@@ -70,37 +90,68 @@ export class RecordAppComponent implements OnInit, OnDestroy {
   get wordCount(): number { return this.transcript.trim() ? this.transcript.trim().split(/\s+/).length : 0; }
   get characterCount(): number { return this.transcript.length; }
   countWords(value: string): number { return value.trim() ? value.trim().split(/\s+/).length : 0; }
-  get canUseWhisper(): boolean { return !!this.audioFile && !this.recording && !this.busy && (this.language === 'cy' || !!this.draft.trim()); }
-  get whisperLabel(): string { return this.t(this.language === 'cy' && !this.draft.trim() ? 'Generate text with Whisper' : 'Improve with Whisper'); }
+  get canUseWhisper(): boolean { return !!this.audioFile && !this.captureBusy; }
+  get whisperLabel(): string { return this.t(!this.draft.trim() ? 'Generate text with Whisper' : 'Improve with Whisper'); }
 
-  async toggleRecording(): Promise<void> { this.recording ? this.stopRecording() : await this.startRecording(); }
+  async toggleRecording(): Promise<void> { await (this.recording ? this.stopRecording() : this.startRecording()); }
 
   async startRecording(): Promise<void> {
-    this.error = ''; this.improved = ''; this.draft = ''; this.showDraft = false; this.committed = ''; this.partial = '';
+    if (this.captureBusy) return;
+    if (this.language === 'cy' && navigator.onLine === false) { this.error = 'W2V gallois nécessite Internet. Le texte précédent est conservé.'; return; }
+    const language = this.language;
+    const session = ++this.session;
+    this.starting = true; this.error = '';
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: this.microphoneId ? { deviceId: { exact: this.microphoneId } } : true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: this.microphoneId ? { deviceId: { exact: this.microphoneId } } : true });
+      if (session !== this.session) { stream.getTracks().forEach(track => track.stop()); return; }
+      this.stream = stream;
+      await this.startLive(stream, language, session);
+      if (session !== this.session) return;
       const mime = this.pickMime(); this.chunks = [];
-      this.recorder = mime ? new MediaRecorder(this.stream, { mimeType: mime }) : new MediaRecorder(this.stream);
-      this.recorder.ondataavailable = event => { if (event.data.size) this.chunks.push(event.data); };
-      this.recorder.onstop = () => this.zone.run(() => this.finalizeRecording());
-      this.recorder.start(); this.recording = true; this.startedAt = Date.now(); this.updateTimer();
+      this.recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      this.recorder.ondataavailable = event => { if (session === this.session && event.data.size) this.chunks.push(event.data); };
+      this.recorderFinished = new Promise<void>(resolve => { this.resolveRecorder = resolve; });
+      this.recorder.onstop = () => this.zone.run(() => {
+        if (session === this.session) this.finalizeRecording();
+        this.resolveRecorder?.(); this.resolveRecorder = null;
+      });
+      this.recorder.start();
+      this.resultLanguage = language;
+      this.improved = ''; this.draft = ''; this.showDraft = false; this.committed = ''; this.partial = '';
+      this.audioFile = null;
+      if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = '';
+      this.recording = true; this.startedAt = Date.now(); this.updateTimer();
       this.timer = window.setInterval(() => this.updateTimer(), 250);
-      this.message = this.language === 'br' ? 'Enregistrement et brouillon en direct…' : 'Enregistrement en cours…';
-      if (this.language === 'br') await this.startLive(this.stream);
-    } catch (error) { this.error = error instanceof Error ? error.message : 'Accès au microphone impossible.'; this.cleanup(); }
+      this.message = `${this.directEngine} : enregistrement et transcription en direct, avec Internet.`;
+    } catch (error) {
+      this.error = error instanceof Error ? error.message : 'Accès au microphone impossible.';
+      this.cleanup();
+    } finally { this.starting = false; }
   }
 
-  stopRecording(): void {
-    if (!this.recorder || this.recorder.state !== 'recording') return;
-    this.recording = false; this.stopLive(true); this.recorder.stop();
+  async stopRecording(): Promise<void> {
+    if (!this.recorder || this.recorder.state !== 'recording' || this.finalizing) return;
+    this.finalizing = true; this.recording = false;
     if (this.timer !== null) window.clearInterval(this.timer); this.timer = null;
+    const finished = new Promise<void>(resolve => {
+      this.finishSocket = resolve;
+      this.finishTimer = window.setTimeout(() => {
+        this.error = 'La finalisation a expiré. L’audio et le texte reçu sont conservés.';
+        this.closeSocket();
+      }, this.resultLanguage === 'cy' ? 60000 : 10000);
+    });
+    this.stopLive(true);
+    this.recorder.stop();
+    try { await Promise.all([finished, this.recorderFinished]); }
+    finally { this.finalizing = false; }
   }
 
   async runWhisper(): Promise<void> {
     if (!this.audioFile || !this.canUseWhisper) return;
     this.busy = true; this.whisperProgress = 2; this.startWhisperProgress(); this.error = ''; this.message = 'Whisper améliore votre texte…';
     try {
-      const result = this.language === 'br' ? await this.api.improve(this.audioFile, this.language, this.draft) : await this.api.transcribe(this.audioFile, this.language);
+      const result = this.resultLanguage === 'br' && this.draft.trim() ? await this.api.improve(this.audioFile, this.resultLanguage, this.draft) : await this.api.transcribe(this.audioFile, this.resultLanguage);
+      if (!result.text.trim()) throw new Error('Whisper n’a reconnu aucune parole. La version directe est conservée.');
       this.stopWhisperProgress(); this.whisperProgress = 100;
       this.improved = result.text; this.showDraft = false;
       const notices = [
@@ -111,16 +162,21 @@ export class RecordAppComponent implements OnInit, OnDestroy {
     } catch (error) { this.stopWhisperProgress(); this.error = this.api.formatError(error); } finally { this.busy = false; }
   }
 
-  reset(): void { this.cleanup(); this.whisperProgress = 0; this.draft = ''; this.improved = ''; this.audioFile = null; if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = ''; this.elapsed = '00:00'; this.message = 'Prêt pour un nouvel enregistrement.'; }
+  reset(): void { if (this.captureBusy) return; this.cleanup(); this.whisperProgress = 0; this.draft = ''; this.improved = ''; this.audioFile = null; if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = ''; this.elapsed = '00:00'; this.message = 'Prêt pour un nouvel enregistrement.'; }
+  shareEmail(): void {
+    const body = [this.draft.trim() ? `${this.directEngine}\n${this.draft.trim()}` : '', this.improved.trim() ? `Whisper\n${this.improved.trim()}` : ''].filter(Boolean).join('\n\n');
+    if (!body) return;
+    window.location.href = `mailto:?subject=${encodeURIComponent('Transcription KeltiaWave Record')}&body=${encodeURIComponent(body)}`;
+  }
   saveAudio(): void { if (this.audioFile) this.download(this.audioFile, this.audioFile.name); }
   saveText(): void { const text = this.transcript.trim(); if (text) this.download(new Blob([`${text}\n`], { type: 'text/plain;charset=utf-8' }), 'keltiawave-record.txt'); }
-  saveVoskText(): void { this.saveVersion(this.draft, 'keltiawave-record-vosk.txt'); }
+  saveVoskText(): void { this.saveVersion(this.draft, `keltiawave-record-${this.directEngine.toLowerCase()}.txt`); }
   saveWhisperText(): void { this.saveVersion(this.improved, 'keltiawave-record-whisper.txt'); }
   saveBothTexts(): void {
     const sections = [];
-    if (this.draft.trim()) sections.push(`# Version Vosk\n${this.draft.trim()}`);
+    if (this.draft.trim()) sections.push(`# Version ${this.directEngine}\n${this.draft.trim()}`);
     if (this.improved.trim()) sections.push(`# Version Whisper\n${this.improved.trim()}`);
-    this.saveVersion(sections.join('\n\n'), 'keltiawave-record-vosk-whisper.txt');
+    this.saveVersion(sections.join('\n\n'), `keltiawave-record-${this.directEngine.toLowerCase()}-whisper.txt`);
   }
 
   private finalizeRecording(): void {
@@ -129,34 +185,69 @@ export class RecordAppComponent implements OnInit, OnDestroy {
     this.audioFile = new File([blob], `keltiawave-record.${ext}`, { type });
     if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = URL.createObjectURL(blob);
     this.stream?.getTracks().forEach(track => track.stop()); this.stream = null;
-    this.message = this.language === 'br' ? 'Brouillon prêt. Corrigez-le ou améliorez-le avec Whisper.' : 'Audio prêt. Générez maintenant le texte avec Whisper.';
+    this.message = 'Audio conservé. Whisper pourra proposer une seconde version après la finalisation du texte direct.';
   }
 
-  private async startLive(stream: MediaStream): Promise<void> {
+  private async startLive(stream: MediaStream, language: RecordLanguage, session: number): Promise<void> {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    this.audioContext = new AudioCtx(); this.source = this.audioContext.createMediaStreamSource(stream); this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-    this.socket = new WebSocket(`${this.api.wsBase}/api/record/live`); this.socket.binaryType = 'arraybuffer';
-    this.socket.onopen = () => this.socket?.send(JSON.stringify({ type: 'start', sample_rate: 16000 }));
-    this.socket.onmessage = event => this.zone.run(() => this.handleLive(JSON.parse(String(event.data || '{}'))));
-    this.socket.onerror = () => this.zone.run(() => { this.error = 'Le brouillon direct est indisponible, mais l’enregistrement continue.'; });
-    this.processor.onaudioprocess = event => { if (this.socket?.readyState === WebSocket.OPEN && this.live) this.socket.send(this.downsample(event.inputBuffer.getChannelData(0), this.audioContext?.sampleRate || 48000).buffer); };
+    this.audioContext = new AudioCtx();
+    await this.audioContext.resume();
+    this.source = this.audioContext.createMediaStreamSource(stream);
+    this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+    const socket = this.socket = new WebSocket(`${this.api.wsBase}${language === 'cy' ? '/api/live/stream' : '/api/record/live'}`);
+    socket.binaryType = 'arraybuffer';
+    this.processor.onaudioprocess = event => {
+      if (session !== this.session || !this.recording || !this.live || socket.readyState !== WebSocket.OPEN) return;
+      if (socket.bufferedAmount > 256000) { this.error = 'Connexion trop lente. L’audio local est conservé ; le direct est arrêté.'; this.stopLive(); return; }
+      socket.send(this.downsample(event.inputBuffer.getChannelData(0), this.audioContext?.sampleRate || 48000).buffer);
+    };
     this.source.connect(this.processor); this.processor.connect(this.audioContext.destination);
+    await new Promise<void>((resolve, reject) => {
+      let ready = false;
+      const timer = window.setTimeout(() => reject(new Error('Le serveur de transcription ne répond pas.')), language === 'cy' ? 30000 : 15000);
+      socket.onopen = () => socket.send(JSON.stringify({ type: 'start', language, sample_rate: 16000 }));
+      socket.onmessage = event => this.zone.run(() => {
+        if (session !== this.session) return;
+        let payload: { type?: string; text?: string; message?: string };
+        try { payload = JSON.parse(String(event.data)); if (!payload || typeof payload !== 'object') throw new Error('Invalid payload'); }
+        catch { window.clearTimeout(timer); if (!ready) reject(new Error('Réponse de transcription invalide.')); else { this.error = 'Réponse de transcription invalide. Le texte reçu est conservé.'; this.stopLive(); } return; }
+        if (payload.type === 'ready') { ready = true; window.clearTimeout(timer); this.live = true; resolve(); return; }
+        if (payload.type === 'error') {
+          window.clearTimeout(timer);
+          if (!ready) reject(new Error(payload.message || 'Le moteur direct est indisponible.'));
+          else { this.error = payload.message || 'Le direct est interrompu. L’audio et le texte sont conservés.'; this.stopLive(); }
+          return;
+        }
+        this.handleLive(payload);
+      });
+      const ended = (): void => {
+        window.clearTimeout(timer);
+        if (session !== this.session) return;
+        if (!ready) reject(new Error('Connexion au moteur direct impossible.'));
+        else { if (this.recording) this.error = 'Connexion interrompue. L’enregistrement audio continue ; le texte reçu est conservé.'; this.live = false; this.closeSocket(); }
+      };
+      socket.onerror = () => this.zone.run(ended);
+      socket.onclose = () => this.zone.run(ended);
+    });
   }
 
   private handleLive(payload: { type?: string; text?: string }): void {
-    if (payload.type === 'ready') this.live = true;
     if (payload.type === 'partial') this.partial = (payload.text || '').trim();
     if (payload.type === 'final') { this.committed = [this.committed, (payload.text || '').trim()].filter(Boolean).join(' '); this.partial = ''; }
-    if (payload.type === 'done') this.live = false;
-    this.draft = [this.committed, this.partial].filter(Boolean).join(' ').trim();
+    if (payload.type === 'partial' || payload.type === 'final') this.draft = [this.committed, this.partial].filter(Boolean).join(' ').trim();
+    if (payload.type === 'done') { this.live = false; this.closeSocket(); }
   }
-
+  private closeSocket(): void {
+    if (this.socket) { this.socket.onmessage = null; this.socket.onerror = null; this.socket.onclose = null; this.socket.close(); this.socket = null; }
+    if (this.finishTimer !== null) window.clearTimeout(this.finishTimer); this.finishTimer = null;
+    this.finishSocket?.(); this.finishSocket = null;
+  }
   private stopLive(sendStop = false): void {
-    if (sendStop && this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'stop' })); else this.socket?.close();
     this.processor?.disconnect(); this.source?.disconnect(); if (this.processor) this.processor.onaudioprocess = null;
     this.processor = null; this.source = null; void this.audioContext?.close(); this.audioContext = null; this.live = false;
+    if (sendStop && this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: 'stop' })); else this.closeSocket();
   }
-  private cleanup(): void { this.stopLive(); this.stopWhisperProgress(); this.stream?.getTracks().forEach(track => track.stop()); this.stream = null; if (this.timer !== null) window.clearInterval(this.timer); this.timer = null; }
+  private cleanup(): void { ++this.session; this.recording = false; this.stopLive(); this.resolveRecorder?.(); this.resolveRecorder = null; if (this.recorder?.state === 'recording') this.recorder.stop(); this.stopWhisperProgress(); this.stream?.getTracks().forEach(track => track.stop()); this.stream = null; if (this.timer !== null) window.clearInterval(this.timer); this.timer = null; }
   private startWhisperProgress(): void {
     this.stopWhisperProgress();
     this.whisperProgressTimer = window.setInterval(() => { this.whisperProgress = Math.min(95, this.whisperProgress + 2); }, 700);

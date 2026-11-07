@@ -26,6 +26,8 @@ def load_rows(path: Path) -> list[dict[str, Any]]:
 
     if suffix == ".json":
         data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict) and ("manifest_version" in data or data.get("format") == "keltiawave-library"):
+            raise SystemExit("Un manifeste Bibliothèque doit être importé avec son archive ZIP complète.")
         if isinstance(data, dict):
             data = data.get("items") or data.get("phrases") or data.get("rows")
         if not isinstance(data, list):
@@ -86,7 +88,22 @@ def resolve_audio_path(dataset_file: Path, audio_root: Path | None, raw_path: st
     return (dataset_file.parent / candidate).resolve()
 
 
-def import_dataset(args: argparse.Namespace) -> dict[str, int]:
+def import_dataset(args: argparse.Namespace) -> dict:
+    if Path(args.dataset).suffix.lower() == ".zip":
+        from app.library_storage import TransferStorage
+        from app.library_transfer import import_library
+        try:
+            with SessionLocal() as db:
+                report = import_library(db, TransferStorage.configured(), args.dataset,
+                                        apply=getattr(args, "apply", False))
+        except Exception as exc:
+            raise SystemExit(f"ERROR library import: {exc}") from None
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        if report["conflicts"] or report["errors"]:
+            raise SystemExit("Import bloqué : conflits ou erreurs. Aucune modification effectuée.")
+        return report
+    if getattr(args, "dry_run", False):
+        raise SystemExit("--dry-run est disponible pour les archives Bibliothèque ZIP uniquement ; aucun import effectué.")
     dataset_file = Path(args.dataset).expanduser().resolve()
     audio_root = Path(args.audio_root).expanduser().resolve() if args.audio_root else None
     rows = load_rows(dataset_file)
@@ -117,7 +134,12 @@ def import_dataset(args: argparse.Namespace) -> dict[str, int]:
                 reused_phrases += 1
                 changed = False
                 changed |= set_if_changed(phrase, "traduction_fr", optional(row, "traduction_fr") or optional(row, "translation_fr"))
+                if "traduction_en" in row or "translation_en" in row:
+                    changed |= set_if_changed(phrase, "traduction_en", optional(row, "traduction_en") or optional(row, "translation_en"))
+                if "traduction_cy" in row or "translation_cy" in row:
+                    changed |= set_if_changed(phrase, "traduction_cy", optional(row, "traduction_cy") or optional(row, "translation_cy"))
                 changed |= set_if_changed(phrase, "theme", optional(row, "theme") or optional(row, "domain"))
+                changed |= set_if_changed(phrase, "subdomain", optional(row, "subdomain"))
                 changed |= set_if_changed(phrase, "niveau", optional(row, "niveau") or optional(row, "level"))
                 changed |= set_if_changed(phrase, "source", optional(row, "source"))
                 changed |= set_if_changed(phrase, "auteur", optional(row, "auteur") or optional(row, "author"))
@@ -127,7 +149,10 @@ def import_dataset(args: argparse.Namespace) -> dict[str, int]:
                 phrase = Phrase(
                     texte=phrase_text,
                     traduction_fr=optional(row, "traduction_fr") or optional(row, "translation_fr"),
+                    traduction_en=optional(row, "traduction_en") or optional(row, "translation_en"),
+                    traduction_cy=optional(row, "traduction_cy") or optional(row, "translation_cy"),
                     theme=optional(row, "theme") or optional(row, "domain"),
+                    subdomain=optional(row, "subdomain"),
                     niveau=optional(row, "niveau") or optional(row, "level"),
                     source=optional(row, "source") or args.source,
                     langue=langue,
@@ -245,6 +270,9 @@ def parse_args() -> argparse.Namespace:
         default=AudioStatus.pending.value,
         help="Statut initial des audios importes.",
     )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", action="store_true", help="ZIP Bibliothèque : analyser sans écriture (défaut).")
+    mode.add_argument("--apply", action="store_true", help="ZIP Bibliothèque : autoriser la création sans écrasement.")
     return parser.parse_args()
 
 

@@ -596,6 +596,28 @@ button, input, select, textarea { font: inherit; }
   font-weight: 850;
 }
 
+.password-form > .btn {
+  align-self: end;
+  min-height: 38px;
+}
+
+.password-form > .message {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.recovery-section {
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  justify-self: center;
+  padding: 24px;
+  gap: 20px;
+}
+.recovery-section > p { margin: 0; line-height: 1.5; }
+.recovery-section .profile-form { grid-template-columns: 1fr; padding: 0; }
+.recovery-section > a { color: #155ee8; font-weight: 700; }
+
 .profile-form label.full {
   grid-column: 1 / -1;
 }
@@ -1052,3 +1074,17 @@ button, input, select, textarea { font: inherit; }
     flex-direction: column;
   }
 }
+
+.recordings-filter { display:flex; align-items:center; gap:10px; margin:16px 0; font-size:14px; }
+.recordings-filter select { padding:8px 12px; border:1px solid #dbe4ef; border-radius:8px; background:#fff; }
+.my-recordings { list-style:none; padding:0; margin:0; }
+.my-recordings li { display:flex; flex-wrap:wrap; align-items:center; gap:16px; padding:18px 0; border-top:1px solid #e5eaf3; }
+.recording-description { flex:1 1 230px; display:grid; gap:7px; min-width:0; overflow-wrap:anywhere; }
+.recording-description small { color:#64748b; }
+.recording-description p { margin:0; font-size:13px; }
+.recording-status { justify-self:start; padding:4px 9px; border-radius:12px; color:#805c10; background:#fff3d2; font-size:12px; font-weight:700; }
+.recording-status.approved { color:#166534; background:#dcfce7; }
+.recording-status.rejected { color:#9f3030; background:#fee2e2; }
+.my-recordings audio { max-width:100%; }
+.my-recordings a,.recordings-section p a { color:#1d4ed8; font-size:13px; font-weight:700; }
+@media(max-width:600px) { .my-recordings audio { width:100%; } }
