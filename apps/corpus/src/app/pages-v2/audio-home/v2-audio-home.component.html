@@ -1,4 +1,6 @@
-<div class="kw-shell">
+<app-komz-explorer *ngIf="modernInterface" experience="listen" [phrases]="explorerPhrases" [references]="explorerReferences" [language]="i18n.language()" [state]="explorerState" [loading]="loading" [error]="error" (stateChange)="explorerState = $event" (practice)="practiceFromExplorer($event)" (classic)="setInterface(false)" (languageChange)="setLanguage($event)" (retry)="retryLoad()"/>
+<div class="kw-shell" *ngIf="!modernInterface">
+  <div class="interface-return"><button type="button" (click)="setInterface(true)">{{ newInterfaceLabel }}</button></div>
   <header class="kw-header">
     <div class="kw-bar">
       <div class="brand-lockup">

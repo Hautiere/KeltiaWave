@@ -435,3 +435,6 @@ button, input, select { font: inherit; }
 }
 
 .voice-origin { display:block; width:fit-content; max-width:100%; margin:6px 0; padding:4px 9px; border-radius:8px; background:#eaf2ff; color:#194f80; font-size:12px; font-weight:700; line-height:1.5; overflow-wrap:anywhere; }
+
+.interface-return { padding:8px; text-align:center; background:#edf4ff; }
+.interface-return button { min-height:36px; padding:6px 14px; border:1px solid #c7d9ff; border-radius:20px; background:white; color:#075bde; cursor:pointer; font-size:12px; }

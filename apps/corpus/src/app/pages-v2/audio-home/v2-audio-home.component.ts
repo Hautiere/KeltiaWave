@@ -3,7 +3,7 @@ import { audioAttribution } from '../../core/audio-attribution';
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService, AudioRead, Phrase } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
@@ -13,6 +13,9 @@ import { TranslatePipe } from '../../core/translate.pipe';
 import { DOMAIN_OPTIONS, canonicalDomain } from '../../core/domains';
 import { canonicalSubdomain, subdomainsFor, subdomainLabel, type SubdomainOption } from '../../core/subdomains';
 import { V2SessionActionComponent } from '../shared/v2-session-action.component';
+
+import { KomzExplorerComponent } from '../record/explorer/komz-explorer.component';
+import { ExplorerState, initialExplorerState, komzInterface } from '../record/explorer/komz-explorer.model';
 
 interface AudioRow {
   audio: AudioRead;
@@ -35,11 +38,24 @@ interface LibraryFilterOption {
 @Component({
   selector: 'app-v2-audio-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, V2SessionActionComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, V2SessionActionComponent, KomzExplorerComponent],
   templateUrl: './v2-audio-home.component.html',
   styleUrls: ['./v2-audio-home.component.scss'],
 })
 export class V2AudioHomeComponent implements OnInit {
+  modernInterface = true;
+  explorerState = initialExplorerState();
+  explorerReferences: AudioRead[] = [];
+  explorerPhrases: Phrase[] = [];
+  setInterface(modern: boolean): void {
+    this.libraryPlayer?.nativeElement.pause(); this.isPlayingAudio = false; this.activeAudioId = null;
+    this.modernInterface = modern;
+    try { localStorage.setItem('kw-listen-interface', modern ? 'modern' : 'classic'); } catch { /* URL remains available. */ }
+    const url = new URL(window.location.href); url.searchParams.set('interface', modern ? 'modern' : 'classic');
+    window.history.replaceState(window.history.state, '', url);
+  }
+  practiceFromExplorer(phrase: Phrase): void { void this.router.navigate(['/lire'], { queryParams: { phraseId: phrase.id } }); }
+  get newInterfaceLabel(): string { return ({ fr: 'Nouvelle interface Listen', en: 'New Listen interface', br: 'Etrefas Listen nevez', cy: 'Rhyngwyneb Listen newydd' })[this.i18n.language()]; }
   readonly audioAttribution = audioAttribution;
   @ViewChild('libraryPlayer') private libraryPlayer?: ElementRef<HTMLAudioElement>;
 
@@ -209,10 +225,13 @@ export class V2AudioHomeComponent implements OnInit {
     readonly auth: AuthService,
     readonly i18n: I18nService,
     private readonly api: ApiService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     document.title = 'KeltiaWave Listen';
+    let saved: string | null = null; try { saved = localStorage.getItem('kw-listen-interface'); } catch {}
+    this.modernInterface = komzInterface(window.location.search, saved) === 'modern';
     this.updateThemeLimit();
     this.load();
   }
@@ -311,7 +330,7 @@ export class V2AudioHomeComponent implements OnInit {
   setLanguage(value: string): void {
     if (value === 'fr' || value === 'br' || value === 'en' || value === 'cy') {
       this.i18n.setLanguage(value as AppLanguage);
-      this.load();
+      if (!this.modernInterface) this.load();
     }
   }
 
@@ -530,6 +549,10 @@ export class V2AudioHomeComponent implements OnInit {
         this.phrases = phrases;
         this.fallbackPhrases = fallbackPhrases;
         this.approvedAudios = approved;
+        this.explorerReferences = selectReferenceAudios(approved);
+        // Listen and Komz explore the same Breton corpus, regardless of UI language.
+        this.explorerPhrases = [...new Map([...fallbackPhrases, ...phrases].map(phrase => [phrase.id, phrase])).values()]
+          .filter(phrase => phrase.langue === 'br');
         this.pendingAudios = pending;
         this.rejectedAudios = rejected;
         this.loading = false;

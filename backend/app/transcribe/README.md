@@ -7,3 +7,5 @@ POST `/api/transcribe/transcribe_w2v_wel_metrics`, multipart `audio_file`. Norma
 Réponse compatible Transcribe : `filename`, `text`, `segments`, `metrics` (`engine=wav2vec2`, `lang=cy`, `model_id=wav2vec2-cy`, `decoder=greedy-ctc`). `/estimate?lang=cy&mode=fast` utilise une calibration séparée `wav2vec2:cy`. Configuration initiale RTF : `TRANSCRIPTION_DEFAULT_RTF_W2V_CY`, ajustée après mesures.
 
 Tests : `backend/.venv/bin/python -m pytest backend/tests/test_wav2vec2.py backend/tests/test_transcription_calibration.py -q`. Vérification réelle à compléter avec de la parole galloise : le test technique sur silence vérifie le chargement, pas l’exactitude de reconnaissance.
+
+Docker installe explicitement Torch CPU depuis l’index officiel PyTorch (même version que `requirements-prosody.txt`), avec cache pip BuildKit. Ne pas réinstaller le paquet PyPI CUDA dans l’image : W2V utilise le CPU, y compris sur Linux ARM64/Mac Docker.

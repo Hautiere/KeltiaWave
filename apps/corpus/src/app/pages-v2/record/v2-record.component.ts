@@ -1,3 +1,5 @@
+import { KomzExplorerComponent } from './explorer/komz-explorer.component';
+import { ExplorerState, initialExplorerState, komzInterface, filterExplorerPhrases } from './explorer/komz-explorer.model';
 import { mobileToolLinks, mobileLabel } from '../../../../../shared/mobile-tools';
 import { selectReferenceAudios } from '../../core/reference-audios';
 import { audioAttribution } from '../../core/audio-attribution';
@@ -19,13 +21,50 @@ import { canonicalSubdomain, subdomainsFor, subdomainLabel } from '../../core/su
 @Component({
   selector: 'app-v2-record',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, V2SessionActionComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, V2SessionActionComponent, KomzExplorerComponent],
   templateUrl: './v2-record.component.html',
   styleUrls: ['./v2-record.component.scss'],
 })
 export class V2RecordComponent implements OnInit, OnDestroy {
   get mobileLinks() { return mobileToolLinks(); }
   mobileLabel(key: string): string { return mobileLabel(key, this.i18n.language()); }
+
+  modernInterface = true;
+  explorerState = initialExplorerState();
+
+  get interfaceSwitchLabel(): string {
+    const labels = { fr: ['↶ Interface classique', '✦ Nouvelle interface Komz'], en: ['↶ Classic interface', '✦ New Komz interface'], br: ['↶ Etrefas klasel', '✦ Etrefas Komz nevez'], cy: ['↶ Rhyngwyneb clasurol', '✦ Rhyngwyneb Komz newydd'] };
+    return labels[this.i18n.language()][this.modernInterface ? 0 : 1];
+  }
+
+  setInterface(modern: boolean): void {
+    if (this.isRecording || this.submitting || this.assessing) return;
+    if (modern && this.selectedTheme) this.explorerState = { ...this.explorerState, theme: this.selectedTheme, level: this.selectedLevel, subdomain: this.selectedSubdomain, onlyWithAudio: this.onlyWithAudio };
+    if (!modern && this.selectedLevel === 'unrated') this.selectedLevel = 'all';
+    this.modernInterface = modern;
+    const mode = modern ? 'modern' : 'classic';
+    try { localStorage.setItem('kw-komz-interface', mode); } catch { /* URL fallback remains available. */ }
+    const url = new URL(window.location.href);
+    url.searchParams.set('interface', mode);
+    window.history.replaceState(window.history.state, '', url);
+    this.cdr.markForCheck();
+  }
+
+  updateExplorerState(state: ExplorerState): void {
+    this.explorerState = { ...state };
+    this.selectedTheme = state.theme;
+    this.selectedLevel = state.level;
+    this.selectedSubdomain = state.subdomain;
+    this.onlyWithAudio = state.onlyWithAudio;
+    this.stage = 'phrases';
+  }
+
+  practiceFromExplorer(phrase: Phrase): void {
+    this.updateExplorerState({ ...this.explorerState, theme: canonicalDomain(phrase.theme) });
+    this.selectPhrase(phrase);
+  }
+
+  retryExplorerLoad(): void { this.loadPhrase(); }
 
   readonly audioAttribution = audioAttribution;
   @ViewChild('recordedPreview') private recordedPreview?: ElementRef<HTMLAudioElement>;
@@ -89,6 +128,9 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    let saved: string | null = null;
+    try { saved = localStorage.getItem('kw-komz-interface'); } catch { /* Private browsing may block storage. */ }
+    this.modernInterface = komzInterface(window.location.search, saved) === 'modern';
     document.title = 'KeltiaWave Komz';
     this.loadPhrase();
   }
@@ -110,6 +152,7 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   }
 
   get filteredPhrases(): Phrase[] {
+    if (this.modernInterface) return filterExplorerPhrases(this.phrases, new Set(this.approvedAudios.map(a => a.phrase_id)), { ...this.explorerState, theme: this.selectedTheme });
     return this.phrases.filter((phrase) => canonicalDomain(phrase.theme) === this.selectedTheme
       && (this.selectedLevel === 'all' || (phrase.niveau || '').toUpperCase() === this.selectedLevel)
       && this.matchesSubdomain(phrase)
@@ -274,7 +317,8 @@ export class V2RecordComponent implements OnInit, OnDestroy {
   setLanguage(value: string): void {
     if (value === 'fr' || value === 'br' || value === 'en' || value === 'cy') {
       this.i18n.setLanguage(value as AppLanguage);
-      void this.loadPhrase();
+      if (!this.modernInterface) void this.loadPhrase();
+      this.cdr.markForCheck();
     }
   }
 
@@ -543,6 +587,7 @@ export class V2RecordComponent implements OnInit, OnDestroy {
         this.selectedTheme = canonicalDomain(directPhrase.theme);
         this.selectedLevel = (directPhrase.niveau || '').toUpperCase() || 'all';
         this.currentPhrase = directPhrase;
+        this.explorerState = { ...this.explorerState, theme: this.selectedTheme, level: this.selectedLevel };
         this.stage = 'practice';
       }
       if (!this.phrases.length) {

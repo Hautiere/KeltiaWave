@@ -117,10 +117,12 @@ d’administration suit les timestamps de la transcription.
 
 ```bash
 backend/.venv/bin/python -m pytest -q backend/tests
-learning-frontend/node_modules/.bin/tsc -p learning-frontend/tsconfig.app.json --noEmit
+npm run build:learning
 git diff --check
 ```
 
 Voir aussi [`CHECKPOINT.md`](./CHECKPOINT.md) et
 [`ROADMAP.md`](./ROADMAP.md), ainsi que le
 [`GUIDE_PRATIQUE.md`](./GUIDE_PRATIQUE.md) illustré.
+
+Les libellés du jeu, de la correction et des résultats sont regroupés dans `src/app/game-copy.ts` pour les interfaces FR, BR et EN.

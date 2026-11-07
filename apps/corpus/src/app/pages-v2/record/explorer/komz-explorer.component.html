@@ -1,0 +1,68 @@
+<div class="explorer" [class.listen-explorer]="experience === 'listen'" id="komz-explorer-top">
+  <header class="explorer-header">
+    <nav class="tools-navigation" aria-label="KeltiaWave">
+      <a [href]="links.record">Record</a><a [href]="links.transcribe">Transcribe</a><a [href]="experience === 'listen' ? '/home-bibliotheque' : links.komz" aria-current="page">{{ product }}</a><a [href]="links.live">Live</a>
+      <a routerLink="/compte" class="tools-account" [attr.aria-label]="copy.account"><kw-komz-icon name="user"/></a>
+      <details class="mobile-languages" #mobileLanguages><summary [attr.aria-label]="copy.interfaceLanguage"><kw-komz-icon name="globe"/><span>{{ headerLabel('languages') }}</span></summary><div class="mobile-language-panel"><label>{{ copy.interfaceLanguage }}<select [ngModel]="language" (ngModelChange)="languageChange.emit($event)"><option value="fr">Français</option><option value="en">English</option><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label><button type="button" (click)="mobileLanguages.open = false; classic.emit()">↶ {{ copy.classic }}</button><button type="button" (click)="mobileLanguages.open = false">{{ copy.close }}</button></div></details>
+    </nav>
+    <div class="brand-lockup"><a class="portal-home" [href]="links.portal" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><kw-komz-icon name="home"/></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><a class="brand" [href]="links.portal"><img src="/assets/keltiawave-mascot.webp" alt="" width="38" height="38"><span><strong>KeltiaWave <b>{{ product }}</b></strong><small>{{ experience === 'listen' ? listeningCopy.subtitle : copy.subtitle }}</small></span></a><label class="audio-language"><img src="/assets/flag-brittany.png" alt="" width="48" height="34"><select [attr.aria-label]="headerLabel('audio')" disabled><option>Brezhoneg</option></select></label></div>
+    <div class="header-actions"><a class="tools-link" [href]="links.portal"><kw-komz-icon name="grid"/><span>{{ headerLabel('otherTools') }}</span></a><a routerLink="/compte" class="icon-button" [attr.aria-label]="copy.account"><kw-komz-icon name="user"/></a><label class="interface-language"><span class="sr-only">{{ copy.interfaceLanguage }}</span><select [ngModel]="language" (ngModelChange)="languageChange.emit($event)"><option value="fr">FR</option><option value="br">BR</option><option value="en">EN</option><option value="cy">CY</option></select></label><details class="interface-menu" #menu><summary class="icon-button" [attr.aria-label]="copy.settings">···</summary><div><a [href]="links.record">Record</a><a [href]="links.transcribe">Transcribe</a><a [href]="links.live">Live</a><button type="button" (click)="menu.open = false; progressOpen = !progressOpen">{{ copy.progress }}</button><button type="button" (click)="menu.open = false; classic.emit()">↶ {{ copy.classic }}</button></div></details></div>
+  </header>
+  <ng-template #navigation>
+    <a [href]="links.portal"><kw-komz-icon name="home"/><span>{{ copy.home }}</span></a>
+    <button type="button" [class.active]="!progressOpen" [attr.aria-pressed]="!progressOpen" (click)="progressOpen = false"><kw-komz-icon name="grid"/><span>{{ product }}</span></button>
+    <button type="button" [class.active]="progressOpen" [attr.aria-pressed]="progressOpen" (click)="progressOpen = !progressOpen"><kw-komz-icon name="bars"/><span>{{ copy.progress }}</span></button>
+    <a routerLink="/compte"><kw-komz-icon name="user"/><span>{{ copy.account }}</span></a>
+  </ng-template>
+
+  <section class="progress-panel" *ngIf="progressOpen" aria-live="polite"><h2>{{ copy.progress }}</h2><ng-container *ngIf="signedIn || experience === 'listen'; else signedOut"><strong>{{ experience === 'listen' ? listenedCount + ' / ' + references.length : progressLabel }}</strong><progress [value]="experience === 'listen' ? listenedProgress : progress" max="100">{{ experience === 'listen' ? listenedProgress : progress }} %</progress><p>{{ experience === 'listen' ? listeningCopy.rule : copy.progressNote }}</p></ng-container><ng-template #signedOut><a routerLink="/compte">{{ copy.signIn }}</a></ng-template><button type="button" (click)="progressOpen = false">{{ copy.close }}</button></section>
+
+  <div class="explorer-layout">
+    <aside id="explorer-themes" class="themes" [class.open]="themesOpen" [attr.aria-label]="copy.themes">
+      <div class="themes-heading"><h2>{{ copy.themes }} <small>({{ domains.length }})</small></h2><button class="mobile-close" type="button" (click)="themesOpen = false">{{ copy.close }}</button></div>
+      <div class="theme-list">
+        <ng-template #themeCard let-domain><button class="theme" type="button" [attr.aria-label]="domain.label + ' (' + domain.count + ')'" [class.selected]="view.theme === domain.value" [attr.aria-pressed]="view.theme === domain.value" (click)="chooseTheme(domain.value)"><img [src]="domain.image" alt="" loading="lazy"><span class="theme-caption"><span class="theme-icon"><kw-komz-icon [name]="domain.icon"/></span><strong>{{ domain.label }}</strong></span></button></ng-template>
+        <ng-container *ngFor="let domain of visibleDomains; trackBy: trackValue"><ng-container *ngTemplateOutlet="themeCard; context: { $implicit: domain }"/></ng-container>
+        <div class="mobile-extra-themes"><ng-container *ngIf="!allThemes"><ng-container *ngFor="let domain of domains.slice(5); trackBy: trackValue"><ng-container *ngTemplateOutlet="themeCard; context: { $implicit: domain }"/></ng-container></ng-container></div>
+      </div>
+      <button *ngIf="domains.length > 5" class="more-themes" type="button" [attr.aria-expanded]="allThemes" (click)="allThemes = !allThemes">{{ allThemes ? copy.less : copy.more }} <span aria-hidden="true">{{ allThemes ? '⌃' : '⌄' }}</span></button>
+    </aside>
+
+    <main class="workspace">
+      <div class="mobile-theme-title"><button type="button" class="icon-button" [attr.aria-label]="copy.menu" (click)="themesOpen = !themesOpen"><kw-komz-icon name="arrow"/></button><h2>{{ selectedDomain?.label || copy.themes }}</h2></div>
+      <div class="loading" *ngIf="loading" role="status">{{ copy.load }}</div>
+      <div class="loading error" *ngIf="error" role="alert">{{ error }} <button type="button" (click)="retry.emit()">{{ copy.retry }}</button></div>
+      <ng-container *ngIf="!loading && selectedDomain as domain">
+        <section class="theme-hero" [style.background-image]="'linear-gradient(90deg,rgba(0,55,111,.91),rgba(0,58,114,.53) 65%,rgba(0,58,114,.08)),url(' + domain.image + ')'">
+          <h1>{{ domain.label }}</h1><p>{{ experience === 'listen' ? listeningCopy.intro : view.theme === 'rencontres' ? copy.meetingIntro : copy.intro }}</p><div class="hero-counts"><kw-komz-icon [name]="domain.icon"/><span>{{ facets.length - 2 }} {{ copy.subdomains }}</span><span aria-hidden="true">•</span><span>{{ domain.count }} {{ copy.phrases.toLowerCase() }}</span></div>
+        </section>
+
+        <div class="subdomains" role="group" [attr.aria-label]="copy.subdomains">
+          <button *ngFor="let facet of facets; let index = index; trackBy: trackValue" type="button" [class.selected]="view.subdomain === facet.value" [class.unclassified]="facet.value === '__unclassified__'" [attr.aria-pressed]="view.subdomain === facet.value" [style.--facet-color]="index === 5 ? '#f72265' : index === 4 ? '#7632ba' : '#0064c6'" (click)="change({ subdomain: facet.value })"><kw-komz-icon [name]="facet.icon"/><strong>{{ facet.label }}</strong><span>({{ facet.count }})</span></button>
+        </div>
+
+        <section class="filter-area">
+          <div class="level-bar" role="group" [attr.aria-label]="copy.filters"><button *ngFor="let level of levels; trackBy: trackValue" type="button" [class.selected]="view.level === level.value" [attr.aria-pressed]="view.level === level.value" (click)="change({ level: level.value })"><strong>{{ level.label }}</strong> ({{ level.count }})</button><button class="filter-toggle icon-button" type="button" [attr.aria-label]="copy.filters" [attr.aria-expanded]="filtersOpen" aria-controls="explorer-filters" (click)="filtersOpen = !filtersOpen"><kw-komz-icon name="filters"/></button></div>
+          <div class="advanced-filters" id="explorer-filters" [hidden]="!filtersOpen"><label class="search"><kw-komz-icon name="search"/><input type="search" [attr.aria-label]="copy.search" [placeholder]="copy.search" [ngModel]="view.search" (ngModelChange)="change({ search: $event })"></label><label *ngIf="experience !== 'listen'"><input type="checkbox" [ngModel]="!view.onlyWithAudio" (ngModelChange)="change({ onlyWithAudio: !$event })"> {{ copy.audio }}</label><button type="button" (click)="reset()">{{ copy.reset }}</button></div>
+        </section>
+
+        <div class="phrases-heading"><h2>{{ copy.phrases }} <span>({{ results.length }})</span></h2><div class="translation-controls"><span class="show-label">{{ copy.show }} :</span><label><span class="sr-only">{{ copy.show }}</span><select [ngModel]="translationLanguage" (ngModelChange)="change({ translation: $event })"><option value="fr">Français</option><option value="en">English</option><option value="cy">Cymraeg</option><option value="none">{{ copy.bretonOnly }}</option></select></label><button type="button" [class.selected]="translationLanguage === 'none'" [attr.aria-pressed]="translationLanguage === 'none'" (click)="change({ translation: translationLanguage === 'none' ? (language === 'br' ? 'fr' : 'interface') : 'none' })">{{ copy.bretonOnly }}</button></div></div>
+        <p class="practice-rule">{{ experience === 'listen' ? listeningCopy.rule : copy.referenceRule }}</p>
+        <p *ngIf="audioError" class="audio-error" role="alert">{{ copy.failed }}</p>
+        <div class="phrase-list" *ngIf="visiblePhrases.length; else empty">
+          <article class="phrase" *ngFor="let phrase of visiblePhrases; trackBy: trackPhrase">
+            <button *ngIf="experience === 'listen'" class="play" type="button" [disabled]="!hasAudio(phrase)" [class.playing]="playingId === phrase.id" [attr.aria-label]="(playingId === phrase.id ? copy.stop : copy.listen) + ' · ' + referenceName(phrase) + ' : ' + phrase.texte" [attr.title]="referenceName(phrase)" (click)="play(phrase)"><kw-komz-icon [name]="playingId === phrase.id ? 'stop' : 'play'"/></button><span *ngIf="experience !== 'listen'" class="phrase-microphone" aria-hidden="true"><kw-komz-icon name="mic"/></span>
+            <div class="phrase-copy"><h3>{{ phrase.texte }}</h3><p *ngIf="translationLanguage !== 'none'">{{ translation(phrase) || copy.noTranslation }}</p><small class="voice-attribution" *ngIf="experience === 'listen'">{{ i18n.translate('v2.voiceOrigin') }} : {{ referenceName(phrase) }}</small><small *ngIf="!hasAudio(phrase)">{{ copy.noReference }}</small></div>
+            <span class="phrase-level" [class.unrated]="!phrase.niveau" [class.a2]="phrase.niveau === 'A2'" [class.b]="phrase.niveau?.startsWith('B')">{{ phrase.niveau || '—' }}<span class="sr-only" *ngIf="!phrase.niveau"> {{ copy.unrated }}</span></span>
+            <button class="practice" *ngIf="experience !== 'listen' || canRepeat(phrase)" type="button" (click)="startPractice(phrase)"><kw-komz-icon name="mic"/><span>{{ experience === 'listen' ? listeningCopy.practice : copy.practice }}</span><span class="sr-only"> : {{ phrase.texte }}</span></button>
+            <span class="listen-first" *ngIf="experience === 'listen' && !canRepeat(phrase)">{{ listeningCopy.first }}</span>
+          </article>
+        </div>
+        <ng-template #empty><div class="empty" role="status"><kw-komz-icon name="search"/><p>{{ copy.empty }}</p><button type="button" (click)="reset()">{{ copy.reset }}</button></div></ng-template>
+        <nav class="pagination" *ngIf="pages > 1" [attr.aria-label]="copy.page"><button type="button" [disabled]="view.page === 1" (click)="change({ page: view.page - 1 })">‹ {{ copy.previous }}</button><span>{{ copy.page }} {{ view.page }} / {{ pages }}</span><button type="button" [disabled]="view.page === pages" (click)="change({ page: view.page + 1 })">{{ copy.next }} ›</button></nav>
+      </ng-container>
+    </main>
+  </div>
+  <audio *ngIf="experience === 'listen'" #referencePlayer preload="none" (ended)="endedAudio()" (error)="failedAudio()" hidden></audio>
+  <nav class="bottom-navigation" [attr.aria-label]="product"><ng-container *ngTemplateOutlet="navigation"/></nav>
+</div>

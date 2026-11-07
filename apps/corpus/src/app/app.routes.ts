@@ -12,10 +12,8 @@ import { LoginComponent } from './pages/login/login.component';
 import { ValidateursComponent } from './pages/validateurs/validateurs.component';
 import { V2AccountComponent } from './pages-v2/account/v2-account.component';
 import { V2AdminComponent } from './pages-v2/admin/v2-admin.component';
-import { V2AudioHomeComponent } from './pages-v2/audio-home/v2-audio-home.component';
 import { V2EvaluateComponent } from './pages-v2/evaluate/v2-evaluate.component';
 import { V2MyClassComponent } from './pages-v2/my-class/v2-my-class.component';
-import { V2RecordComponent } from './pages-v2/record/v2-record.component';
 import { V2WriteComponent } from './pages-v2/write/v2-write.component';
 
 import { ResetPasswordComponent } from './pages-v2/account/reset-password.component';
@@ -34,9 +32,9 @@ const openKomzOnItsOwnDomain = () => {
 
 export const routes: Routes = [
   { path: 'portal', canActivate: [redirectToPortal], children: [] },
-  { path: '', component: V2AudioHomeComponent, canActivate: [openKomzOnItsOwnDomain], pathMatch: 'full' },
-  { path: 'home-bibliotheque', component: V2AudioHomeComponent },
-  { path: 'lire', component: V2RecordComponent },
+  { path: '', loadComponent: () => import('./pages-v2/audio-home/v2-audio-home.component').then(m => m.V2AudioHomeComponent), canActivate: [openKomzOnItsOwnDomain], pathMatch: 'full' },
+  { path: 'home-bibliotheque', loadComponent: () => import('./pages-v2/audio-home/v2-audio-home.component').then(m => m.V2AudioHomeComponent) },
+  { path: 'lire', loadComponent: () => import('./pages-v2/record/v2-record.component').then(m => m.V2RecordComponent) },
   { path: 'enregistrer', redirectTo: 'lire', pathMatch: 'full' },
   { path: 'evaluer', component: V2EvaluateComponent },
   { path: 'ecrire', component: V2WriteComponent },

@@ -333,3 +333,6 @@
 }
 
 @media(max-width:700px) { :host { height:100dvh; min-height:0; overflow:hidden; display:flex; flex-direction:column; } }
+
+.interface-return { display:flex; justify-content:center; flex-wrap:wrap; align-items:center; gap:16px; padding:8px; background:#edf4ff; font-size:12px; }
+.interface-return button { padding:8px 14px; border:1px solid #c7d9ff; border-radius:20px; background:white; color:#075bde; cursor:pointer; }

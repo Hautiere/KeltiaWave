@@ -96,3 +96,10 @@ Les 50 audios ont été importés dans la base et le stockage Docker **locaux** 
 présents, 50 statuts `pending`, lecture MP3 via l'API réussie. Une seconde
 simulation indique zéro nouvel audio à créer. Aucun import en staging ou
 production n'a été fait.
+
+## Nouvelle interface web
+
+La navigation par cartes de sous-domaines, ses filtres combinés et le retour
+immédiat à la vue classique sont décrits dans [Komz : interface et retour
+arrière](komz-interface.md). Les compteurs restent liés aux données du corpus ;
+les phrases sans sous-domaine ou niveau restent accessibles.

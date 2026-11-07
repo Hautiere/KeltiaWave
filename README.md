@@ -1,318 +1,78 @@
 # KeltiaWave
 
-Socle commun regroupant un backend unique et sept applications web autonomes :
+Sept interfaces web autonomes, un backend FastAPI partagé. Android natif vit dans [le dépôt voisin](../keltiawave-mobile/README.md). Pour intervenir sur le code, commencer par [AGENTS.md](AGENTS.md) puis ouvrir uniquement la documentation du sujet.
 
-- **Portal** (`4100`) : page d'accueil et accès à tous les outils ;
-- **Corpus** (`4200`) : collecte, validation et administration des voix ;
-- **Learning** (`4300`) : vidéos, leçons et exercices ;
-- **Record** (`4400`) : enregistrement et comparaison Vosk/Whisper ;
-- **Transcribe** (`4500`) : transcription de fichiers audio et vidéo ;
-- **Subtitles** (`4600`) : génération, calage et export de sous-titres.
-- **Live** (`4800`) : transcription en direct de l’audio d’un onglet partagé, sans microphone.
+## Applications et état actuel
 
-Les projets sources `portal-standalone`, `corpus-collaboratif` et
-`breizh-transcriptor-whisper` restent indépendants et ne sont pas modifiés par
-cette intégration.
+| Application | Port local | Usage |
+|---|---:|---|
+| Portal | 4100 | Accueil et accès aux outils, statique |
+| Corpus | 4200 | Komz/Listen, voix, comptes, validation |
+| Learning | 4300 | Cours, vidéos, exercices |
+| Record | 4400 | Enregistrement, Vosk/Whisper |
+| Transcribe | 4500 | Fichiers audio/vidéo ; breton et gallois |
+| Subtitles | 4600 | Création, calage, export de sous-titres |
+| Live | 4800 | Son d’un onglet partagé, breton/Vosk ou gallois/W2V |
 
-## Architecture
+État documenté le **7 novembre 2026** :
 
-Les sept fronts sont déployables séparément. Les six outils métier utilisent le
-même backend FastAPI (`8100`) ; Portal reste une page statique sans API :
+- Transcribe gallois propose **W2V · Rapide** et **Whisper · Qualité**. W2V utilise les poids locaux du serveur, décodage CTC glouton, sans KenLM ni horodatages fins. [Détails W2V](backend/app/transcribe/README.md).
+- Live web gallois est livré sur [le serveur de test](https://live.staging.keltiawave.com/) : blocs utiles de 4 s, contexte 1 s et délai de calcul. Whisper reste disponible après l’arrêt, dans la langue capturée. Une seule écoute galloise par processus ; arrêt explicite si le calcul ne suit plus. [Capture, API et limites](apps/live/README.md).
+- Tous les moteurs web nécessitent le serveur et Internet. Le partage web dépend du navigateur et ne capture pas les autres apps d’un téléphone. Le Vosk breton hors ligne appartient à l’implémentation Android native.
+- Le portail affiche Transcribe, Record, Subtitles et Live lorsque le gallois est sélectionné. Subtitles propose W2V ou Whisper ; le calage W2V est approximatif et à ajuster. Ces changements locaux ne confirment pas une livraison staging, production ou mobile.
 
-- API vocales spécialisées pour Record, Transcribe et Subtitles ;
-- API Corpus, comptes, authentification et rôles ;
-- API Learning, progression, médias, leçons et exercices ;
-- PostgreSQL pour les données relationnelles en production ;
-- MinIO/S3 pour les fichiers audio, vidéo et ressources Learning.
+## Komz et Listen : navigation par sous-domaines
 
-![Architecture Docker KeltiaWave](docs/assets/architecture-docker-keltiawave.png)
+Les deux parcours de `apps/corpus` partagent le nouvel explorateur : thèmes illustrés, sous-domaines, niveaux, recherche, traductions et pagination. Komz (`/lire`) propose l’enregistrement puis le score et la référence ; Listen (`/` ou `/home-bibliotheque`) permet d’écouter immédiatement, puis de répéter et comparer après l’écoute.
 
-Le trafic public arrive en HTTPS par Caddy. Les applications web transmettent
-leurs appels `/api` au backend FastAPI sur le réseau Docker privé. PostgreSQL,
-MinIO et les modèles vocaux ne sont jamais interrogés directement par les
-navigateurs. Portal est une application statique et n'utilise actuellement pas
-l'API.
+La vue classique reste accessible avec `?interface=classic`, avec une préférence distincte pour chaque parcours. [Fonctionnement et retour à la vue classique](docs/komz-interface.md).
 
-L'estimation de durée de Transcribe est calibrée dans
-`backend/data/transcription-calibration.json`. Ce profil appartient au serveur,
-survit aux redémarrages grâce au volume `backend_data` et profite immédiatement
-à tous les navigateurs. Les variables `TRANSCRIPTION_DEFAULT_RTF_*` servent de
-valeurs initiales sur une installation encore jamais calibrée.
+## Architecture et stockage
 
-```text
-apps/
-  portal/
-  corpus/
-  learning/
-  record/
-  transcribe/
-  subtitles/
-  live/
-backend/
-  alembic/             migrations de la base Learning
-  app/api/endpoints/   Corpus, comptes et administration
-  app/learning/        API Learning
-  app/record/          API Record
-  app/transcribe/      API Transcribe
-  app/subtitles/       API Subtitles
-  app/live/            API Live (capacités et flux WebSocket Vosk)
-  models/              modèles vocaux locaux non versionnés
-deploy/
-scripts/
-```
+Les fronts Angular communiquent avec le backend (`8100`) via `/api` sur leur propre origine (Nginx ou proxy Angular). Portal ne consomme pas d’API. Caddy termine HTTPS ; PostgreSQL et MinIO/S3 restent sur le réseau Docker privé. SQLite et stockage local suffisent en développement. Migrations Alembic appliquées au démarrage.
+
+Les modèles restent hors Git : `backend/models/`, dont `wav2vec2-cy`. La calibration partagée de durée est dans `backend/data/transcription-calibration.json`, persistée par `backend_data` ; `TRANSCRIPTION_DEFAULT_RTF_*` initialise les profils. Les fichiers temporaires de transcription sont supprimés après traitement.
+
+[Architecture Docker](docs/assets/architecture-docker-keltiawave.png) · [Backend](backend/README.md) · [Modèles](backend/models/README.md)
+
+## Comptes, contributions et retours
+
+Même compte web/mobile sur le serveur choisi ; rôles `learner`, `teacher`, `admin`, `contributor`. Staging et production ont des données/comptes distincts. Le nom de profil est modifiable ; mot de passe oublié = lien de réinitialisation par email.
+
+Deux parcours à distinguer :
+
+- **Corpus public** : les contributions gardent l’origine de la voix (nom du compte ou « Inconnu »), même pour un texte Common Voice. Komz/Listen utilisent la même référence approuvée la plus récente ; les autres audios restent conservés. Mon compte affiche les envois personnels et leur statut. Les envois anonymes ne sont pas rattachés automatiquement.
+- **Travail pédagogique privé** : envoi depuis Komz mobile uniquement, suivi et retours dans Mon compte, correction web/mobile par professeur/admin. École → formation, « Non inscrit » par défaut ; sans professeur actif, administration. Une validation pédagogique ne publie pas dans le corpus. [Contrats et confidentialité](backend/README-practice.md).
+
+[Corpus : imports, traductions et administration](docs/corpus-reference.md) · [Thèmes Komz](docs/komz-themes.md)
 
 ## Démarrage local
 
-Prérequis : Python 3.11+, Node.js 20+, npm et FFmpeg.
+Prérequis : Python 3.11+, Node.js 20+, npm, FFmpeg ; dépendances W2V indiquées dans son README.
 
-1. Copiez `.env.example` vers `.env` et remplacez au minimum `SECRET_KEY`.
-2. Installez ou liez les modèles décrits dans `backend/models/README.md` :
-   `./scripts/link-legacy-models.sh` permet de réutiliser ceux de l'ancien projet.
-3. Lancez le backend : `./scripts/start-backend.sh`.
-4. Dans un autre terminal, lancez l'application voulue :
+1. Copier `.env.example` vers `.env`, configurer les secrets ; ne jamais les versionner.
+2. Installer/lier les modèles : [guide](backend/models/README.md), `./scripts/link-legacy-models.sh` si modèles anciens disponibles.
+3. `./scripts/start-backend.sh`, puis `./scripts/start-<app>.sh` (`portal`, `corpus`, `learning`, `record`, `transcribe`, `subtitles`, `live`).
+4. Ouvrir le port du front ; documentation API : <http://127.0.0.1:8100/docs>.
 
-```bash
-./scripts/start-portal.sh       # http://127.0.0.1:4100
-./scripts/start-corpus.sh       # http://127.0.0.1:4200
-./scripts/start-learning.sh     # http://127.0.0.1:4300
-./scripts/start-record.sh       # http://127.0.0.1:4400
-./scripts/start-transcribe.sh   # http://127.0.0.1:4500
-./scripts/start-subtitles.sh    # http://127.0.0.1:4600
-./scripts/start-live.sh         # http://127.0.0.1:4800
+Ou, depuis **ce dépôt**, lancer toute la pile :
+
+```sh
+./start-docker.sh               # construit, démarre, contrôle, ouvre les pages
+./start-docker.sh --no-build --no-browser
 ```
 
-En local, SQLite et le stockage de fichiers local suffisent. Les migrations
-Alembic sont appliquées automatiquement au démarrage. Documentation API :
-<http://127.0.0.1:8100/docs>.
+Les volumes `postgres_data`, `minio_data`, `backend_data` conservent les données. Éviter une ancienne copie du projet utilisant les mêmes ports. Le portail simplifié reste accessible sur <http://127.0.0.1:4100/portal-simple.html>.
 
-## Authentification et rôles
+## Vérification et livraison
 
-Corpus et Learning partagent les mêmes utilisateurs et jetons. Les rôles
-principaux sont `learner`, `teacher`, `admin` et `contributor`. Un administrateur
-initial peut être créé au démarrage avec les variables `BOOTSTRAP_ADMIN_*`.
+Compiler uniquement le front modifié (`npm run build:<app>`) et exécuter les tests backend ciblés ; commandes dans [AGENTS.md](AGENTS.md). Terminer par `git diff --check`. Une modification documentaire ne nécessite pas de build.
 
-Ne versionnez jamais `.env`, les mots de passe, les jetons ou les clés MinIO.
+Staging et production OVH sont deux piles indépendantes. Livraison à partir d’une révision Git commise/poussée, sauvegarde préalable, contrôles API/fronts/données/médias, retour arrière préparé. Révision serveur effective : `DEPLOYED_GIT_SHA`. Ne pas confondre code poussé, web déployé et APK installé.
 
-## Docker
-
-Copiez `.env.example` vers `.env`, remplacez impérativement `SECRET_KEY`,
-`POSTGRES_PASSWORD` et `MINIO_ROOT_PASSWORD`, puis lancez la pile locale et ses
-contrôles de santé :
-
-```bash
-./start-docker.sh
-```
-
-Ce lanceur à la racine réutilise `scripts/start-docker.sh` : il construit et
-démarre le backend et les sept fronts, vérifie leurs URL, puis ouvre la
-documentation API et le portail dans le navigateur. `--no-build` réutilise les
-images existantes et `--no-browser` désactive l'ouverture des pages.
-
-Lancez cette commande depuis **ce dépôt** (`/Users/gr4dl0nys29/projets/keltiawave/keltiawave`).
-Une ancienne copie a été mise à l'écart sous
-`projets/breizh_transcriptors/keltiawave-archive-2026-10-10`. Elle utilisait les
-mêmes ports Docker et pouvait remplacer les conteneurs récents. Le script affiche
-le chemin du dépôt utilisé et vérifie l'origine des conteneurs avant d'annoncer
-que tout fonctionne.
-
-Le script construit d'abord l'infrastructure et le backend, attend que l'API
-réponde, puis construit et démarre les sept interfaces sans reconstruire le
-backend. Il ouvre la documentation backend avant les interfaces, puis Portal
-sur <http://127.0.0.1:4100>, qui
-donne accès à toutes les applications. Utilisez `--no-build` pour réutiliser les
-images existantes ou `--no-browser` pour ne pas ouvrir le navigateur.
-
-Le portail initial reste disponible sur <http://127.0.0.1:4100/index.html>.
-Une proposition simplifiée, avec cinq actions principales sans répéter les
-cartes d'applications, se teste sur
-<http://127.0.0.1:4100/portal-simple.html>. Le lien « Explorer tous les outils »
-de cette page ouvre le portail initial.
-
-Sur mobile, le portail propose un lanceur compact dans l'ordre Transcribe,
-Record, Subtitles, Play, Komz et Library. L'atelier Subtitles place le choix du
-média, de la langue et du moteur immédiatement autour de l'aperçu vidéo ; la
-matrice conserve davantage de largeur pour le texte grâce à des timecodes
-compacts.
-
-Le portail présente les outils depuis une page d'accueil multilingue et
-transmet la langue choisie à Komz et Listen. En gallois, seuls Transcribe et
-Subtitles sont proposés ; en cornique, aucune application n'est affichée.
-Dans chaque application, le bouton « KeltiaWave Portal » à gauche ramène au
-portail ; le logo de l'application reste un repère visuel sans lien. En local,
-le bouton ouvre le portail local sur le port 4100.
-
-PostgreSQL et MinIO restent sur le réseau Docker interne. Seuls le backend et
-les sept fronts publient des ports. Les volumes `postgres_data`, `minio_data`
-et `backend_data` conservent les données entre les redémarrages.
-
-## Lot Common Voice dans Komz
-
-Le manifeste `backend/data/common_voice_selected_50.csv` contient 50 phrases
-bretonnes sélectionnées, leurs traductions françaises, niveaux A1/A2, thèmes
-proposés et noms des meilleurs MP3 Common Voice. Les fichiers audio proviennent
-du jeu de données Common Voice breton et ne sont pas versionnés ici. Les champs
-`decision`, `traduction_statut` et `niveau_statut` signalent les propositions
-éditoriales encore à relire.
-
-Les scripts `backend/scripts/import_selected_phrases.py` et
-`backend/scripts/import_selected_common_voice_audios.py` simulent par défaut.
-Ils opèrent sur la base configurée par `DATABASE_URL` et exigent `--apply` pour
-écrire. Le second script requiert `--audio-root`, un répertoire contenant les
-MP3 nommés dans le manifeste. Il réutilise les phrases existantes et crée les
-audios avec l'origine `common-voice` et le statut `pending` : les votes Common
-Voice ne valent pas validation Komz.
-
-Dans la pile Docker **locale**, les 50 phrases et leurs 50 audios ont été
-importés et vérifiés le 1er octobre 2026. Un second lot de 550 phrases et
-audios a ensuite été préparé sur 11 thèmes. Le 2 octobre 2026, les 600 phrases
-et audios Common Voice ont été transférés sur le staging et la production OVH
-via une archive Bibliothèque ZIP ciblée. Les 550 nouveaux audios ont été
-approuvés en lot à la demande du propriétaire sans contrôle d'écoute ; les
-traductions et niveaux automatiques restent à relire. Pour les thèmes et les
-résultats de vérification, voir `docs/komz-themes.md` et
-`docs/common-voice-1000.md`.
-
-Le lot de 50 phrases « Maison et vie quotidienne » avec MP3, traductions et
-sous-thèmes se trouve dans `../datasets/exports/common_voice_maison_50_2026-10-10.zip`.
-Après un démarrage local, `docker cp` permet de placer l'archive dans le
-conteneur backend ; `python -m scripts.import_common_voice_maison ARCHIVE`
-simule l'import et `--apply` l'effectue. L'import est idempotent et refuse
-les phrases déjà classées différemment. L'admin peut exporter un dataset en
-ZIP avec ses audios et métadonnées, y compris les sous-thèmes. Son import
-générique ne constitue pas encore une synchronisation sûre entre production
-et local : il peut créer des audios en double pour des phrases déjà présentes.
-
-Listen affiche les thèmes sous forme d'images, puis les phrases avec un audio
-approuvé. Les niveaux sont regroupés sur une ligne, puis le sous-domaine et la
-recherche occupent une zone compacte. Les compteurs et filtres reconnaissent
-aussi les anciens imports qui enregistrent le libellé du sous-domaine plutôt
-que son identifiant normalisé, dans Listen comme dans Komz. Niveau,
-sous-domaine et recherche se combinent. L'utilisateur écoute
-d'abord la voix de référence ; le lien vers la pratique dans Komz devient alors
-disponible pour cette phrase. Dans Komz, il choisit un thème et une phrase,
-enregistre sa voix et obtient son score avant de pouvoir écouter la voix de
-référence. Cette dernière est présentée dans un encadré explicatif sous le
-score. Les estimations des mots reconnus, du rythme et de la prosodie restent
-expérimentales. Le détail des thèmes et sous-domaines figure dans
-`docs/komz-themes.md` ; l'API d'analyse du rythme est décrite dans
-`backend/README.md`.
-
-La langue d'interface choisie détermine la traduction affichée sous la phrase
-bretonne dans Listen et Komz : français, anglais ou gallois. En gallois, le
-libellé des sous-domaines est également traduit et la traduction apparaît sans
-préfixe. Les champs `traduction_en` et `traduction_cy` peuvent être corrigés
-dans l'administration et sont conservés par les exports et imports du corpus.
-Les archives Bibliothèque créées avant ces champs restent importables.
-
-Les lots de traduction sont dans `backend/translations/`. Les scripts
-`backend/scripts/import_english_translations.py` et
-`backend/scripts/import_welsh_translations.py` vérifient l'identifiant et le
-texte breton de chaque phrase, simulent l'import par défaut et préservent les
-traductions déjà présentes. L'option `--apply` écrit les nouvelles valeurs ;
-`--replace` permet une correction explicite. Exécuter ensuite
-`seed_english_translations.py` et `seed_welsh_corrections.py` pour les phrases
-courantes corrigées manuellement. Les autres traductions du CSV sont des
-propositions automatiques qui demandent une relecture linguistique.
-Pour livrer ces lots sur une base dont les identifiants diffèrent de la base
-locale, `backend/scripts/import_phrase_translations_by_text.py` apparie le
-texte breton exact, applique les corrections EN/CY et simule par défaut. Il
-refuse les doublons et les phrases absentes ; `--allow-missing` permet de
-laisser de côté les absences identifiées, puis `--apply` valide l'import en une
-transaction. Les traductions déjà présentes sont préservées.
-
-Dans **Admin > Phrases proposées**, la recherche et le filtre par thème se
-combinent. Quand un thème est sélectionné, le tableau affiche le sous-thème à
-la place du thème et permet de trier cette colonne. Le formulaire de création
-ou de modification permet de choisir un domaine et, facultativement, un
-sous-domaine. Les anciens domaines sont rapprochés des 13 domaines éditoriaux
-pour l'affichage et le filtrage.
-
-Dans **Admin > Audio recordings**, le filtre par thème s'applique aux
-enregistrements avant la limite de résultats. Le tableau compact affiche le
-sous-thème de la phrase associée dans une colonne triable ; les phrases sans
-sous-thème portent la mention « Sans sous-thème ».
-
-## Vérifications
-
-```bash
-npm run build
-cd backend && .venv/bin/python -m pytest
-```
-
-## Déploiement OVH sans régression
-
-Le staging et la production sont deux piles Docker indépendantes sur OVH. Les
-déploiements partent d'une révision Git commise et poussée, construisent les
-conteneurs sur des ports liés à `127.0.0.1`, puis vérifient les interfaces, les
-données Komz et les médias Play avant toute exposition publique.
-
-Pour livrer un tag précis en staging, définir `DEPLOY_REF` sur ce tag : le
-script archive cette révision et ne prend pas les modifications locales non
-commitées.
-
-```bash
-# Copier les données de production vers le staging (avec sauvegarde du staging)
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net \
-  ./scripts/refresh-staging-data-from-production.sh --apply
-
-# Déployer le tag en staging
+```sh
 SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_REF=TAG_EXPLICITE \
   ./scripts/deploy-staging-ovh.sh --apply
-
-# Après vérification du staging et sauvegarde de la production, déployer le
-# même tag sur la pile production déjà reliée aux domaines publics.
-SSH_TARGET=ubuntu@vps-dc75d8a6.vps.ovh.net DEPLOY_SLOT=production \
-  DEPLOY_REF=TAG_EXPLICITE ./scripts/deploy-ovh.sh --apply
 ```
 
-Le script de promotion Caddy sert uniquement à la première bascule depuis
-l'ancienne pile OVH. Il n'est pas nécessaire quand Caddy route déjà vers
-`keltiawave-production-*`.
-
-La procédure, les prérequis et le retour arrière sont détaillés dans
-`deploy/ovh/README.md`. Les récapitulatifs de livraison sont disponibles dans
-le dossier `docs/`, notamment `docs/CHANGES-2026-09-03.md` pour les interfaces
-mobiles Portal et Subtitles.
-
-## Live : suivre un podcast en direct
-
-Live est un front indépendant (`apps/live`) qui utilise les routes dédiées
-`GET /api/live/capabilities` et `WS /api/live/stream` du backend commun.
-Le son partagé est transmis au serveur Vosk. Un audio compressé reste temporairement
-dans la page pour l’action facultative « Améliorer avec Whisper » après l’écoute.
-Whisper utilise un fichier temporaire supprimé après traitement et conserve Vosk
-comme version distincte.
-Cette version web nécessite Internet et un navigateur permettant le partage audio
-d’un onglet ; elle n’utilise jamais le microphone. La capture des autres apps
-du téléphone reste un sujet mobile distinct. Voir `apps/live/README.md`.
-
-
-## Contributions Komz et Listen
-
-Les audios envoyés sont attribués au nom du compte connecté, ou à « Inconnu »
-pour un envoi anonyme. L’origine de la voix est indépendante de la source du texte :
-un utilisateur qui lit une phrase Common Voice reste l’auteur de sa voix.
-Listen et Komz affichent cette origine explicitement et partagent la même sélection
-d’une référence approuvée par phrase (la plus récente par date d’enregistrement,
-puis par identifiant). L’approbation enseignant/admin ou l’approbation en lot
-Common Voice existante est requise. Une nouvelle référence plus récente peut
-remplacer celle affichée ; les autres audios restent conservés.
-
-Dans **Mon compte → Mes enregistrements**, chaque utilisateur retrouve ses envois,
-peut les réécouter et filtrer les statuts : en attente, approuvé ou à revoir. Le
-commentaire et la date de décision sont affichés. Le bouton Actualiser recharge
-les décisions. L’API authentifiée `GET /api/audios/mine` retourne uniquement les
-contributions personnelles associées à l’adresse du compte ; les envois anonymes
-ne sont pas rattachés automatiquement après inscription. Un audio approuvé reste
-dans le compte et rejoint aussi la liste des audios approuvés.
-
-Record propose aussi l’ouverture d’un email contenant les textes Vosk et Whisper.
-L’utilisateur choisit le destinataire et envoie lui-même le message dans son
-application email.
-
-Voir [les changements du 31 octobre 2026](docs/CHANGES-2026-10-31.md).
-
-
-## Application Android native
-
-Le code et l’état actuel sont dans [KeltiaWave-Mobile](https://github.com/Hautiere/KeltiaWave-Mobile). Pour une intervention locale, commencer par `../keltiawave-mobile/AGENTS.md` ; ne pas charger les deux documentations complètes. Le mode Vosk Android est local, contrairement au traitement web sur serveur.
+Lire [le guide OVH](deploy/ovh/README.md) avant de déployer, modifier Caddy ou copier des données. Le rafraîchissement du staging depuis la production remplace des données : il ne fait pas partie d’une livraison de code ordinaire. Historique : `docs/CHANGES-*`, à consulter uniquement si nécessaire.
