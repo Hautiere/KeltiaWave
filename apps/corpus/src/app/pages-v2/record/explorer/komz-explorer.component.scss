@@ -293,3 +293,69 @@ progress { accent-color:var(--blue); }
 @media(max-width:600px) { .listen-first { grid-column:2/4; justify-self:end; } }
 
 .voice-attribution { display:block; margin-top:5px; overflow-wrap:anywhere; }
+
+@media(max-width:900px) { .tools-navigation { overflow-x:auto; flex-wrap:nowrap; } .tools-navigation>a,.tools-navigation>details { flex-shrink:0; } }
+
+@media(max-width:900px) {
+ .tools-navigation { width:100%; max-width:100%; min-width:0; overflow:visible; gap:0; padding-inline:6px; }
+ .tools-tabs { display:flex; flex:1 1 0; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:#9ab4dc #edf3ff; }
+ .tools-tabs::-webkit-scrollbar { height:4px; }
+ .tools-tabs::-webkit-scrollbar-thumb { background:#9ab4dc; border-radius:4px; }
+ .tools-tabs>a { display:flex; align-items:center; justify-content:center; flex:0 0 auto; min-height:44px; padding:0 9px; font-size:12px; font-weight:750; white-space:nowrap; }
+ .tools-tabs>a[aria-current] { color:#159447; border-bottom:3px solid #159447; }
+ .tabs-arrow { flex:0 0 28px; width:28px; min-height:44px; border:0; background:#edf3ff; color:#075bde; font-size:26px; }
+ .tabs-arrow[hidden] { display:none; }
+ .mobile-languages { flex:0 0 auto; position:static; padding-left:6px; }
+ .mobile-language-panel { right:6px; max-width:calc(100vw - 12px); }
+}
+
+/* Keep the first practice phrases discoverable below the mobile topic picker. */
+@media(max-width:600px) {
+ .mobile-theme-title { margin-block:4px 8px; }
+ .theme-hero { min-height:0; padding:12px 14px; border-radius:16px; }
+ .theme-hero h1 { font-size:17px; }
+ .theme-hero p { margin:5px 0 7px; font-size:11px; }
+ .hero-counts { gap:8px; font-size:10px; }
+ .subdomains { gap:5px; margin-top:8px; }
+ .subdomains button { display:grid; grid-template-columns:18px minmax(0,1fr); grid-template-rows:auto auto; align-content:center; align-items:center; column-gap:5px; row-gap:2px; min-height:52px; padding:6px; border-radius:10px; text-align:left; }
+ .subdomains kw-komz-icon { display:block; grid-row:1/3; font-size:17px; }
+ .subdomains strong { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:10px; line-height:1.2; }
+ .subdomains button>span { grid-column:2; font-size:10px; }
+ .filter-area { margin-top:8px; padding:5px 0; border-radius:12px; }
+ .level-bar { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:thin; padding-bottom:3px; }
+ .level-bar>button { flex:0 0 auto; min-height:36px; padding:5px 8px; }
+ .level-bar .filter-toggle { position:sticky; right:0; margin-left:0; background:#f7faff; }
+ .phrases-heading { margin:8px 0; gap:6px; }
+ .practice-rule { margin-bottom:8px; font-size:11px; }
+}
+
+@media(max-width:700px) {
+ .listen-explorer .brand strong { font-size:14px; }
+ .listen-explorer .brand small { font-size:10px; }
+ .listen-explorer .brand img { width:26px; height:30px; }
+ .listen-explorer .mobile-theme-title h2 { font-size:14px; }
+ .listen-explorer .theme-hero h1 { font-size:16px; }
+ .listen-explorer .theme-hero p,.listen-explorer .practice-rule { font-size:11px; }
+ .listen-explorer .phrase h3 { font-size:12px; line-height:1.35; }
+ .listen-explorer .phrase p { font-size:11px; line-height:1.4; }
+ .listen-explorer .voice-attribution { font-size:10px; margin-top:3px; }
+ .listen-explorer .phrase-level { font-size:10px; padding:4px 6px; }
+ .listen-explorer .play { width:32px; height:32px; }
+ .listen-explorer .play kw-komz-icon { font-size:11px; }
+ .listen-explorer .practice { font-size:11px; padding:6px 10px; min-height:40px; }
+ .listen-explorer .practice kw-komz-icon { font-size:12px; }
+ .listen-explorer .listen-first { font-size:10px; }
+ .listen-explorer .phrases-heading h2 { font-size:15px; }
+ .listen-explorer .phrases-heading h2>span { font-size:13px; }
+ .listen-explorer .translation-controls { font-size:10px; gap:6px; }
+ .listen-explorer .bottom-navigation a,.listen-explorer .bottom-navigation button { font-size:10px; }
+ .listen-explorer .bottom-navigation kw-komz-icon { font-size:17px; }
+ .listen-explorer .phrase>.play { min-height:44px; min-width:34px; }
+}
+
+.facet-label-mobile { display:none; }
+@media(max-width:600px) {
+ .facet-label-full { display:none; }
+ .facet-label-mobile { display:block; white-space:pre-line; }
+ .subdomains strong { min-height:2.4em; }
+}

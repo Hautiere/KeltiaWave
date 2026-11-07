@@ -104,3 +104,16 @@ ne remplacent pas une écoute réelle dans le navigateur.
 
 Tag de cette mise à niveau : `web-2026-11-07-komz-listen-sous-domaines`.
 Il identifie le code et la documentation ; il ne confirme pas un déploiement distant.
+
+## Ajustements mobiles du 7 novembre 2026
+
+Les barres mobiles proposent Listen, Play et Subtitles en plus des outils audio.
+Dans l’explorateur Komz/Listen, les onglets défilent horizontalement avec des
+flèches selon le débordement ; le compte reste accessible dans la barre du bas.
+Les sous-domaines conservent leurs icônes avec des libellés mobiles de quatre
+mots maximum, répartis sur deux lignes équilibrées. Le nom complet est conservé
+dans le libellé accessible. La bannière, les niveaux et les résultats de
+prononciation sont plus compacts pour rendre les premières phrases visibles.
+La présentation ordinateur conserve les libellés complets.
+
+Tag prévu pour la livraison : `web-2026-11-07-komz-listen-mobile-compact`.

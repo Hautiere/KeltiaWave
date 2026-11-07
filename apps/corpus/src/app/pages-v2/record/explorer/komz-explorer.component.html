@@ -1,8 +1,12 @@
 <div class="explorer" [class.listen-explorer]="experience === 'listen'" id="komz-explorer-top">
   <header class="explorer-header">
     <nav class="tools-navigation" aria-label="KeltiaWave">
-      <a [href]="links.record">Record</a><a [href]="links.transcribe">Transcribe</a><a [href]="experience === 'listen' ? '/home-bibliotheque' : links.komz" aria-current="page">{{ product }}</a><a [href]="links.live">Live</a>
-      <a routerLink="/compte" class="tools-account" [attr.aria-label]="copy.account"><kw-komz-icon name="user"/></a>
+      <button class="tabs-arrow" type="button" [hidden]="!tabsCanGoBack" [attr.aria-label]="copy.previous" (click)="scrollTabs(-1)">‹</button>
+      <div class="tools-tabs" #toolTabs (scroll)="updateTabsOverflow()">
+      <a [href]="links.record">Record</a><a [href]="links.transcribe">Transcribe</a><a [href]="links.komz" [attr.aria-current]="experience === 'komz' ? 'page' : null">Komz</a><a [href]="links.live">Live</a>
+      <a [href]="links.listen" [attr.aria-current]="experience === 'listen' ? 'page' : null">Listen</a><a [href]="links.play">Play</a><a [href]="links.subtitles">Subtitles</a>
+      </div>
+      <button class="tabs-arrow" type="button" [hidden]="!tabsCanGoForward" [attr.aria-label]="copy.next" (click)="scrollTabs(1)">›</button>
       <details class="mobile-languages" #mobileLanguages><summary [attr.aria-label]="copy.interfaceLanguage"><kw-komz-icon name="globe"/><span>{{ headerLabel('languages') }}</span></summary><div class="mobile-language-panel"><label>{{ copy.interfaceLanguage }}<select [ngModel]="language" (ngModelChange)="languageChange.emit($event)"><option value="fr">Français</option><option value="en">English</option><option value="br">Brezhoneg</option><option value="cy">Cymraeg</option></select></label><button type="button" (click)="mobileLanguages.open = false; classic.emit()">↶ {{ copy.classic }}</button><button type="button" (click)="mobileLanguages.open = false">{{ copy.close }}</button></div></details>
     </nav>
     <div class="brand-lockup"><a class="portal-home" [href]="links.portal" aria-label="Portail KeltiaWave"><span class="portal-home-icon"><kw-komz-icon name="home"/></span><span class="portal-home-copy"><strong>KeltiaWave</strong><small>Portal</small></span></a><a class="brand" [href]="links.portal"><img src="/assets/keltiawave-mascot.webp" alt="" width="38" height="38"><span><strong>KeltiaWave <b>{{ product }}</b></strong><small>{{ experience === 'listen' ? listeningCopy.subtitle : copy.subtitle }}</small></span></a><label class="audio-language"><img src="/assets/flag-brittany.png" alt="" width="48" height="34"><select [attr.aria-label]="headerLabel('audio')" disabled><option>Brezhoneg</option></select></label></div>
@@ -38,7 +42,7 @@
         </section>
 
         <div class="subdomains" role="group" [attr.aria-label]="copy.subdomains">
-          <button *ngFor="let facet of facets; let index = index; trackBy: trackValue" type="button" [class.selected]="view.subdomain === facet.value" [class.unclassified]="facet.value === '__unclassified__'" [attr.aria-pressed]="view.subdomain === facet.value" [style.--facet-color]="index === 5 ? '#f72265' : index === 4 ? '#7632ba' : '#0064c6'" (click)="change({ subdomain: facet.value })"><kw-komz-icon [name]="facet.icon"/><strong>{{ facet.label }}</strong><span>({{ facet.count }})</span></button>
+          <button *ngFor="let facet of facets; let index = index; trackBy: trackValue" type="button" [class.selected]="view.subdomain === facet.value" [class.unclassified]="facet.value === '__unclassified__'" [attr.aria-label]="facet.label + ' (' + facet.count + ')'" [attr.title]="facet.label" [attr.aria-pressed]="view.subdomain === facet.value" [style.--facet-color]="index === 5 ? '#f72265' : index === 4 ? '#7632ba' : '#0064c6'" (click)="change({ subdomain: facet.value })"><kw-komz-icon [name]="facet.icon"/><strong><span class="facet-label-full">{{ facet.label }}</span><span class="facet-label-mobile" aria-hidden="true">{{ mobileSubdomainLabel(facet.label) }}</span></strong><span>({{ facet.count }})</span></button>
         </div>
 
         <section class="filter-area">

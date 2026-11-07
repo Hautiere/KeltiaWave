@@ -6,7 +6,7 @@ export function mobileToolLinks() {
   const offset = local && Number(location.port) >= 14000 && Number(location.port) < 15000 ? 10000 : 0;
   const domain = location.hostname.includes('.staging.') ? 'staging.keltiawave.com' : 'keltiawave.com';
   const tool = (name: string, port: number) => local ? `${location.protocol}//${location.hostname}:${port + offset}` : `https://${name}.${domain}`;
-  return { record: tool('record', 4400), transcribe: tool('transcribe', 4500), live: tool('live', 4800), komz: `${tool('komz', 4200)}/lire`, account: `${tool('komz', 4200)}/compte`, portal: local ? `${location.protocol}//${location.hostname}:4100/` : `https://${domain}/` };
+  return { subtitles: tool('subtitles', 4600), listen: tool(domain.startsWith('staging.') ? 'library' : 'voices', 4200), play: tool(domain.startsWith('staging.') ? 'play' : 'learning', 4300), record: tool('record', 4400), transcribe: tool('transcribe', 4500), live: tool('live', 4800), komz: `${tool('komz', 4200)}/lire`, account: `${tool('komz', 4200)}/compte`, portal: local ? `${location.protocol}//${location.hostname}:4100/` : `https://${domain}/` };
 }
 const LABELS: Record<string, Record<MobileLocale, string>> = {
   languages: {fr:'Langues',en:'Languages',br:'Yezhoù',cy:'Ieithoedd'},

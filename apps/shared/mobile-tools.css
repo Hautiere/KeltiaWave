@@ -42,3 +42,5 @@
   .kw-mobile-shell :focus-visible,.kw-mobile-actions :focus-visible,.kw-mobile-help :focus-visible { outline:3px solid #479bff; outline-offset:2px; }
   @media(max-width:360px) { .kw-mobile-nav { padding-inline:5px; gap:2px; } .kw-mobile-languages .kw-mobile-language-caption { display:none; } .kw-mobile-brandbar { padding-inline:8px; gap:4px; } .kw-mobile-brand>strong { font-size:14px; } .kw-mobile-brand>img { width:26px; height:26px; } .kw-mobile-subtitle { margin-left:32px; font-size:10px; } .kw-mobile-audio { gap:3px; font-size:9px; } .kw-mobile-audio img { width:40px; height:28px; } .kw-mobile-audio select { width:78px; } }
 }
+
+@media(max-width:700px) { .kw-mobile-nav { overflow-x:auto; flex-wrap:nowrap; } .kw-mobile-nav>a,.kw-mobile-nav>details { flex-shrink:0; } }

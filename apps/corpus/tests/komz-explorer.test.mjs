@@ -45,3 +45,13 @@ test('explicit classic URL always overrides modern storage and refresh is revers
  assert.equal(mode('', null), 'modern');
  assert.equal(mode('?interface=invalid', 'classic'), 'classic');
 });
+
+const { mobileSubdomainLabel } = load(new URL('../src/app/pages-v2/record/explorer/komz-explorer.model.ts', import.meta.url));
+test('mobile subdomain captions use balanced lines and at most four words', () => {
+ assert.equal(mobileSubdomainLabel('Greetings & farewells'), 'Greetings\n& farewells');
+ const label = mobileSubdomainLabel('Where you are from & where you live');
+ assert.equal(label.replace(/\n/g, ' ').split(/\s+/).length, 4);
+ assert.equal(label.split('\n').length, 2);
+ assert.ok(label.endsWith('…'));
+ assert.equal(mobileSubdomainLabel('All'), 'All');
+});

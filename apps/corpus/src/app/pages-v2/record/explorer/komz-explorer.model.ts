@@ -33,3 +33,20 @@ export function filterExplorerPhrases(phrases: Phrase[], referenceIds: ReadonlyS
     && (!search || normalizedText([phrase.texte, phrase.traduction_fr, phrase.traduction_en, phrase.traduction_cy].filter(Boolean).join(' ')).includes(search)))
     .sort((a, b) => levelRank(a) - levelRank(b));
 }
+
+/** Compact mobile captions; keep the full editorial label for accessibility. */
+export function mobileSubdomainLabel(label: string): string {
+  const words = label.trim().split(/\s+/).filter(Boolean);
+  const shortened = words.length > 4;
+  const kept = words.slice(0, 4);
+  if (shortened) kept[kept.length - 1] += '…';
+  if (kept.length < 2) return kept.join(' ');
+  let split = 1;
+  let difference = Infinity;
+  for (let i = 1; i < kept.length; i++) {
+    if (kept[i - 1] === '&') continue;
+    const candidate = Math.abs(kept.slice(0, i).join(' ').length - kept.slice(i).join(' ').length);
+    if (candidate < difference) { difference = candidate; split = i; }
+  }
+  return kept.slice(0, split).join(' ') + '\n' + kept.slice(split).join(' ');
+}

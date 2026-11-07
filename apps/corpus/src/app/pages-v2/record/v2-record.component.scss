@@ -336,3 +336,38 @@
 
 .interface-return { display:flex; justify-content:center; flex-wrap:wrap; align-items:center; gap:16px; padding:8px; background:#edf4ff; font-size:12px; }
 .interface-return button { padding:8px 14px; border:1px solid #c7d9ff; border-radius:20px; background:white; color:#075bde; cursor:pointer; }
+
+/* Compact pronunciation feedback on phones, retaining comfortable touch targets. */
+@media(max-width:700px) {
+ .practice-phrase-card { padding:12px; }
+ .practice-phrase-card h1 { font-size:21px; line-height:1.2; }
+ .practice-phrase-card p,.phrase-translation { font-size:13px; }
+ .panel-heading h2,.compare-card h2 { font-size:14px; }
+ .panel-mark { width:26px; height:26px; font-size:12px; }
+ .panel-note,.record-hint,.compare-row strong { font-size:11px; }
+ .record-orb { width:68px; height:68px; border-width:7px; font-size:26px; margin-bottom:6px; }
+ .record-time { font-size:12px; }
+ .assessment-actions { flex-direction:column; align-items:stretch; gap:6px; margin-top:10px; }
+ .assessment-actions button { min-height:44px; padding:8px 12px; font-size:13px; line-height:1.25; }
+ .assessment-actions p { font-size:11px; line-height:1.4; }
+ .score-card { margin-top:10px; padding:12px; border-radius:11px; }
+ .score-total { gap:8px; padding-bottom:10px; }
+ .score-total small { font-size:11px; }
+ .score-total strong { font-size:26px; }
+ .score-total strong span { font-size:12px; }
+ .score-total p { font-size:11px; line-height:1.4; }
+ .score-breakdown { gap:6px; margin-top:10px; }
+ .score-item { gap:4px; padding:9px; }
+ .score-item>span { font-size:11px; }
+ .score-item strong { font-size:20px; }
+ .score-item strong small { font-size:11px; }
+ .score-details { margin-top:8px; font-size:11px; line-height:1.4; }
+ .reference-card { gap:10px; margin-top:12px; padding:12px; }
+ .reference-icon { width:28px; height:28px; border-radius:8px; font-size:16px; }
+ .reference-heading { gap:8px; }
+ .reference-heading h3 { font-size:14px; }
+ .reference-heading p,.assessment-note,.practice-tip { font-size:11px; line-height:1.4; }
+ .practice-tip { padding:10px 12px; }
+ .record-fields label { font-size:11px; }
+ .record-actions button { font-size:12px; min-height:44px; }
+}

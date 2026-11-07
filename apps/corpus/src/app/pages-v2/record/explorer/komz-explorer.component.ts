@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, AfterViewInit, OnChanges, OnDestroy, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { Phrase, AudioRead } from '../../../core/api.service';
@@ -11,13 +11,33 @@ import { audioFileUrl } from '../../../core/constants';
 import { audioAttribution } from '../../../core/audio-attribution';
 import { mobileToolLinks, mobileLabel } from '../../../../../../shared/mobile-tools';
 import { EXPLORER_COPY } from './komz-explorer.copy';
-import { ExplorerState, initialExplorerState, filterExplorerPhrases } from './komz-explorer.model';
+import { ExplorerState, initialExplorerState, filterExplorerPhrases, mobileSubdomainLabel } from './komz-explorer.model';
 import { KomzIconComponent } from './komz-icon.component';
 
 @Component({ selector: 'app-komz-explorer', standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, KomzIconComponent],
   templateUrl: './komz-explorer.component.html', styleUrls: ['./komz-explorer.component.scss'] })
-export class KomzExplorerComponent implements OnChanges, OnDestroy {
+export class KomzExplorerComponent implements OnChanges, OnDestroy, AfterViewInit {
+  @ViewChild('toolTabs') toolTabs?: ElementRef<HTMLElement>;
+  tabsCanGoBack = false;
+  tabsCanGoForward = false;
+  private tabsResizeObserver?: ResizeObserver;
+  ngAfterViewInit(): void {
+    const tabs = this.toolTabs?.nativeElement;
+    if (!tabs) return;
+    this.tabsResizeObserver = new ResizeObserver(() => this.updateTabsOverflow());
+    this.tabsResizeObserver.observe(tabs);
+  }
+  updateTabsOverflow(): void {
+    const tabs = this.toolTabs?.nativeElement;
+    if (!tabs) return;
+    this.tabsCanGoBack = tabs.scrollLeft > 1;
+    this.tabsCanGoForward = tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 1;
+  }
+  scrollTabs(direction: number): void {
+    const tabs = this.toolTabs?.nativeElement;
+    tabs?.scrollBy({ left: direction * tabs.clientWidth * 0.7, behavior: 'smooth' });
+  }
   @Input() experience: 'komz' | 'listen' = 'komz';
   @ViewChild('referencePlayer') player?: ElementRef<HTMLAudioElement>;
   playingId: number | null = null;
@@ -41,6 +61,7 @@ export class KomzExplorerComponent implements OnChanges, OnDestroy {
   view = initialExplorerState();
   readonly links = mobileToolLinks();
   readonly pageSize = 20;
+  readonly mobileSubdomainLabel = mobileSubdomainLabel;
   themesOpen = false;
   allThemes = false;
   filtersOpen = false;
@@ -135,7 +156,7 @@ export class KomzExplorerComponent implements OnChanges, OnDestroy {
     const reference = this.referencesByPhrase.get(phrase.id);
     return reference ? audioAttribution(reference, phrase.source) : this.copy.noReference;
   }
-  ngOnDestroy(): void { this.stopAudio(); }
+  ngOnDestroy(): void { this.tabsResizeObserver?.disconnect(); this.stopAudio(); }
   stopAudio(): void {
     ++this.playIntent;
     const audio = this.player?.nativeElement;

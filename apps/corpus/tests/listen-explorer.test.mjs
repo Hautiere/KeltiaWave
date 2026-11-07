@@ -81,3 +81,21 @@ test('Komz opens practice without listening and never starts reference playback'
   explorer.startPractice(explorer.phrases[0]);
   assert.equal(explorer.practice.values.length, 1);
 });
+
+test('mobile tab arrows follow horizontal overflow and scroll position', () => {
+  const { explorer } = loadExplorer();
+  const tabs = { scrollLeft: 0, clientWidth: 250, scrollWidth: 500 };
+  explorer.toolTabs = { nativeElement: tabs };
+  explorer.updateTabsOverflow();
+  assert.equal(explorer.tabsCanGoBack, false);
+  assert.equal(explorer.tabsCanGoForward, true);
+  tabs.scrollLeft = 250;
+  explorer.updateTabsOverflow();
+  assert.equal(explorer.tabsCanGoBack, true);
+  assert.equal(explorer.tabsCanGoForward, false);
+  tabs.scrollLeft = 0;
+  tabs.clientWidth = 500;
+  explorer.updateTabsOverflow();
+  assert.equal(explorer.tabsCanGoBack, false);
+  assert.equal(explorer.tabsCanGoForward, false);
+});
